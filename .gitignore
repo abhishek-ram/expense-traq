@@ -91,3 +91,4 @@ ENV/
 # This project settings
 .idea
 db.sqlite3
+settings.py

@@ -15,7 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import login, logout
+from expensetraq.core import views
 
 urlpatterns = [
+    # url(r'^$', views.index, name='index'),
     url(r'^admin/', admin.site.urls),
+    url(r'^index/$', login_required(views.index), name='index'),
+    url(r'^login/$', login, name='login'),
+    url(r'^logout/$', logout, {'next_page': '/index/'}, name='logout'),
+    url(r'^.*', login_required(views.index)),
 ]
