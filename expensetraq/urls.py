@@ -20,10 +20,12 @@ from django.contrib.auth.views import login, logout
 from expensetraq.core import views
 
 urlpatterns = [
-    # url(r'^$', views.index, name='index'),
+    # Django admin urls
     url(r'^admin/', admin.site.urls),
-    url(r'^index/$', login_required(views.index), name='index'),
+
+    # ExpenseTraQ urls
+    url(r'^index/$', login_required(views.Index.as_view()), name='index'),
     url(r'^login/$', login, name='login'),
     url(r'^logout/$', logout, {'next_page': '/index/'}, name='logout'),
-    url(r'^.*', login_required(views.index)),
+    url(r'^.*', login_required(views.Index.as_view())),
 ]

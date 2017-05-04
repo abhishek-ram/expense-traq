@@ -92,3 +92,4 @@ ENV/
 .idea
 db.sqlite3
 settings.py
+uploads/

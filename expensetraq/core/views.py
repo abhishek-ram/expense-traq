@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from django.views.generic import TemplateView
+from django.utils.decorators import method_decorator
 from expensetraq.core.utils import user_in_groups
 
 
-@login_required()
-@user_in_groups(['ExpenseAdmin'])
-def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+# @method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class Index(TemplateView):
+    template_name = 'core/index.html'
