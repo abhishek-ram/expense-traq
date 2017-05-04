@@ -1,6 +1,7 @@
 from django.utils import six
 from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import PermissionDenied
+from django.contrib import messages
 
 
 def user_in_groups(group, login_url=None, raise_exception=True):
@@ -26,3 +27,21 @@ def user_in_groups(group, login_url=None, raise_exception=True):
         return False
 
     return user_passes_test(check_groups, login_url=login_url)
+
+
+class DeleteMessageMixin(object):
+    """
+    Adds a success message on successful form submission.
+    """
+    success_message = ''
+
+    def delete(self, request, *args, **kwargs):
+        success_message = self.get_success_message(self.get_object())
+        response = super(DeleteMessageMixin, self).delete(request)
+        if success_message:
+            messages.success(self.request, success_message)
+        return response
+
+    def get_success_message(self, obj):
+        return self.success_message % obj.__dict__
+

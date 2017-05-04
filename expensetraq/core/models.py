@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db import models
+from django.urls import reverse
 from django.contrib.auth.models import User
 from django_extensions.db.models import TimeStampedModel
 
 
 class ExpenseType(TimeStampedModel, models.Model):
-    name = models.CharField(max_length=30, primary_key=True)
+    name = models.CharField(max_length=30)
     gl_code = models.CharField(max_length=30, verbose_name='GL Code')
     receipt_required = models.BooleanField(default=True)
 

@@ -1,0 +1,93 @@
+{% extends 'core/layout.html' %}
+{% load staticfiles %}
+
+{% block title %}ExpenseTraQ - Expense Types{% endblock %}
+
+
+{% block body_content %}
+
+    <!-- page content -->
+  <div class="right_col" role="main">
+    <!-- po table -->
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_title">
+            <h3>Expense Types <small>You can find all expense types listed here</small>
+              <a class="btn btn-primary" type="button"
+                 href="{% url 'expense-type-add' %}">
+                <i class="fa fa-plus" ></i> Add Expense Type</a>
+            </h3>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>GL Code</th>
+                  <th>Receipt Required</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for et in object_list %}
+                  <tr>
+                    <td>
+                      <b>{{ et.name }}</b>
+                    </td>
+                    <td>{{ et.gl_code }}</td>
+                    <td>
+                      {% if  et.receipt_required %}
+                        <i class="fa fa-check-square" ></i>
+                      {% else %}
+                        <i class="fa fa-square-o" ></i>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'expense-type-update' et.pk %}"
+                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                      <button onclick="confirmDelete('{% url 'expense-type-delete' et.pk %}', '{{ et.name }}')"
+                              class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- po table -->
+    <!-- delete modal -->
+    <div class="modal fade delete-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <form class="form-horizontal delete-form" method="post">
+              {% csrf_token %}
+
+              <h4>Are you sure you want to delete the expense type "<strong></strong>"?</h4>
+              <input type="submit" class="btn btn-danger" value="Delete Mapping"/>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- delete modal -->
+  </div>
+
+<!-- /page content -->
+{% endblock %}
+
+
+
+{% block body_js %}
+  <script>
+    function confirmDelete(url, salesperson) {
+      $(".delete-form").attr("action", url);
+      $(".delete-form h4 strong").text(salesperson);
+      $(".delete-modal").modal("show");
+    }
+  </script>
+{% endblock %}

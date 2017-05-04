@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load et_extras %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -21,6 +22,10 @@
     <link href="{% static "vendors/nprogress/nprogress.css" %}" rel="stylesheet">
     <!-- Custom Theme Style -->
     <link href="{% static "css/custom.min.css" %}" rel="stylesheet">
+    <!-- PNotify -->
+    <link href="{% static "vendors/pnotify/dist/pnotify.css" %}" rel="stylesheet">
+    <link href="{% static "vendors/pnotify/dist/pnotify.buttons.css" %}" rel="stylesheet">
+    <link href="{% static "vendors/pnotify/dist/pnotify.nonblock.css" %}" rel="stylesheet">
 
      {% block head_css %}
     {% endblock head_css %}
@@ -44,10 +49,15 @@
             <!-- sidebar menu -->
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
               <div class="menu_section">
+                {% with user|is_in_groups as user_groups %}
                 <h3>Menu</h3>
                 <ul class="nav side-menu">
                   <li><a href="{% url 'index' %}"><i class="fa fa-home" ></i> Home </a></li>
+                  {% if "ExpenseAdmin" in user_groups %}
+                    <li><a href="{% url 'expense-type-list' %}"><i class="fa fa-sliders" ></i> Expense Types </a></li>
+                  {% endif %}
                 </ul>
+                {% endwith %}
               </div>
             </div>
             <!-- /sidebar menu -->
@@ -162,6 +172,16 @@
       </div>
     </div>
 
+    <!-- notification -->
+    <div class="notification">
+      <ul>
+        {% for message in messages %}
+          <li class="{{ message.level_tag }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <!-- /notification -->
+
     <!-- jQuery -->
     <script src="{% static "vendors/jquery/dist/jquery.min.js" %}"></script>
     <!-- Bootstrap -->
@@ -174,6 +194,9 @@
     <script src="{% static "js/custom.min.js" %}"></script>
 
     <!-- PNotify -->
+    <script src="{% static "vendors/pnotify/dist/pnotify.js" %}"></script>
+    <script src="{% static "vendors/pnotify/dist/pnotify.buttons.js" %}"></script>
+    <script src="{% static "vendors/pnotify/dist/pnotify.nonblock.js" %}"></script>
     <script>
       $(document).ready(function() {
         $(".notification").hide();
