@@ -938,17 +938,15 @@ if (typeof NProgress != 'undefined') {
 			
 		};
 	   
-	 /* AUTOSIZE */
+       /* AUTOSIZE */
 			
 		function init_autosize() {
-			
-			if(typeof $.fn.autosize !== 'undefined'){
-			
+			if(typeof (autosize) !== 'undefined'){
+			console.log('init_autosize');
 			autosize($('.resizable_textarea'));
 			
 			}
-			
-		};  
+		}
 	   
 	   /* PARSLEY */
 			
@@ -1835,34 +1833,34 @@ if (typeof NProgress != 'undefined') {
 	   
 	  	/* PNotify */
 			
-		function init_PNotify() {
-			
-			if( typeof (PNotify) === 'undefined'){ return; }
-			console.log('init_PNotify');
-			
-			new PNotify({
-			  title: "PNotify",
-			  type: "info",
-			  text: "Welcome. Try hovering over me. You can click things behind me, because I'm non-blocking.",
-			  nonblock: {
-				  nonblock: true
-			  },
-			  addclass: 'dark',
-			  styling: 'bootstrap3',
-			  hide: false,
-			  before_close: function(PNotify) {
-				PNotify.update({
-				  title: PNotify.options.title + " - Enjoy your Stay",
-				  before_close: null
-				});
-
-				PNotify.queueRemove();
-
-				return false;
-			  }
-			});
-
-		}; 
+		// function init_PNotify() {
+		//
+		// 	if( typeof (PNotify) === 'undefined'){ return; }
+		// 	console.log('init_PNotify');
+		//
+		// 	new PNotify({
+		// 	  title: "PNotify",
+		// 	  type: "info",
+		// 	  text: "Welcome. Try hovering over me. You can click things behind me, because I'm non-blocking.",
+		// 	  nonblock: {
+		// 		  nonblock: true
+		// 	  },
+		// 	  addclass: 'dark',
+		// 	  styling: 'bootstrap3',
+		// 	  hide: false,
+		// 	  before_close: function(PNotify) {
+		// 		PNotify.update({
+		// 		  title: PNotify.options.title + " - Enjoy your Stay",
+		// 		  before_close: null
+		// 		});
+        //
+		// 		PNotify.queueRemove();
+        //
+		// 		return false;
+		// 	  }
+		// 	});
+        //
+		// };
 	   
 	   
 	   /* CUSTOM NOTIFICATION */
@@ -5023,8 +5021,25 @@ if (typeof NProgress != 'undefined') {
 			}
 	   
 		}  
-	   
-	   
+
+		function init_notification() {
+
+			if( typeof (PNotify) === 'undefined'){ return; }
+			console.log('init_PNotify');
+			$(".notification").hide();
+			var notifications = $(".notification li");
+			notifications.each(function(idx, li) {
+			  var notification = $(li);
+			  new PNotify({
+				  title: 'New Message',
+				  text: notification.text(),
+				  type: notification.attr('class'),
+				  styling: 'bootstrap3'
+			  });
+			});
+		}
+
+
 	$(document).ready(function() {
 	//
 	// 	init_sparklines();
@@ -5059,9 +5074,9 @@ if (typeof NProgress != 'undefined') {
 	// 	init_calendar();
 	// 	init_compose();
 	// 	init_CustomNotification();
-		// init_autosize();
+		init_autosize();
 	// 	init_autocomplete();
-	//
+		init_notification();
 	});
 	
 

@@ -45,3 +45,9 @@ class DeleteMessageMixin(object):
     def get_success_message(self, obj):
         return self.success_message % obj.__dict__
 
+
+def context_processor(request):
+    context = {}
+    if request.user.is_authenticated:
+        context['user_groups'] = {g.name for g in request.user.groups.all()}
+    return context

@@ -1,0 +1,147 @@
+{% extends 'core/layout.html' %}
+{% load staticfiles %}
+
+{% block title %}ExpenseTraQ - Expense Types{% endblock %}
+
+{% block head_css %}
+
+  <!-- bootstrap-daterangepicker -->
+  <link href="{% static "vendors/bootstrap-daterangepicker/daterangepicker.css" %}" rel="stylesheet">
+
+  <!-- Select2 -->
+  <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block body_content %}
+
+    <!-- page content -->
+  <div class="right_col" role="main">
+    <!-- po table -->
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_title">
+            {% if form.instance.id %}
+            <h3>Edit Expense {{ form.instance.id  }}</h3>
+            {% else %}
+            <h3>Add a new Expense</h3>
+            {% endif %}
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <form class="form-horizontal form-label-left" method="post">
+              {% csrf_token %}
+              <div class="item form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                       for="id_expense_type">Expense Type <span class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select id="id_expense_type" name="expense_type" required="required"
+                          class="form-control col-md-7 col-xs-12 select2_single">
+                    {% for k, v in form.fields.expense_type.choices %}
+                       <option value="{{ k }}">{{ v }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+
+              <div class="item form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                       for="id_amount">Amount <span class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <input type="number" id="id_amount" required="required"
+                         name="amount" value="{{form.instance.gl_code}}"
+                         class="form-control col-md-7 col-xs-12">
+                </div>
+              </div>
+
+              <div class="item form-group ">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                         for="id_transaction_date">Date of Transaction <span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12 has-feedback xdisplay_inputx ">
+                  <input type="text" class="form-control has-feedback-left"
+                         id="id_transaction_date" name="transaction_date">
+  {#                       id="id_transaction_date" aria-describedby="inputSuccess2Status2">#}
+                  <span class="fa fa-calendar-o form-control-feedback left"
+                        aria-hidden="true"></span>
+  {#                <span id="inputSuccess2Status2" class="sr-only">(success)</span>#}
+                  </div>
+              </div>
+
+              <div class="item form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                       for="id_paid_by">Paid By <span class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select id="id_paid_by" name="paid_by" required="required"
+                          class="form-control col-md-7 col-xs-12 ">
+                    {% for k, v in form.fields.paid_by.choices %}
+                       <option value="{{ k }}">{{ v }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+
+              <div class="item form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                       for="id_notes">Notes
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <textarea class="resizable_textarea form-control col-md-7 col-xs-12"
+                            id="id_notes" name="notes"></textarea>
+                </div>
+              </div>
+
+
+              <div class="ln_solid"></div>
+              <div class="form-group">
+                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                  <button type="submit" class="btn btn-success">Submit</button>
+                </div>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- po table -->
+  </div>
+
+<!-- /page content -->
+{% endblock %}
+
+{% block body_js %}
+  <!-- Autosize -->
+  <script src="{% static "vendors/autosize/dist/autosize.min.js" %}"></script>
+
+  <!-- bootstrap-daterangepicker -->
+  <script src="{% static "vendors/moment/min/moment.min.js" %}"></script>
+  <script src="{% static "vendors/bootstrap-daterangepicker/daterangepicker.js" %}"></script>
+
+  <!-- Select2 -->
+  <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
+
+  <script>
+      $(document).ready(function() {
+        // Initialize the date picker
+        $('#id_transaction_date').daterangepicker({
+          minDate: moment().subtract(1, 'month'),
+          maxDate: moment(),
+			    singleDatePicker: true,
+			    singleClasses: "picker_3"
+			  }, function(start, end, label) {});
+
+        // Initialize Select
+        $(".select2_single").select2({
+			    placeholder: "Select an expense type",
+			    allowClear: false
+			  });
+      });
+  </script>
+{% endblock %}

@@ -49,15 +49,17 @@
             <!-- sidebar menu -->
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
               <div class="menu_section">
-                {% with user|is_in_groups as user_groups %}
                 <h3>Menu</h3>
                 <ul class="nav side-menu">
-                  <li><a href="{% url 'index' %}"><i class="fa fa-home" ></i> Home </a></li>
+                  <li><a href="{% url 'index' %}">
+                    <i class="fa fa-home" ></i> Home </a></li>
+                  <li><a href="{% url 'expense-list' %}">
+                    <i class="fa fa-dollar" ></i> Expenses </a></li>
                   {% if "ExpenseAdmin" in user_groups %}
-                    <li><a href="{% url 'expense-type-list' %}"><i class="fa fa-sliders" ></i> Expense Types </a></li>
+                    <li><a href="{% url 'expense-type-list' %}">
+                      <i class="fa fa-sliders" ></i> Expense Types </a></li>
                   {% endif %}
                 </ul>
-                {% endwith %}
               </div>
             </div>
             <!-- /sidebar menu -->
@@ -190,31 +192,17 @@
     <script src="{% static "vendors/fastclick/lib/fastclick.js" %}"></script>
     <!-- NProgress -->
     <script src="{% static "vendors/nprogress/nprogress.js" %}"></script>
-    <!-- Custom Theme Scripts -->
-    <script src="{% static "js/custom.min.js" %}"></script>
 
     <!-- PNotify -->
     <script src="{% static "vendors/pnotify/dist/pnotify.js" %}"></script>
     <script src="{% static "vendors/pnotify/dist/pnotify.buttons.js" %}"></script>
     <script src="{% static "vendors/pnotify/dist/pnotify.nonblock.js" %}"></script>
-    <script>
-      $(document).ready(function() {
-        $(".notification").hide();
-        var notifications = $(".notification li");
-        notifications.each(function(idx, li) {
-          var notification = $(li);
-          new PNotify({
-              title: 'New Message',
-              text: notification.text(),
-              type: notification.attr('class'),
-              styling: 'bootstrap3'
-          });
-        });
-      });
-    </script>
-    <!-- /PNotify -->
+
     {% block body_js %}
     {% endblock body_js %}
-	
+
+	   <!-- Custom Theme Scripts -->
+    <script src="{% static "js/custom.js" %}"></script>
+
   </body>
 </html>

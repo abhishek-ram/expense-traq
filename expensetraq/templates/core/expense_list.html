@@ -1,0 +1,175 @@
+{% extends 'core/layout.html' %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block title %}ExpenseTraQ - Expense Types{% endblock %}
+
+{% block head_css %}
+  <!-- Datatables -->
+  <link href="{% static "vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+  <link href="{% static "vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css" %}" rel="stylesheet">
+  <link href="{% static "vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css" %}" rel="stylesheet">
+  <link href="{% static "vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css" %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block body_content %}
+
+    <!-- page content -->
+  <div class="right_col" role="main">
+    <!-- po table -->
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_title">
+            <h3>Expense <small>You can find all expenses listed here</small>
+              {% if "ExpenseSalesman" in user_groups %}
+                <a class="btn btn-primary" type="button"
+                   href="{% url 'expense-add' %}">
+                  <i class="fa fa-plus" ></i> Add Expense</a>
+              {% endif %}
+            </h3>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <table class="table table-striped" id="datatable">
+              <thead>
+                <tr>
+                  <th>Expense Type</th>
+                  <th>Date of Transaction</th>
+                  <th>Amount</th>
+                  <th>Paid By</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for expense in object_list %}
+                  <tr>
+                    <td>
+                      {{ expense.expense_type }}
+                    </td>
+                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                    <td>${{ expense.amount|intcomma }}</td>
+                    <td>{{ expense.get_paid_by_display }}</td>
+                    <td> {{ expense.status }}
+                      {% if expense.status == 'A' %}
+                      {% elif expense.status == 'D' %}
+                      {% else %}
+                        <a class="btn btn-round btn-warning btn-xs">
+                          <i class="fa fa-history" ></i> Pending</a>
+                      {% endif %}
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-primary btn-xs">
+                          <i class="fa fa-folder"></i> View </a>
+{#                      <a href="{% url 'expense-type-update' et.pk %}"#}
+{#                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>#}
+{#                      <button onclick="confirmDelete('{% url 'expense-type-delete' et.pk %}', '{{ et.name }}')"#}
+{#                              class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>#}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- po table -->
+    <!-- delete modal -->
+    <div class="modal fade delete-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <form class="form-horizontal delete-form" method="post">
+              {% csrf_token %}
+
+              <h4>Are you sure you want to delete the expense type "<strong></strong>"?</h4>
+              <input type="submit" class="btn btn-danger" value="Delete Mapping"/>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- delete modal -->
+  </div>
+
+<!-- /page content -->
+{% endblock %}
+
+{% block body_js %}
+  <!-- Datatables -->
+    <script src="{% static "vendors/datatables.net/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "vendors/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "vendors/datatables.net-buttons/js/dataTables.buttons.min.js" %}"></script>
+    <script src="{% static "vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js" %}"></script>
+    <script src="{% static "vendors/datatables.net-buttons/js/buttons.flash.min.js" %}"></script>
+{#    <script src="{% static "vendors/datatables.net-buttons/js/buttons.html5.min.js" %}"></script>#}
+{#    <script src="{% static "vendors/datatables.net-buttons/js/buttons.print.min.js" %}"></script>#}
+    <script src="{% static "vendors/datatables.net-responsive/js/dataTables.responsive.min.js" %}"></script>
+    <script src="{% static "vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js" %}"></script>
+    <script src="{% static "vendors/datatables.net-scroller/js/dataTables.scroller.min.js" %}"></script>
+
+  <script>
+    function confirmDelete(url, salesperson) {
+      $(".delete-form").attr("action", url);
+      $(".delete-form h4 strong").text(salesperson);
+      $(".delete-modal").modal("show");
+    }
+
+    var table = $('#datatable').DataTable ({
+        dom: "Bfrtip",
+        buttons: [
+          {
+            extend: "pageLength",
+            className: "btn-sm",
+          },
+          {
+            text: "Pending",
+            className: "btn-sm",
+            action: function ( e, dt, node, config ) {
+                dt.column(4).search('P').draw();
+            }
+          },
+          {
+            text: "Approved",
+            className: "btn-sm",
+            action: function ( e, dt, node, config ) {
+              dt.column(4).search('A').draw();
+            }
+          },
+          {
+            text: "Rejected",
+            className: "btn-sm",
+            action: function ( e, dt, node, config ) {
+              dt.column(4).search('R').draw();
+            }
+          }
+        ],
+        "responsive": true,
+        "order": [[ 1, "desc" ]],
+        "columnDefs": [
+          { "type": "date", targets: [1] },
+          {
+            targets: [4] ,
+            render: function ( data, type, full, meta ) {
+              if (data === 'A') {
+                return '<a class="btn btn-round btn-warning btn-xs"> ' +
+                       '<i class="fa fa-history" ></i> Pending</a>'
+              } else if (data === 'R') {
+                return '<a class="btn btn-round btn-warning btn-xs"> ' +
+                       '<i class="fa fa-history" ></i> Pending</a>'
+              } else {
+                return '<a class="btn btn-round btn-warning btn-xs"> ' +
+                       '<i class="fa fa-history" ></i> Pending</a>'
+              }
+            }
+          },
+          { "searchable": false, "targets": [2, 5] },
+          { "sortable": false, "targets": [4, 5] }
+        ]
+      });
+
+  </script>
+{% endblock %}

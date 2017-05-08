@@ -11,6 +11,9 @@ class ExpenseType(TimeStampedModel, models.Model):
     gl_code = models.CharField(max_length=30, verbose_name='GL Code')
     receipt_required = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.name
+
 
 def receipt_directory_path(instance, filename):
     return 'expense_receipts/{0}/{1}'.format(instance.salesman.id, filename)
@@ -22,7 +25,7 @@ class Expense(TimeStampedModel, models.Model):
         ('C', 'Company Paid'),
     )
     STATUS_CHOICES = (
-        ('C', 'Created'),
+        ('P', 'Pending'),
         ('A', 'Approved'),
         ('D', 'Denied'),
     )
@@ -33,7 +36,7 @@ class Expense(TimeStampedModel, models.Model):
     amount = models.DecimalField(max_digits=14, decimal_places=2)
     transaction_date = models.DateField()
     status = models.CharField(
-        max_length=2, choices=STATUS_CHOICES, default='C')
+        max_length=2, choices=STATUS_CHOICES, default='P')
     paid_by = models.CharField(max_length=2, choices=PAID_BY_CHOICES)
     notes = models.TextField(null=True, blank=True)
     receipt = models.ImageField(
