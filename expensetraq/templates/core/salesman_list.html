@@ -1,0 +1,66 @@
+{% extends 'core/layout.html' %}
+{% load staticfiles %}
+
+{% block title %}ExpenseTraQ - Expense Types{% endblock %}
+
+
+{% block body_content %}
+
+    <!-- page content -->
+  <div class="right_col" role="main">
+    <!-- salesman table -->
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_title">
+            <h3>Salesman <small>You can find on-boarded salesmen here</small>
+              <a class="btn btn-primary btn-round" type="button"
+                 href="{% url 'salesman-add' %}">
+                <i class="fa fa-plus" ></i> Add Salesman</a>
+            </h3>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Salesman</th>
+                  <th>Regions</th>
+                  <th>Manager</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for et in object_list %}
+                  <tr>
+                    <td>
+                      <b>{{ et.user }}</b>
+                    </td>
+                    <td>
+                      {% for r in  et.region_list %}
+                        <span class="label label-info">{{ r }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>{{ et.manager }}</td>
+                    <td>
+                      <a href="{% url 'salesman-update' et.pk %}"
+                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- salesman table -->
+  </div>
+
+<!-- /page content -->
+{% endblock %}
+
+
+
+{% block body_js %}
+{% endblock %}

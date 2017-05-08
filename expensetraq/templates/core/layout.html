@@ -49,17 +49,26 @@
             <!-- sidebar menu -->
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
               <div class="menu_section">
-                <h3>Menu</h3>
-                <ul class="nav side-menu">
-                  <li><a href="{% url 'index' %}">
-                    <i class="fa fa-home" ></i> Home </a></li>
-                  <li><a href="{% url 'expense-list' %}">
-                    <i class="fa fa-dollar" ></i> Expenses </a></li>
-                  {% if "ExpenseAdmin" in user_groups %}
-                    <li><a href="{% url 'expense-type-list' %}">
-                      <i class="fa fa-sliders" ></i> Expense Types </a></li>
-                  {% endif %}
-                </ul>
+
+                {% if "ExpenseSalesman" in user_groups and not user.salesman%}
+                  <ul class="nav side-menu">
+                  </ul>
+                {% else %}
+                  <h3>Menu</h3>
+                  <ul class="nav side-menu">
+                    <li><a href="{% url 'index' %}">
+                      <i class="fa fa-home" ></i> Home </a></li>
+                    {% if "ExpenseAdmin" in user_groups %}
+                      <li><a href="{% url 'salesman-list' %}">
+                        <i class="fa fa-group" ></i> Salesmen </a></li>
+                      <li><a href="{% url 'expense-type-list' %}">
+                        <i class="fa fa-sliders" ></i> Expense Types </a></li>
+                    {% elif "ExpenseSalesman" in user_groups %}
+                      <li><a href="{% url 'expense-list' %}">
+                        <i class="fa fa-dollar" ></i> Expenses </a></li>
+                    {% endif %}
+                  </ul>
+                {% endif %}
               </div>
             </div>
             <!-- /sidebar menu -->

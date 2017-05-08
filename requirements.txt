@@ -2,3 +2,4 @@ Django==1.11
 django-auth-ldap==1.2.11
 Pillow==4.1.1
 django-extensions==1.7.8
+django-localflavor==1.4.1

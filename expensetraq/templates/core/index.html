@@ -6,10 +6,20 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-    <div class="right_col" role="main">
-        Welcome to the Salesman Expense Tracking System
-    </div>
-
-<!-- /page content -->
+  <!-- page content -->
+  <div class="right_col" role="main">
+  {% if "ExpenseSalesman" in user_groups and not user.salesman%}
+    <div class="col-md-12">
+        <div class="col-middle">
+          <div class="text-center text-center">
+            <h1>You have not been On-Boarded to the system.</h1>
+            <h2>Please contact the system admin to get your self on-boarded. </h2>
+          </div>
+        </div>
+      </div>
+  {% else %}
+    Welcome to the Salesman Expense Tracking System
+  {% endif %}
+  </div>
+  <!-- /page content -->
 {% endblock %}

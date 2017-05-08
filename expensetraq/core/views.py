@@ -6,7 +6,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
-from expensetraq.core.models import Expense, ExpenseType
+from expensetraq.core.models import Expense, ExpenseType, Salesman
+from expensetraq.core.forms import SalesmanForm
 
 
 class Index(TemplateView):
@@ -68,3 +69,24 @@ class ExpenseUpdate(SuccessMessageMixin, UpdateView):
         'expense_type', 'amount', 'transaction_date', 'paid_by', 'notes']
     success_url = reverse_lazy('expense-type-list')
     success_message = 'Expense Type "%(name)s" has been edited successfully'
+
+
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class SalesmanList(ListView):
+    model = Salesman
+
+
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class SalesmanCreate(SuccessMessageMixin, CreateView):
+    model = Salesman
+    form_class = SalesmanForm
+    success_url = reverse_lazy('salesman-list')
+    success_message = 'Salesman "%(user)s" has been added successfully'
+
+
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class SalesmanUpdate(SuccessMessageMixin, UpdateView):
+    model = Salesman
+    form_class = SalesmanForm
+    success_url = reverse_lazy('salesman-list')
+    success_message = 'Salesman "%(user)s" has been edited successfully'
