@@ -1,5 +1,6 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
+{% load form_extras %}
 
 {% block title %}ExpenseTraQ - Expense Types{% endblock %}
 
@@ -7,6 +8,10 @@
 
   <!-- iCheck -->
   <link href="{% static "vendors/iCheck/skins/flat/green.css" %}" rel="stylesheet">
+
+  <!-- Select2 -->
+  <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
+
 {% endblock %}
 
 {% block body_content %}
@@ -28,47 +33,48 @@
           <div class="x_content">
             <form class="form-horizontal form-label-left" method="post">
               {% csrf_token %}
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_name">Name <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="text" id="id_name" required="required"
-                         name="name" value="{{form.instance.name}}"
-                         class="form-control col-md-7 col-xs-12">
-                </div>
-              </div>
 
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_gl_code">GL Code <span class="required">*</span>
+              {% render_input_text form "name" "Name" form.instance.name %}
+              <div class="form-group">
+                <label class="col-md-3 col-sm-3 col-xs-12 control-label">Receipt Required
+                  <br>
+                  <small class="text-navy">Check this box to make expense receipts mandatory</small>
                 </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="text" id="id_gl_code" required="required"
-                         name="gl_code" value="{{form.instance.gl_code}}"
-                         class="form-control col-md-7 col-xs-12">
-                </div>
-              </div>
-
-            <div class="form-group">
-              <label class="col-md-3 col-sm-3 col-xs-12 control-label">Receipt Required
-                <br>
-                <small class="text-navy">Check this box to make expense receipts mandatory</small>
-              </label>
                 <div class="checkbox">
                   <label class="">
-                    <div class="icheckbox_flat-green checked" style="position: relative;">
-                      <input type="checkbox" class="flat" id="id_receipt_required"
-                             name="receipt_required" style="position: absolute; opacity: 0;"
-                             {% if form.instance.receipt_required %} checked {% endif %}>
-                      <ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins>
-                    </div>
+                    <input type="checkbox" class="flat" id="id_receipt_required" name="receipt_required"
+                      {% if form.instance.receipt_required %} checked {% endif %}>
                   </label>
                 </div>
               </div>
+              <br/>
 
+              {{ inline_formset.management_form }}
+              <div class="item form-group">
+                <label class="col-md-3 col-sm-3 col-xs-12 control-label"> GL Code Mapping</label>
+                <div class=" col-md-6 col-sm-6 col-xs-12">
+                  <table class="table" id="formset">
+                    <thead>
+                      <tr>
+                        <th>Region</th>
+                        <th>GL Code</th>
+                        {% if form.instance.id %}<th>Delete</th>{% endif %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for i_form in inline_formset %}
+                        <tr>
+                          {% for hidden in i_form.hidden_fields %}
+                            {{ hidden }}
+                          {% endfor %}
+                          {% render_inline_form_tb i_form %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
 
-
+                </div>
+              </div>
               <div class="ln_solid"></div>
               <div class="form-group">
                 <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
@@ -90,4 +96,32 @@
 {% block body_js %}
   <!-- iCheck -->
   <script src="{% static "vendors/iCheck/icheck.min.js" %}"></script>
+  <!-- Select2 -->
+  <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
+  <!-- Formset -->
+  <script src="{% static "js/django.formset.js" %}"></script>
+  <script>
+      $(document).ready(function() {
+        // Initialize Select
+        $(".select2_single").select2({
+			    placeholder: "Select a state",
+			    allowClear: true,
+          width: '100%'
+			  });
+      });
+      $('#formset').find('tbody tr').formset({
+        addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
+        addCssClass: 'add-row btn btn-sm btn-info pull-right',
+        deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
+        deleteCssClass: 'del-row btn btn-sm btn-danger',
+        prefix: '{{ inline_formset.prefix }}',
+        added: function (row) {
+          row.find(".select2_single").select2({
+            placeholder: "Select a state",
+			      allowClear: true,
+            width: '100%'
+			    });
+        }
+      });
+  </script>
 {% endblock %}

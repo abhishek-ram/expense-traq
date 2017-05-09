@@ -1,6 +1,8 @@
 from django import forms
-from expensetraq.core.models import Salesman, User
+from expensetraq.core.models import Salesman, User, ExpenseType, \
+    ExpenseTypeCode
 from localflavor.us.models import STATE_CHOICES
+from django.forms.models import inlineformset_factory
 
 
 class SalesmanForm(forms.ModelForm):
@@ -16,3 +18,14 @@ class SalesmanForm(forms.ModelForm):
     class Meta:
         model = Salesman
         fields = '__all__'
+
+
+class ExpenseTypeCodeForm(forms.ModelForm):
+    region = forms.ChoiceField(choices=STATE_CHOICES)
+
+    class Meta:
+        model = ExpenseTypeCode
+        fields = ['region', 'gl_code']
+
+ExpenseTypeCodeFormset = inlineformset_factory(
+    ExpenseType, ExpenseTypeCode, fields='__all__')

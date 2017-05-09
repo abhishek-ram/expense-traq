@@ -16,10 +16,10 @@ class ExpenseType(TimeStampedModel, models.Model):
         return self.name
 
 
-class ExpenseTypeCode(TimeStampedModel, models.Model):
+class ExpenseTypeCode(models.Model):
     expense_type = models.ForeignKey(
-        ExpenseType, on_delete=models.CASCADE)
-    region = models.CharField(max_length=10)
+        ExpenseType, on_delete=models.CASCADE, related_name='gl_codes')
+    region = us_models.USStateField()
     gl_code = models.CharField(max_length=30, verbose_name='GL Code')
 
 

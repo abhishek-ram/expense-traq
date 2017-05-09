@@ -1,7 +1,7 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
-
-{% block title %}ExpenseTraQ - Expense Types{% endblock %}
+{% load form_extras %}
+{% block title %}ExpenseTraQ - Manage Salesmen{% endblock %}
 
 {% block head_css %}
 
@@ -29,56 +29,13 @@
           <div class="x_content">
             <form class="form-horizontal form-label-left" method="post">
               {% csrf_token %}
-              <div class="item form-group {% if form.user.errors %} bad {% endif %}">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_user">Salesman <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="id_user" name="user" required="required"
-                          class="form-control col-md-7 col-xs-12 select2_single">
-                    {% for k, v in form.fields.user.choices %}
-                      <option value="{{ k }}" {% if form.instance.user.id == k %}
-                                 selected {% endif %} >{{ v }}</option>
-                    {% endfor %}
-                  </select>
 
-                </div>
-                {% for error in  form.user.errors %}
-                  <div class="alert col-md-2 col-sm-2">{{ error }}</div>
-                {% endfor %}
-              </div>
+              {% render_input_select form "user" "Salesman" form.instance.user.id%}
 
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_regions">Regions <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="id_regions" name="regions" required="required" multiple
-                          class="form-control col-md-7 col-xs-12 select2_single">
-                    {% for k, v in form.fields.regions.choices %}
-                       <option value="{{ k }}" {% if k in form.instance.regions %}
-                               selected {% endif %} >{{ v }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
+              {% render_input_select_m form "regions" "Regions" form.instance.regions%}
 
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_manager">Manager <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="id_manager" name="manager" required="required"
-                          placeholder="select a manager"
-                          class="form-control col-md-7 col-xs-12 select2_single ">
-                    {% for k, v in form.fields.manager.choices %}
-                       <option value="{{ k }}" {% if form.instance.manager.id == k %}
-                               selected {% endif %} >{{ v }}</option>
-                    {% endfor %}
-                  </select>
+              {% render_input_select form "manager" "Manager" form.instance.manager.id%}
 
-                </div>
-              </div>
 
               <div class="ln_solid"></div>
               <div class="form-group">

@@ -5,9 +5,13 @@ from django.views.generic import TemplateView, ListView, CreateView, \
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.contrib import messages
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
-from expensetraq.core.models import Expense, ExpenseType, Salesman
-from expensetraq.core.forms import SalesmanForm
+from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
+    Salesman
+from expensetraq.core.forms import SalesmanForm, ExpenseTypeCodeForm
+from django.forms import formset_factory, inlineformset_factory
 
 
 class Index(TemplateView):
@@ -20,19 +24,76 @@ class ExpenseTypeList(ListView):
 
 
 @method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
-class ExpenseTypeCreate(SuccessMessageMixin, CreateView):
+class ExpenseTypeCreate(CreateView):
     model = ExpenseType
     fields = '__all__'
     success_url = reverse_lazy('expense-type-list')
     success_message = 'Expense Type "%(name)s" has been created successfully'
+    ETCFormSet = inlineformset_factory(
+        ExpenseType, ExpenseTypeCode, extra=2, can_delete=False,
+        fields=['region', 'gl_code'])
+
+    def get_context_data(self, **kwargs):
+        context = super(ExpenseTypeCreate, self).get_context_data(**kwargs)
+        if not context.get('inline_formset'):
+            context['inline_formset'] = self.ETCFormSet()
+        return context
+
+    def form_valid(self, form):
+        expense_type = form.save()
+        formset = self.ETCFormSet(self.request.POST, instance=expense_type)
+        if formset.is_valid():
+            formset.save()
+            messages.success(self.request,
+                             self.get_success_message(form.cleaned_data))
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            expense_type.delete()
+            messages.error(
+                self.request, 'Failed to save Expense type, Errors are '
+                              '{}'.format(formset.errors[0].as_ul())
+            )
+            return self.render_to_response(
+                self.get_context_data(form=form, inline_formset=formset))
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % cleaned_data
 
 
 @method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
-class ExpenseTypeUpdate(SuccessMessageMixin, UpdateView):
+class ExpenseTypeUpdate(UpdateView):
     model = ExpenseType
     fields = '__all__'
     success_url = reverse_lazy('expense-type-list')
     success_message = 'Expense Type "%(name)s" has been edited successfully'
+    ETCFormSet = inlineformset_factory(
+        ExpenseType, ExpenseTypeCode, extra=2, fields=['region', 'gl_code'])
+
+    def get_context_data(self, **kwargs):
+        context = super(ExpenseTypeUpdate, self).get_context_data(**kwargs)
+        if not context.get('inline_formset'):
+            context['inline_formset'] = self.ETCFormSet(
+                instance=context['form'].instance)
+        return context
+
+    def form_valid(self, form):
+        expense_type = form.save()
+        formset = self.ETCFormSet(self.request.POST, instance=expense_type)
+        if formset.is_valid():
+            formset.save()
+            messages.success(
+                self.request, self.get_success_message(form.cleaned_data))
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            messages.error(
+                self.request, 'Failed to save Expense type, Errors are '
+                              '{}'.format(formset.errors[0].as_ul())
+            )
+            return self.render_to_response(
+                self.get_context_data(form=form, inline_formset=formset))
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % cleaned_data
 
 
 @method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')

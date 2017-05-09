@@ -1,7 +1,7 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
 
-{% block title %}ExpenseTraQ - Expense Types{% endblock %}
+{% block title %}ExpenseTraQ - Manage Expense Types{% endblock %}
 
 
 {% block body_content %}
@@ -13,8 +13,8 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
-            <h3>Expense Types <small>You can find all expense types listed here</small>
-              <a class="btn btn-primary" type="button"
+            <h3>Manage Expense Types <small>You can find all expense types listed here</small>
+              <a class="btn btn-primary btn-round" type="button"
                  href="{% url 'expense-type-add' %}">
                 <i class="fa fa-plus" ></i> Add Expense Type</a>
             </h3>
@@ -25,8 +25,8 @@
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>GL Code</th>
                   <th>Receipt Required</th>
+                  <th>Edited On</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -36,14 +36,14 @@
                     <td>
                       <b>{{ et.name }}</b>
                     </td>
-                    <td>{{ et.gl_code }}</td>
                     <td>
                       {% if  et.receipt_required %}
-                        <i class="fa fa-check-square" ></i>
+                        <i class="fa fa-check-square fa-lg" ></i>
                       {% else %}
-                        <i class="fa fa-square-o" ></i>
+                        <i class="fa fa-square-o fa-lg" ></i>
                       {% endif %}
                     </td>
+                    <td>{{ et.modified }}</td>
                     <td>
                       <a href="{% url 'expense-type-update' et.pk %}"
                          class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
