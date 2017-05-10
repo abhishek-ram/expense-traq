@@ -7,11 +7,12 @@ from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.db import transaction
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman
-from expensetraq.core.forms import SalesmanForm, ExpenseTypeCodeForm
-from django.forms import formset_factory, inlineformset_factory
+from expensetraq.core.forms import SalesmanForm
+from django.forms import inlineformset_factory
 
 
 class Index(TemplateView):
@@ -40,15 +41,17 @@ class ExpenseTypeCreate(CreateView):
         return context
 
     def form_valid(self, form):
-        expense_type = form.save()
-        formset = self.ETCFormSet(self.request.POST, instance=expense_type)
-        if formset.is_valid():
-            formset.save()
-            messages.success(self.request,
-                             self.get_success_message(form.cleaned_data))
-            return HttpResponseRedirect(self.get_success_url())
-        else:
-            expense_type.delete()
+        try:
+            with transaction.atomic():
+                self.object = form.save()
+                formset = self.ETCFormSet(
+                    self.request.POST, instance=self.object)
+                assert formset.is_valid()
+                formset.save()
+                messages.success(self.request,
+                                 self.get_success_message(form.cleaned_data))
+                return HttpResponseRedirect(self.get_success_url())
+        except AssertionError:
             messages.error(
                 self.request, 'Failed to save Expense type, Errors are '
                               '{}'.format(formset.errors[0].as_ul())
@@ -77,8 +80,8 @@ class ExpenseTypeUpdate(UpdateView):
         return context
 
     def form_valid(self, form):
-        expense_type = form.save()
-        formset = self.ETCFormSet(self.request.POST, instance=expense_type)
+        self.object = form.save()
+        formset = self.ETCFormSet(self.request.POST, instance=self.object)
         if formset.is_valid():
             formset.save()
             messages.success(
