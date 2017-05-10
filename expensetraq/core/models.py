@@ -29,7 +29,8 @@ def receipt_directory_path(instance, filename):
 
 class Salesman(TimeStampedModel, models.Model):
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='salesman')
+        User, on_delete=models.CASCADE, related_name='salesman',
+        error_messages={'unique': 'Salesman already on-boarded.'})
     regions = models.TextField()
     manager = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name='team', null=True)

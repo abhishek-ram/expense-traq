@@ -22,7 +22,7 @@
             {% if form.instance.id %}
             <h3>Edit Salesman - {{ form.instance.user  }}</h3>
             {% else %}
-            <h3>Add a new Expense Type</h3>
+            <h3>On-board a Salesman</h3>
             {% endif %}
             <div class="clearfix"></div>
           </div>
@@ -30,11 +30,12 @@
             <form class="form-horizontal form-label-left" method="post">
               {% csrf_token %}
 
-              {% render_input_select form "user" "Salesman" form.instance.user.id%}
+              {% render_input_select form.user "Salesman"%}
+              {% render_input_select form.regions%}
 
-              {% render_input_select_m form "regions" "Regions" form.instance.regions%}
+{#              {% render_input_select_m form "regions" "Regions" form.instance.regions%}#}
 
-              {% render_input_select form "manager" "Manager" form.instance.manager.id%}
+              {% render_input_select form.manager%}
 
 
               <div class="ln_solid"></div>
