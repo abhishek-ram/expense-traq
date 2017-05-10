@@ -34,6 +34,9 @@ class Salesman(TimeStampedModel, models.Model):
     manager = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name='team', null=True)
 
+    def __str__(self):
+        return str(self.user)
+
     @property
     def region_list(self):
         return literal_eval(self.regions)

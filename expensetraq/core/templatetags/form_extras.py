@@ -4,34 +4,41 @@ register = template.Library()
 
 
 @register.simple_tag
-def render_input_text(form, field, label, value):
+def render_input_text(field, label=None):
+    field_type = field.field.__class__.__name__
+    field_value = field.value() or ''
 
     required, required_span = '', ''
-    if form.fields[field].required:
+    if field.field.required:
         required = 'required'
         required_span = '<span class="required">*</span>'
 
     error_class, error_tag = '', ''
-    if form[field].errors:
+    if field.errors:
         error_class = 'bad'
         error_tag = '<div class="alert col-md-2 col-sm-2">{}</div>'.format(
-            form[field].errors[-1])
+            field.errors[-1])
+
+    input_type = 'type="text"'
+    if field_type == 'DecimalField':
+        input_type = 'type="number" step="0.01"'
 
     return mark_safe("""
-    <div class="item form-group {5}">
-      <label class="control-label col-md-3 col-sm-3 col-xs-12"
-        for="id_{0}">{1} {4}
-        </label>
-        <div class="col-md-6 col-sm-6 col-xs-12">
-          <input type="text" id="id_{0}" {3} value="{2}"
-                name="{0}" value="{{form.instance.name}}"
-                class="form-control col-md-7 col-xs-12">
-          </select>
+        <div class="item form-group {6}">
+          <label class="control-label col-md-3 col-sm-3 col-xs-12"
+            for="id_{0}">{2} {5}
+            </label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+              <input {1} id="id_{0}" {4} value="{3}"
+                    name="{0}" value="{{form.instance.name}}"
+                    class="form-control col-md-7 col-xs-12">
+              </select>
+            </div>
+            {7}
         </div>
-        {6}
-    </div>
-    """.format(field, label, value, required, required_span, error_class,
-               error_tag))
+        """.format(field.html_name, input_type, label or field.label,
+                   field_value, required, required_span, error_class,
+                   error_tag))
 
 
 @register.simple_tag

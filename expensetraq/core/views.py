@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.db import transaction
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
-    Salesman
+    Salesman, ExpenseLimit
 from expensetraq.core.forms import SalesmanForm
 from django.forms import inlineformset_factory
 
@@ -154,3 +154,34 @@ class SalesmanUpdate(SuccessMessageMixin, UpdateView):
     form_class = SalesmanForm
     success_url = reverse_lazy('salesman-list')
     success_message = 'Salesman "%(user)s" has been edited successfully'
+
+
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class ExpenseLimitList(ListView):
+    model = ExpenseLimit
+
+
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class ExpenseLimitCreate(SuccessMessageMixin, CreateView):
+    model = ExpenseLimit
+    fields = '__all__'
+    success_url = reverse_lazy('expense-limit-list')
+    success_message = 'Expense limit for <var>%(salesman)s</var> has been ' \
+                      'added successfully'
+
+
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class ExpenseLimitUpdate(SuccessMessageMixin, UpdateView):
+    model = ExpenseLimit
+    fields = '__all__'
+    success_url = reverse_lazy('expense-limit-list')
+    success_message = 'Expense limit for <var>%(salesman)s</var> has been ' \
+                      'edited successfully'
+
+
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class ExpenseLimitDelete(DeleteMessageMixin, DeleteView):
+    model = ExpenseLimit
+    success_url = reverse_lazy('expense-limit-list')
+    success_message = 'Expense Type <var>%(id)s</var> has been deleted ' \
+                      'successfully'

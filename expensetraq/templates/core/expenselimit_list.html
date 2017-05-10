@@ -17,10 +17,10 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
-            <h3>Manage Expense Types <small>You can find all expense types listed here</small>
+            <h3>Manage Expense Limits <small>You can find all expense limits listed here</small>
               <a class="btn btn-primary btn-round" type="button"
-                 href="{% url 'expense-type-add' %}">
-                <i class="fa fa-plus" ></i> Add Expense Type</a>
+                 href="{% url 'expense-limit-add' %}">
+                <i class="fa fa-plus" ></i> Add Expense Limit</a>
             </h3>
             <div class="clearfix"></div>
           </div>
@@ -28,30 +28,22 @@
             <table class="table table-striped" id="datatable">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Receipt Required</th>
-                  <th>Edited On</th>
+                  <th>Salesman</th>
+                  <th>Expense Type</th>
+                  <th>Updated On</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {% for et in object_list %}
+                {% for el in object_list %}
                   <tr>
+                    <td>{{ el.salesman }}</td>
+                    <td>{{ el.expense_type }}</td>
+                    <td>${{ el.limit }}</td>
                     <td>
-                      <b>{{ et.name }}</b>
-                    </td>
-                    <td>
-                      {% if  et.receipt_required %}
-                        <i class="fa fa-check-square fa-lg" ></i>
-                      {% else %}
-                        <i class="fa fa-square-o fa-lg" ></i>
-                      {% endif %}
-                    </td>
-                    <td>{{ et.modified }}</td>
-                    <td>
-                      <a href="{% url 'expense-type-update' et.pk %}"
+                      <a href="{% url 'expense-limit-update' el.pk %}"
                          class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-                      <button onclick="confirmDelete('{% url 'expense-type-delete' et.pk %}', '{{ et.name }}')"
+                      <button onclick="confirmDelete('{% url 'expense-limit-delete' el.pk %}', '{{ el.salesman }}', '{{ el.expense_type }}')"
                               class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
                     </td>
                   </tr>
@@ -75,7 +67,8 @@
           </div>
           <div class="modal-body">
             {% csrf_token %}
-            <h5>Are you sure you want to delete the expense type <kbd></kbd> ?</h5>
+            <h5>Are you sure you want to delete the expense limit of type
+              <kbd class="expense_type"></kbd> for <kbd class="salesman"></kbd>?</h5>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -91,22 +84,26 @@
 <!-- /page content -->
 {% endblock %}
 
+
+
 {% block body_js %}
   <!-- Datatables -->
   <script src="{% static "vendors/datatables.net/js/jquery.dataTables.min.js" %}"></script>
   <script src="{% static "vendors/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
 
   <script>
-    function confirmDelete(url, salesperson) {
+    function confirmDelete(url, salesman, expense_type) {
       $(".delete-form").attr("action", url);
-      $(".delete-form h5 kbd").text(salesperson);
+      $(".delete-form .salesman").text(salesman);
+      $(".delete-form .expense_type").text(expense_type);
       $(".delete-modal").modal("show");
+
     }
     $('#datatable').dataTable({
         "ordering": false,
         "responsive": true,
         "columnDefs": [
-            { "searchable": false, "targets": [1, 2, 3] }
+            { "searchable": false, "targets": [2, 3] }
         ]
       });
   </script>

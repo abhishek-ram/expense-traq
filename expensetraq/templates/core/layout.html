@@ -62,6 +62,8 @@
                         <i class="fa fa-group" ></i> Salesmen </a></li>
                       <li><a href="{% url 'expense-type-list' %}">
                         <i class="fa fa-sliders" ></i> Expense Types </a></li>
+                      <li><a href="{% url 'expense-limit-list' %}">
+                        <i class="fa fa-shield" ></i> Expense Limits </a></li>
                     {% elif "ExpenseSalesman" in user_groups %}
                       <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-dollar" ></i> Expenses </a></li>

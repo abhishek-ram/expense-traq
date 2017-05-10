@@ -34,7 +34,7 @@
             <form class="form-horizontal form-label-left" method="post">
               {% csrf_token %}
 
-              {% render_input_text form "name" "Name" form.instance.name %}
+              {% render_input_text form.name%}
               <div class="form-group">
                 <label class="col-md-3 col-sm-3 col-xs-12 control-label">Receipt Required
                   <br>
