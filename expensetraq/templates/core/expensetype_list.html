@@ -12,18 +12,24 @@
 
     <!-- page content -->
   <div class="right_col" role="main">
-    <!-- po table -->
+    <div class="page-title">
+      <div class="title_left">
+        <h3>Manage Expense Types <small>You can find all expense types listed here</small></>
+      </div>
+
+      <div class="title_right">
+        <a class="btn btn-primary btn-round pull-right" type="button"
+                 href="{% url 'expense-type-add' %}">
+                <i class="fa fa-plus" ></i> Add Expense Type</a>
+      </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <!-- object list -->
     <div class="row">
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
-          <div class="x_title">
-            <h3>Manage Expense Types <small>You can find all expense types listed here</small>
-              <a class="btn btn-primary btn-round" type="button"
-                 href="{% url 'expense-type-add' %}">
-                <i class="fa fa-plus" ></i> Add Expense Type</a>
-            </h3>
-            <div class="clearfix"></div>
-          </div>
           <div class="x_content">
             <table class="table table-striped" id="datatable">
               <thead>
@@ -62,7 +68,7 @@
         </div>
       </div>
     </div>
-    <!-- po table -->
+    <!-- object list -->
     <!-- delete modal -->
     <div class="modal fade delete-modal" tabindex="-1" role="dialog"
          aria-hidden="true" aria-labelledby="deleteModalLabel">

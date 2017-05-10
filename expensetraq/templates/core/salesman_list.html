@@ -12,18 +12,23 @@
 
     <!-- page content -->
   <div class="right_col" role="main">
+    <div class="page-title">
+      <div class="title_left">
+        <h3>Manage Salesman <small>You can find on-boarded salesmen here</small></h3>
+      </div>
+
+      <div class="title_right">
+        <a class="btn btn-primary btn-round  pull-right" type="button"
+                 href="{% url 'salesman-add' %}">
+                <i class="fa fa-plane" ></i> On-Board Salesman</a>
+      </div>
+    </div>
+
+    <div class="clearfix"></div>
     <!-- salesman table -->
     <div class="row">
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
-          <div class="x_title">
-            <h3>Manage Salesman <small>You can find on-boarded salesmen here</small>
-              <a class="btn btn-primary btn-round" type="button"
-                 href="{% url 'salesman-add' %}">
-                <i class="fa fa-plane" ></i> On-Board Salesman</a>
-            </h3>
-            <div class="clearfix"></div>
-          </div>
           <div class="x_content">
             <table class="table table-striped" id="datatable">
               <thead>

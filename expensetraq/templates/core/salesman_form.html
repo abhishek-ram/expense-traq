@@ -4,25 +4,24 @@
 {% block title %}ExpenseTraQ - Manage Salesmen{% endblock %}
 
 {% block head_css %}
-
   <!-- Select2 -->
   <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
-
 {% endblock %}
 
 {% block body_content %}
 
     <!-- page content -->
   <div class="right_col" role="main">
+
     <!-- po table -->
     <div class="row">
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
             {% if form.instance.id %}
-            <h3>Edit Salesman - {{ form.instance.user  }}</h3>
+              <h3>Edit Salesman - {{ form.instance.user  }}</h3>
             {% else %}
-            <h3>On-board a Salesman</h3>
+              <h3>On-board a Salesman</h3>
             {% endif %}
             <div class="clearfix"></div>
           </div>
@@ -30,12 +29,10 @@
             <form class="form-horizontal form-label-left" method="post">
               {% csrf_token %}
 
-              {% render_input_select form.user "Salesman"%}
-              {% render_input_select form.regions%}
+              {% render_input_select form.user "Salesman" %}
+              {% render_input_select form.regions %}
 
-{#              {% render_input_select_m form "regions" "Regions" form.instance.regions%}#}
-
-              {% render_input_select form.manager%}
+              {% render_input_select form.manager %}
 
 
               <div class="ln_solid"></div>

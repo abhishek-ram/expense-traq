@@ -12,18 +12,24 @@
 
     <!-- page content -->
   <div class="right_col" role="main">
-    <!-- po table -->
+    <div class="page-title">
+      <div class="title_left">
+        <h3>Manage Expense Limits <small>You can find all expense limits listed here</small></h3>
+      </div>
+
+      <div class="title_right">
+        <a class="btn btn-primary btn-round pull-right" type="button"
+                 href="{% url 'expense-limit-add' %}">
+                <i class="fa fa-plus" ></i> Add Expense Limit</a>
+      </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <!-- object list -->
     <div class="row">
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
-          <div class="x_title">
-            <h3>Manage Expense Limits <small>You can find all expense limits listed here</small>
-              <a class="btn btn-primary btn-round" type="button"
-                 href="{% url 'expense-limit-add' %}">
-                <i class="fa fa-plus" ></i> Add Expense Limit</a>
-            </h3>
-            <div class="clearfix"></div>
-          </div>
           <div class="x_content">
             <table class="table table-striped" id="datatable">
               <thead>
@@ -54,7 +60,8 @@
         </div>
       </div>
     </div>
-    <!-- po table -->
+    <!-- object list -->
+
     <!-- delete modal -->
     <div class="modal fade delete-modal" tabindex="-1" role="dialog"
          aria-hidden="true" aria-labelledby="deleteModalLabel">

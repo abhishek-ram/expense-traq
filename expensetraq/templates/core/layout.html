@@ -9,7 +9,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-     {% endblock meta %}
+    {% endblock meta %}
 
     <title>{% block title %}{% endblock %}</title>
 
@@ -26,7 +26,7 @@
     <link href="{% static "vendors/pnotify/dist/pnotify.buttons.css" %}" rel="stylesheet">
     <link href="{% static "vendors/pnotify/dist/pnotify.nonblock.css" %}" rel="stylesheet">
 
-     {% block head_css %}
+    {% block head_css %}
     {% endblock head_css %}
   </head>
 
@@ -56,7 +56,7 @@
                   <h3>Menu</h3>
                   <ul class="nav side-menu">
                     <li><a href="{% url 'index' %}">
-                      <i class="fa fa-home" ></i> Home </a></li>
+                      <i class="fa fa-dashboard" ></i> Dashboard </a></li>
                     {% if "ExpenseAdmin" in user_groups %}
                       <li><a href="{% url 'salesman-list' %}">
                         <i class="fa fa-group" ></i> Salesmen </a></li>

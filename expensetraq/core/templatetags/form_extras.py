@@ -46,12 +46,12 @@ def render_input_text(field, label=None):
 @register.simple_tag
 def render_input_select(field, label=None):
     field_type = field.field.__class__.__name__
-    field_value = field.value() or ''
+    field_values = [str(field.value() or '')]
 
-    multiple, field_values = '', [str(field_value)]
+    multiple,  = '',
     if 'Multiple' in field_type:
         multiple = 'multiple'
-        field_values = [str(v) for v in literal_eval(field_value)]
+        field_values = [str(v) for v in literal_eval(field.value() or '[]')]
 
     options = ''
     for k, v in field.field.choices:
