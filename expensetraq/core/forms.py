@@ -27,7 +27,7 @@ class ExpenseLineForm(forms.ModelForm):
         if expense_limit \
                 and cleaned_data.get('amount', 0) > expense_limit.limit:
             self.add_error('amount', 'Amount exceeds the Expense limit')
-        if cleaned_data['expense_type'] \
+        if cleaned_data.get('expense_type') \
                 and cleaned_data['expense_type'].receipt_required \
                 and not cleaned_data['expense'].receipt:
             self.add_error('expense_type',

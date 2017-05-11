@@ -12,6 +12,8 @@
   <!-- Select2 -->
   <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
 
+  <!-- bootstrap-fileinput -->
+  <link href="{% static "vendors/bootstrap-fileinput/css/fileinput.min.css" %}" rel="stylesheet">
 {% endblock %}
 
 {% block body_content %}
@@ -33,87 +35,72 @@
           <div class="x_content">
             <form class="form-horizontal form-label-left" method="post" enctype="multipart/form-data">
               {% csrf_token %}
-               <div class="item form-group ">
-                  <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                         for="id_transaction_date">Date of Transaction <span class="required">*</span>
-                  </label>
-                  <div class="col-md-6 col-sm-6 col-xs-12 has-feedback xdisplay_inputx ">
-                  <input type="text" class="form-control has-feedback-left"
-                         id="id_transaction_date" name="transaction_date">
-                  <span class="fa fa-calendar-o form-control-feedback left"
-                        aria-hidden="true"></span>
-                  </div>
-              </div>
-
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_paid_by">Paid By <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="id_paid_by" name="paid_by" required="required"
-                          class="form-control col-md-7 col-xs-12 ">
-                    {% for k, v in form.fields.paid_by.choices %}
-                       <option value="{{ k }}">{{ v }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_notes">Notes
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <textarea class="resizable_textarea form-control col-md-7 col-xs-12"
-                            id="id_notes" name="notes"></textarea>
-                </div>
-              </div>
-
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_receipt">Receipt Image
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="file" accept="image/*" capture="camera"
-                         class="form-control col-md-7 col-xs-12" id="id_receipt"
-                         name="receipt"/>
-                </div>
-              </div>
-
-              {{ inline_formset.management_form }}
-              <div class="item form-group">
-                <label class="col-md-3 col-sm-3 col-xs-12 control-label"> Expense List</label>
-                <div class=" col-md-6 col-sm-6 col-xs-12">
-                  <table class="table table-condensed" id="formset">
-                    <thead>
-                      <tr>
-                        <th>Expense Type</th>
-                        <th>Region</th>
-                        <th>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for i_form in inline_formset %}
-                        <tr>
-                          {% for hidden in i_form.hidden_fields %}
-                            {{ hidden }}
+              <div class="row">
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                <table class="table table-striped">
+                  <tbody>
+                    <tr>
+                      <th>Date of Transaction</th>
+                      <td>
+                        <input type="text" class="form-control"
+                           id="id_transaction_date" name="transaction_date">
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Paid by</th>
+                      <td>
+                        <select id="id_paid_by" name="paid_by" required="required"
+                            class="form-control col-md-7 col-xs-12 ">
+                          {% for k, v in form.fields.paid_by.choices %}
+                             <option value="{{ k }}">{{ v }}</option>
                           {% endfor %}
-                          {% render_inline_form_tb i_form %}
-                        </tr>
-                      {% endfor %}
-
-                    </tbody>
-                    <tfoot>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Notes</th>
+                      <td>
+                        <textarea class="resizable_textarea form-control col-md-7 col-xs-12"
+                              id="id_notes" name="notes"></textarea>
+                      </td>
+                    </tr>
+                   </tbody>
+                </table>
+                {{ inline_formset.management_form }}
+                <table class="table table-condensed" id="formset">
+                  <thead>
+                    <tr>
+                      <th>Expense Type</th>
+                      <th>Region</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for i_form in inline_formset %}
                       <tr>
-                        <th></th>
-                        <th class="pull-right">Total Sum</th>
-                        <th id="total-sum"></th>
+                        {% for hidden in i_form.hidden_fields %}
+                          {{ hidden }}
+                        {% endfor %}
+                        {% render_inline_form_tb i_form %}
                       </tr>
-                    </tfoot>
-                  </table>
+                    {% endfor %}
 
-                </div>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th></th>
+                      <th class="pull-right">Total Sum</th>
+                      <th id="total-sum"></th>
+                    </tr>
+                  </tfoot>
+                </table>
+
+              </div>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                <input type="file" accept="image/*" capture="camera"
+                       class="form-control" id="id_receipt"
+                       name="receipt"/>
+              </div>
               </div>
 
               <div class="ln_solid"></div>
@@ -145,7 +132,8 @@
   <!-- Select2 -->
   <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
-
+  <!-- bootstrap-fileinput -->
+  <script src="{% static "vendors/bootstrap-fileinput/js/fileinput.min.js" %}"></script>
   <script>
     $(document).ready(function() {
       // Initialize the date picker
@@ -162,6 +150,14 @@
         allowClear: true
       });
 
+      //Initialize the file input
+      $("#id_receipt").fileinput({
+        showUpload: false,
+        browseLabel: "Pick or Capture Receipt",
+        browseIcon: "<i class=\"glyphicon glyphicon-picture\"></i> ",
+      });
+
+      // Calculate total amount
       $( "input[name$='amount']" ).each(function() {
         $(this).change(function(){
             var total_sum = 0;
