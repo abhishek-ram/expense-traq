@@ -76,10 +76,19 @@ class Expense(TimeStampedModel, models.Model):
     transaction_date = models.DateField()
     status = models.CharField(
         max_length=2, choices=STATUS_CHOICES, default='P')
-    paid_by = models.CharField(max_length=2, choices=PAID_BY_CHOICES)
+    paid_by = models.CharField(
+        max_length=2, choices=PAID_BY_CHOICES, default='E')
     notes = models.TextField(null=True, blank=True)
     receipt = models.ImageField(
         upload_to=receipt_directory_path, null=True, blank=True)
+
+    @property
+    def total_amount(self):
+        return sum([l.amount for l in self.lines.all()])
+
+    @property
+    def expense_types(self):
+        return '|'.join([l.expense_type.name for l in self.lines.all()])
 
 
 class ExpenseLine(TimeStampedModel, models.Model):

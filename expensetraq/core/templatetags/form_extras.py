@@ -100,30 +100,39 @@ def render_inline_form_tb(form):
         if field_value and field.field.required:
             required = 'required'
 
-        # if field.is_hidden:
-        #     row += '<input type="hidden" id="id_{0}" name="{0}" ' \
-        #            'value= "{1}">'.format(field.html_name, field_value)
-        if field_type == 'CharField':
+        error_tag = '', ''
+        if field.errors:
+            error_tag = 'data-toggle="error-tooltip" title="{}"'.format(
+                field.errors[-1])
+
+        if field.is_hidden:
+            pass
+        elif field_type == 'CharField':
             row += """
                 <td><input type="text" id="id_{0}" name="{0}" {1}
-                    class="form-control" value= "{2}"></td>
-            """.format(field.html_name, required, field_value)
+                    class="form-control" value= "{2}" {3}></td>
+            """.format(field.html_name, required, field_value, error_tag)
+        elif field_type == 'DecimalField':
+            row += """
+                <td><input type="number" step="0.01 "id="id_{0}" name="{0}" {1}
+                    class="form-control has-error" value= "{2}" {3}></td>
+            """.format(field.html_name, required, field_value, error_tag)
         elif field_type == 'BooleanField':
             row += '<td><input type="checkbox" id="id_{0}" name="{0}" ' \
                    'class="flat"></td>'.format(field.html_name)
-        elif field_type in ['ChoiceField', 'TypedChoiceField']:
-            options = '<option></option>'
+        elif 'ChoiceField' in field_type:
+            options = ''
             for k, v in field.field.choices:
-                if k == field_value:
+                if str(k) == str(field_value):
                     options += '<option value="{}" selected>{}' \
                                '</option>'.format(k, v)
                 else:
                     options += '<option value="{}">{}</option>'.format(k, v)
             row += """
-                <td><select id="id_{0}" name="{0}" {1}
+                <td><select id="id_{0}" name="{0}" {1} {3}
                     class="form-control select2_single">
                     {2}
                 </select></td>
-            """.format(field.html_name, required, options)
+            """.format(field.html_name, required, options, error_tag)
 
     return mark_safe(row)

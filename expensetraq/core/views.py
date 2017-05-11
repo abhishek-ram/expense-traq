@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.views.generic import TemplateView, ListView, CreateView, \
-    UpdateView, DeleteView
+    UpdateView, DeleteView, DetailView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
@@ -10,9 +10,10 @@ from django.contrib import messages
 from django.db import transaction
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
-    Salesman, ExpenseLimit
-from expensetraq.core.forms import SalesmanForm
+    Salesman, ExpenseLimit, ExpenseLine
+from expensetraq.core.forms import SalesmanForm, ExpenseLineForm
 from django.forms import inlineformset_factory
+from django.forms import models
 
 
 class Index(TemplateView):
@@ -111,19 +112,45 @@ class ExpenseList(ListView):
 
 
 @method_decorator(user_in_groups(['ExpenseSalesman']), name='dispatch')
-class ExpenseCreate(SuccessMessageMixin, CreateView):
+class ExpenseCreate(CreateView):
     model = Expense
-    fields = [
-        'expense_type', 'amount', 'transaction_date', 'paid_by', 'notes',
-        'receipt'
-    ]
+    fields = ['transaction_date', 'paid_by', 'notes', 'receipt']
     success_url = reverse_lazy('expense-list')
-    success_message = 'Expense $%(amount)s of type "%(expense_type)s"' \
-                      'has been created successfully'
+    success_message = 'Expense with total ${0.total_amount} has ' \
+                      'been recorded successfully'
+    ExpenseFormSet = inlineformset_factory(
+        Expense, ExpenseLine, extra=4, min_num=1, can_delete=False,
+        validate_min=True, form=ExpenseLineForm)
+
+    def get_context_data(self, **kwargs):
+        context = super(ExpenseCreate, self).get_context_data(**kwargs)
+        if not context.get('inline_formset'):
+            context['inline_formset'] = self.ExpenseFormSet(
+                form_kwargs={'request': self.request})
+        return context
 
     def form_valid(self, form):
-        form.instance.salesman = self.request.user
-        return super(ExpenseCreate, self).form_valid(form)
+        try:
+            with transaction.atomic():
+                form.instance.salesman = self.request.user.salesman
+                self.object = form.save()
+                formset = self.ExpenseFormSet(
+                    self.request.POST, instance=self.object,
+                    form_kwargs={'request': self.request})
+                assert formset.is_valid()
+                formset.save()
+                messages.success(self.request,
+                                 self.get_success_message(self.object))
+                return HttpResponseRedirect(self.get_success_url())
+        except AssertionError:
+            messages.error(
+                self.request,
+                'Failed to record expense, correct errors and resubmit')
+        return self.render_to_response(
+            self.get_context_data(form=form, inline_formset=formset))
+
+    def get_success_message(self, obj):
+        return self.success_message.format(obj)
 
 
 @method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
@@ -133,6 +160,12 @@ class ExpenseUpdate(SuccessMessageMixin, UpdateView):
         'expense_type', 'amount', 'transaction_date', 'paid_by', 'notes']
     success_url = reverse_lazy('expense-type-list')
     success_message = 'Expense Type "%(name)s" has been edited successfully'
+
+
+@method_decorator(user_in_groups(['ExpenseSalesman',
+                                  'ExpenseManager']), name='dispatch')
+class ExpenseDetail(DetailView):
+    model = Expense
 
 
 @method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')

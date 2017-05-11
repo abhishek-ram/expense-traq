@@ -18,8 +18,14 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import login, logout
 from expensetraq.core import views
+from django.conf import settings
+from django.conf.urls.static import static
 
-urlpatterns = [
+media_url = []
+if settings.DEBUG:
+    media_url = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns = media_url + [
     # Django admin urls
     url(r'^admin/', admin.site.urls),
 
@@ -67,6 +73,9 @@ urlpatterns = [
         login_required(views.ExpenseCreate.as_view()),
         name='expense-add'),
     url(r'expense/(?P<pk>[0-9]+)/$',
+        login_required(views.ExpenseDetail.as_view()),
+        name='expense-detail'),
+    url(r'expense/(?P<pk>[0-9]+)/edit/$',
         login_required(views.ExpenseUpdate.as_view()),
         name='expense-update'),
     url(r'^.*', login_required(views.Index.as_view())),

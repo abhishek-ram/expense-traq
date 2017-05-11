@@ -35,7 +35,7 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_content">
-            <table class="table table-striped" id="datatable">
+            <table class="table" id="datatable">
               <thead>
                 <tr>
                   <th>Expense Type</th>
@@ -49,11 +49,9 @@
               <tbody>
                 {% for expense in object_list %}
                   <tr>
-                    <td>
-                      {{ expense.expense_type }}
-                    </td>
+                    <td>{{ expense.expense_types }}</td>
                     <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
-                    <td>${{ expense.amount|intcomma }}</td>
+                    <td>${{ expense.total_amount|intcomma }}</td>
                     <td>{{ expense.get_paid_by_display }}</td>
                     <td> {{ expense.status }}
                       {% if expense.status == 'A' %}
@@ -64,7 +62,8 @@
                       {% endif %}
                     </td>
                     <td>
-                        <a href="#" class="btn btn-primary btn-xs">
+                        <a href="{% url 'expense-detail' expense.pk %}"
+                           class="btn btn-primary btn-xs">
                           <i class="fa fa-folder"></i> View </a>
 {#                      <a href="{% url 'expense-type-update' et.pk %}"#}
 {#                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>#}
@@ -121,58 +120,74 @@
       $(".delete-modal").modal("show");
     }
 
-    var table = $('#datatable').DataTable ({
-        dom: "Bfrtip",
-        buttons: [
-          {
-            extend: "pageLength",
-            className: "btn-sm",
-          },
-          {
-            text: "Pending",
-            className: "btn-sm",
-            action: function ( e, dt, node, config ) {
-                dt.column(4).search('P').draw();
-            }
-          },
-          {
-            text: "Approved",
-            className: "btn-sm",
-            action: function ( e, dt, node, config ) {
-              dt.column(4).search('A').draw();
-            }
-          },
-          {
-            text: "Rejected",
-            className: "btn-sm",
-            action: function ( e, dt, node, config ) {
-              dt.column(4).search('R').draw();
-            }
-          }
-        ],
-        "responsive": true,
-        "order": [[ 1, "desc" ]],
-        "columnDefs": [
-          { "type": "date", targets: [1] },
-          {
-            targets: [4] ,
-            render: function ( data, type, full, meta ) {
-              if (data === 'A') {
-                return '<a class="btn btn-round btn-warning btn-xs"> ' +
-                       '<i class="fa fa-history" ></i> Pending</a>'
-              } else if (data === 'R') {
-                return '<a class="btn btn-round btn-warning btn-xs"> ' +
-                       '<i class="fa fa-history" ></i> Pending</a>'
-              } else {
-                return '<a class="btn btn-round btn-warning btn-xs"> ' +
-                       '<i class="fa fa-history" ></i> Pending</a>'
+    $('#datatable').DataTable ({
+      dom: "Brtip",
+      buttons: [
+        {
+          extend: "pageLength",
+{#          className: "btn-sm"#}
+        },
+        {
+          extend: "collection",
+          text: "Filter By",
+          autoClose: true,
+{#          className: "btn-sm",#}
+          buttons: [
+            {
+              text: "Pending",
+              action: function ( e, dt, node, config ) {
+                  dt.column(4).search('P').draw();
+              }
+            },
+            {
+              text: "Approved",
+              action: function ( e, dt, node, config ) {
+                dt.column(4).search('A').draw();
+              }
+            },
+            {
+              text: "Rejected",
+              action: function ( e, dt, node, config ) {
+                dt.column(4).search('R').draw();
               }
             }
-          },
-          { "searchable": false, "targets": [2, 5] },
-          { "sortable": false, "targets": [4, 5] }
-        ]
-      });
+          ]
+        }
+
+      ],
+      "responsive": true,
+      "order": [[ 1, "desc" ], [ 0, "desc" ]],
+      "columnDefs": [
+        { "type": "date", targets: [1] },
+        {
+          targets: [4] ,
+          render: function ( data, type, full, meta ) {
+            if (data === 'A') {
+              return '<a class="btn btn-round btn-warning btn-xs"> ' +
+                     '<i class="fa fa-history" ></i> Pending</a>'
+            } else if (data === 'R') {
+              return '<a class="btn btn-round btn-warning btn-xs"> ' +
+                     '<i class="fa fa-history" ></i> Pending</a>'
+            } else {
+              return '<a class="btn btn-round btn-warning btn-xs"> ' +
+                     '<i class="fa fa-history" ></i> Pending</a>'
+            }
+          }
+        },
+        {
+          targets: [0] ,
+          render: function ( data, type, full, meta ) {
+            var elem = '';
+            data.split('|').forEach(function (item, index) {
+                elem = elem + ' <kbd>' + item + '</kbd>';
+            });
+            return elem
+          }
+        },
+        { "searchable": false, "targets": [2, 3, 5] },
+        { "sortable": false, "targets": [2, 3, 4, 5] }
+      ]
+    });
 
   </script>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends 'core/layout.html' %}
+{% load form_extras %}
 {% load staticfiles %}
 
 {% block title %}ExpenseTraQ - Expense Types{% endblock %}
@@ -25,50 +26,22 @@
             {% if form.instance.id %}
             <h3>Edit Expense {{ form.instance.id  }}</h3>
             {% else %}
-            <h3>Add a new Expense</h3>
+            <h3>Record an Expense</h3>
             {% endif %}
             <div class="clearfix"></div>
           </div>
           <div class="x_content">
-            <form class="form-horizontal form-label-left" method="post">
+            <form class="form-horizontal form-label-left" method="post" enctype="multipart/form-data">
               {% csrf_token %}
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_expense_type">Expense Type <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="id_expense_type" name="expense_type" required="required"
-                          class="form-control col-md-7 col-xs-12 select2_single">
-                    {% for k, v in form.fields.expense_type.choices %}
-                       <option value="{{ k }}">{{ v }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-
-              <div class="item form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                       for="id_amount">Amount <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="number" id="id_amount" required="required"
-                         name="amount" value="{{form.instance.gl_code}}"
-                         class="form-control col-md-7 col-xs-12">
-                </div>
-              </div>
-
-              <div class="item form-group ">
+               <div class="item form-group ">
                   <label class="control-label col-md-3 col-sm-3 col-xs-12"
                          for="id_transaction_date">Date of Transaction <span class="required">*</span>
                   </label>
                   <div class="col-md-6 col-sm-6 col-xs-12 has-feedback xdisplay_inputx ">
                   <input type="text" class="form-control has-feedback-left"
                          id="id_transaction_date" name="transaction_date">
-  {#                       id="id_transaction_date" aria-describedby="inputSuccess2Status2">#}
                   <span class="fa fa-calendar-o form-control-feedback left"
                         aria-hidden="true"></span>
-  {#                <span id="inputSuccess2Status2" class="sr-only">(success)</span>#}
                   </div>
               </div>
 
@@ -97,11 +70,56 @@
                 </div>
               </div>
 
+              <div class="item form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                       for="id_receipt">Receipt Image
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <input type="file" accept="image/*" capture="camera"
+                         class="form-control col-md-7 col-xs-12" id="id_receipt"
+                         name="receipt"/>
+                </div>
+              </div>
+
+              {{ inline_formset.management_form }}
+              <div class="item form-group">
+                <label class="col-md-3 col-sm-3 col-xs-12 control-label"> Expense List</label>
+                <div class=" col-md-6 col-sm-6 col-xs-12">
+                  <table class="table table-condensed" id="formset">
+                    <thead>
+                      <tr>
+                        <th>Expense Type</th>
+                        <th>Region</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for i_form in inline_formset %}
+                        <tr>
+                          {% for hidden in i_form.hidden_fields %}
+                            {{ hidden }}
+                          {% endfor %}
+                          {% render_inline_form_tb i_form %}
+                        </tr>
+                      {% endfor %}
+
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th></th>
+                        <th class="pull-right">Total Sum</th>
+                        <th id="total-sum"></th>
+                      </tr>
+                    </tfoot>
+                  </table>
+
+                </div>
+              </div>
 
               <div class="ln_solid"></div>
               <div class="form-group">
-                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                  <button type="submit" class="btn btn-success">Submit</button>
+                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-6">
+                  <button class="btn btn-success pull-right"><i class="fa fa-credit-card"></i> Submit Expense</button>
                 </div>
               </div>
 
@@ -127,21 +145,33 @@
   <!-- Select2 -->
   <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
-  <script>
-      $(document).ready(function() {
-        // Initialize the date picker
-        $('#id_transaction_date').daterangepicker({
-          minDate: moment().subtract(1, 'month'),
-          maxDate: moment(),
-			    singleDatePicker: true,
-			    singleClasses: "picker_3"
-			  }, function(start, end, label) {});
 
-        // Initialize Select
-        $(".select2_single").select2({
-			    placeholder: "Select an expense type",
-			    allowClear: false
-			  });
+  <script>
+    $(document).ready(function() {
+      // Initialize the date picker
+      $('#id_transaction_date').daterangepicker({
+        minDate: moment().subtract(1, 'month'),
+        maxDate: moment(),
+        singleDatePicker: true,
+        singleClasses: "picker_3"
+      }, function(start, end, label) {});
+
+      // Initialize Select
+      $(".select2_single").select2({
+        width: '100%',
+        allowClear: true
       });
+
+      $( "input[name$='amount']" ).each(function() {
+        $(this).change(function(){
+            var total_sum = 0;
+            $( "input[name$='amount']" ).each(function() {
+              total_sum = total_sum + parseFloat($(this).val() || 0);
+            });
+
+            $("#total-sum").html('$' + total_sum );
+        });
+      });
+    });
   </script>
 {% endblock %}
