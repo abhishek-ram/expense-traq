@@ -22,7 +22,7 @@ class ExpenseLineForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(ExpenseLineForm, self).clean()
-        expense_limit = self.request.user.salesman.expense_limits.filter(
+        expense_limit = self.salesman.expense_limits.filter(
             expense_type=cleaned_data.get('expense_type')).first()
         if expense_limit \
                 and cleaned_data.get('amount', 0) > expense_limit.limit:
@@ -33,14 +33,19 @@ class ExpenseLineForm(forms.ModelForm):
             self.add_error('expense_type',
                            'Receipt is required for this expense type')
 
-    def __init__(self, request, *args, **kwargs):
+    def __init__(self, salesman, *args, **kwargs):
         super(ExpenseLineForm, self).__init__(*args, **kwargs)
-        self.request = request
+        self.salesman = salesman
         region_dict = dict(STATE_CHOICES)
         region_choices = [
-            (r, region_dict[r]) for r in request.user.salesman.region_list]
+            (r, region_dict[r]) for r in salesman.region_list]
         self.fields['region'].choices = [('', '---------')] + region_choices
 
     class Meta:
         model = ExpenseLine
         fields = ['expense_type', 'region', 'amount']
+
+
+class ExpenseReportForm(forms.Form):
+    salesman = forms.ModelChoiceField(
+        queryset=Salesman.objects.all(), empty_label='')

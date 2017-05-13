@@ -2,7 +2,7 @@
 {% load form_extras %}
 {% load staticfiles %}
 
-{% block title %}ExpenseTraQ - Expense Types{% endblock %}
+{% block title %}ExpenseTraQ - Manage Expenses {% endblock %}
 
 {% block head_css %}
 
@@ -42,8 +42,9 @@
                     <tr>
                       <th>Date of Transaction</th>
                       <td>
-                        <input type="text" class="form-control"
-                           id="id_transaction_date" name="transaction_date">
+                        <input type="text" class="form-control" id="id_transaction_date"
+                               name="transaction_date"
+                               value="{{ form.instance.transaction_date|date:"m/d/Y" }}">
                       </td>
                     </tr>
                     <tr>
@@ -52,7 +53,8 @@
                         <select id="id_paid_by" name="paid_by" required="required"
                             class="form-control col-md-7 col-xs-12 ">
                           {% for k, v in form.fields.paid_by.choices %}
-                             <option value="{{ k }}">{{ v }}</option>
+                             <option {% if k == form.instance.paid_by %} selected {% endif %}
+                               value="{{ k }}">{{ v }}</option>
                           {% endfor %}
                         </select>
                       </td>
@@ -61,7 +63,7 @@
                       <th>Notes</th>
                       <td>
                         <textarea class="resizable_textarea form-control col-md-7 col-xs-12"
-                              id="id_notes" name="notes"></textarea>
+                              id="id_notes" name="notes">{{ form.instance.notes|default:""}}</textarea>
                       </td>
                     </tr>
                    </tbody>
@@ -97,9 +99,18 @@
 
               </div>
               <div class="col-md-6 col-sm-6 col-xs-12">
-                <input type="file" accept="image/*" capture="camera"
-                       class="form-control" id="id_receipt"
-                       name="receipt"/>
+                {% if form.instance.id %}
+                  {% if form.instance.receipt %}
+                  <img src="{{ form.instance.receipt.url }}" class="img-thumbnail"
+                       style="max-height: 600px;">
+                  {% else %}
+                    <img src="{% static "images/default_receipt.jpg" %}" class="img-thumbnail">
+                  {% endif %}
+                {% else %}
+                  <input type="file" accept="image/*" capture="camera"
+                         class="form-control" id="id_receipt"
+                         name="receipt"/>
+                {% endif %}
               </div>
               </div>
 
@@ -135,6 +146,14 @@
   <!-- bootstrap-fileinput -->
   <script src="{% static "vendors/bootstrap-fileinput/js/fileinput.min.js" %}"></script>
   <script>
+    function updateSum(){
+      var total_sum = 0;
+          $( "input[name$='amount']" ).each(function() {
+            total_sum = total_sum + parseFloat($(this).val() || 0);
+          });
+
+          $("#total-sum").html('$' + total_sum );
+    }
     $(document).ready(function() {
       // Initialize the date picker
       $('#id_transaction_date').daterangepicker({
@@ -155,19 +174,16 @@
         showUpload: false,
         browseLabel: "Pick or Capture Receipt",
         browseIcon: "<i class=\"glyphicon glyphicon-picture\"></i> ",
+        initialCaption: "Capture or Select a Receipt"
       });
 
-      // Calculate total amount
+      // Calculate total amount on change and on load
       $( "input[name$='amount']" ).each(function() {
         $(this).change(function(){
-            var total_sum = 0;
-            $( "input[name$='amount']" ).each(function() {
-              total_sum = total_sum + parseFloat($(this).val() || 0);
-            });
-
-            $("#total-sum").html('$' + total_sum );
+          updateSum();
         });
       });
+      updateSum();
     });
   </script>
 {% endblock %}

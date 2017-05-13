@@ -11,9 +11,9 @@ from django.db import transaction
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman, ExpenseLimit, ExpenseLine
-from expensetraq.core.forms import SalesmanForm, ExpenseLineForm
+from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
+    ExpenseReportForm
 from django.forms import inlineformset_factory
-from django.forms import models
 
 
 class Index(TemplateView):
@@ -107,8 +107,12 @@ class ExpenseTypeDelete(DeleteMessageMixin, DeleteView):
     success_message = 'Expense Type "%(name)s" has been deleted successfully'
 
 
+@method_decorator(user_in_groups(['ExpenseSalesman']), name='dispatch')
 class ExpenseList(ListView):
     model = Expense
+
+    def get_queryset(self):
+        return Expense.objects.filter(salesman=self.request.user.salesman)
 
 
 @method_decorator(user_in_groups(['ExpenseSalesman']), name='dispatch')
@@ -126,7 +130,7 @@ class ExpenseCreate(CreateView):
         context = super(ExpenseCreate, self).get_context_data(**kwargs)
         if not context.get('inline_formset'):
             context['inline_formset'] = self.ExpenseFormSet(
-                form_kwargs={'request': self.request})
+                form_kwargs={'salesman': self.request.user.salesman})
         return context
 
     def form_valid(self, form):
@@ -143,27 +147,110 @@ class ExpenseCreate(CreateView):
                                  self.get_success_message(self.object))
                 return HttpResponseRedirect(self.get_success_url())
         except AssertionError:
+            form.instance.id = None
             messages.error(
                 self.request,
                 'Failed to record expense, correct errors and resubmit')
-        return self.render_to_response(
-            self.get_context_data(form=form, inline_formset=formset))
+            return self.render_to_response(
+                self.get_context_data(form=form, inline_formset=formset))
 
     def get_success_message(self, obj):
         return self.success_message.format(obj)
 
 
 @method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
-class ExpenseUpdate(SuccessMessageMixin, UpdateView):
+class ExpenseReport(ListView):
     model = Expense
-    fields = [
-        'expense_type', 'amount', 'transaction_date', 'paid_by', 'notes']
-    success_url = reverse_lazy('expense-type-list')
-    success_message = 'Expense Type "%(name)s" has been edited successfully'
+    form_class = ExpenseReportForm
+    template_name = 'core/expense_report.html'
+
+    def get_queryset(self):
+        form = self.get_form()
+        self.salesman = None
+        if form.is_valid():
+            self.salesman = form.cleaned_data['salesman']
+            return Expense.objects.filter(
+                salesman=form.cleaned_data['salesman'])
+        else:
+            return Expense.objects.none()
+
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """
+        Insert the form into the context dict.
+        """
+        if 'form' not in kwargs:
+            kwargs['form'] = self.get_form()
+            kwargs['salesman'] = self.salesman
+        return super(ExpenseReport, self).get_context_data(**kwargs)
+
+    def get_form_kwargs(self):
+        """
+        Returns the keyword arguments for instantiating the form.
+        """
+        kwargs = {
+            # 'initial': self.get_initial(),
+            # 'prefix': self.get_prefix(),
+        }
+
+        if self.request.method in ('POST', 'PUT'):
+            kwargs.update({
+                'data': self.request.POST,
+                'files': self.request.FILES,
+            })
+        else:
+            kwargs.update({
+                'data': self.request.GET,
+            })
+        return kwargs
+
+    def get_form(self):
+        return self.form_class(**self.get_form_kwargs())
 
 
-@method_decorator(user_in_groups(['ExpenseSalesman',
-                                  'ExpenseManager']), name='dispatch')
+@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+class ExpenseUpdate(UpdateView):
+    model = Expense
+    fields = ['transaction_date', 'paid_by', 'notes']
+    success_url = reverse_lazy('expense-report')
+    success_message = 'Expense "{0.pk}" has been edited successfully'
+
+    ExpenseFormSet = inlineformset_factory(
+        Expense, ExpenseLine,max_num=5, can_delete=False, form=ExpenseLineForm)
+
+    def get_context_data(self, **kwargs):
+        context = super(ExpenseUpdate, self).get_context_data(**kwargs)
+        if not context.get('inline_formset'):
+            context['inline_formset'] = self.ExpenseFormSet(
+                form_kwargs={'salesman': context['form'].instance.salesman},
+                instance=context['form'].instance)
+        return context
+
+    def form_valid(self, form):
+        try:
+            self.object = form.save()
+            formset = self.ExpenseFormSet(
+                self.request.POST, instance=self.object,
+                form_kwargs={'salesman': self.object.salesman})
+            assert formset.is_valid()
+            formset.save()
+            messages.success(self.request,
+                             self.get_success_message(self.object))
+            return HttpResponseRedirect('%s?salesman=%s' % (
+                self.get_success_url(), self.object.salesman.id))
+        except AssertionError:
+            messages.error(
+                self.request,
+                'Failed to record expense, correct errors and resubmit')
+            return self.render_to_response(
+                self.get_context_data(form=form, inline_formset=formset))
+
+    def get_success_message(self, obj):
+        return self.success_message.format(obj)
+
+
 class ExpenseDetail(DetailView):
     model = Expense
 
