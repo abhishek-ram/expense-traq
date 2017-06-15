@@ -114,7 +114,7 @@ def render_inline_form_tb(form):
             """.format(field.html_name, required, field_value, error_tag)
         elif field_type == 'DecimalField':
             row += """
-                <td><input type="number" step="0.01 "id="id_{0}" name="{0}" {1}
+                <td><input type="number" step="0.01" id="id_{0}" name="{0}" {1}
                     class="form-control has-error" value= "{2}" {3}></td>
             """.format(field.html_name, required, field_value, error_tag)
         elif field_type == 'BooleanField':
