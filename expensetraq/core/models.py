@@ -103,6 +103,8 @@ class ExpenseLine(TimeStampedModel, models.Model):
 import logging
 logger = logging.getLogger('django_auth_ldap')
 @receiver(populate_user)
-def ldap_post_populate(sender, **kwargs):
+def ldap_post_populate(sender, user, ldap_user, **kwargs):
     logger.info("User Populate finished! %s" %kwargs)
+    logger.info(ldap_user.group_dns)
+    logger.info(ldap_user.group_names)
 
