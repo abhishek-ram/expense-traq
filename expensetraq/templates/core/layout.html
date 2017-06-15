@@ -49,7 +49,7 @@
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
               <div class="menu_section">
 
-                {% if "ExpenseSalesman" in user_groups and not user.salesman%}
+                {% if "Expense-User" in user_groups and not user.salesman%}
                   <ul class="nav side-menu">
                   </ul>
                 {% else %}
@@ -57,7 +57,7 @@
                   <ul class="nav side-menu">
                     <li><a href="{% url 'index' %}">
                       <i class="fa fa-dashboard" ></i> Dashboard </a></li>
-                    {% if "ExpenseAdmin" in user_groups %}
+                    {% if "Expense-Admin" in user_groups %}
                       <li><a href="{% url 'salesman-list' %}">
                         <i class="fa fa-group" ></i> Salesmen </a></li>
                       <li><a href="{% url 'expense-type-list' %}">
@@ -66,7 +66,7 @@
                         <i class="fa fa-shield" ></i> Expense Limits </a></li>
                       <li><a href="{% url 'expense-report' %}">
                         <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
-                    {% elif "ExpenseSalesman" in user_groups %}
+                    {% elif "Expense-User" in user_groups %}
                       <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-credit-card" ></i> Expenses </a></li>
                     {% endif %}

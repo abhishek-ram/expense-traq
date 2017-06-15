@@ -20,12 +20,12 @@ class Index(TemplateView):
     template_name = 'core/index.html'
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseTypeList(ListView):
     model = ExpenseType
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseTypeCreate(CreateView):
     model = ExpenseType
     fields = '__all__'
@@ -64,7 +64,7 @@ class ExpenseTypeCreate(CreateView):
         return self.success_message % cleaned_data
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseTypeUpdate(UpdateView):
     model = ExpenseType
     fields = '__all__'
@@ -100,14 +100,14 @@ class ExpenseTypeUpdate(UpdateView):
         return self.success_message % cleaned_data
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseTypeDelete(DeleteMessageMixin, DeleteView):
     model = ExpenseType
     success_url = reverse_lazy('expense-type-list')
     success_message = 'Expense Type "%(name)s" has been deleted successfully'
 
 
-@method_decorator(user_in_groups(['ExpenseSalesman']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-User']), name='dispatch')
 class ExpenseList(ListView):
     model = Expense
 
@@ -115,7 +115,7 @@ class ExpenseList(ListView):
         return Expense.objects.filter(salesman=self.request.user.salesman)
 
 
-@method_decorator(user_in_groups(['ExpenseSalesman']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-User']), name='dispatch')
 class ExpenseCreate(CreateView):
     model = Expense
     fields = ['transaction_date', 'paid_by', 'notes', 'receipt']
@@ -158,7 +158,7 @@ class ExpenseCreate(CreateView):
         return self.success_message.format(obj)
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseReport(ListView):
     model = Expense
     form_class = ExpenseReportForm
@@ -210,7 +210,7 @@ class ExpenseReport(ListView):
         return self.form_class(**self.get_form_kwargs())
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseUpdate(UpdateView):
     model = Expense
     fields = ['transaction_date', 'paid_by', 'notes']
@@ -255,12 +255,12 @@ class ExpenseDetail(DetailView):
     model = Expense
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class SalesmanList(ListView):
     model = Salesman
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class SalesmanCreate(SuccessMessageMixin, CreateView):
     model = Salesman
     form_class = SalesmanForm
@@ -268,7 +268,7 @@ class SalesmanCreate(SuccessMessageMixin, CreateView):
     success_message = 'Salesman "%(user)s" has been added successfully'
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class SalesmanUpdate(SuccessMessageMixin, UpdateView):
     model = Salesman
     form_class = SalesmanForm
@@ -276,12 +276,12 @@ class SalesmanUpdate(SuccessMessageMixin, UpdateView):
     success_message = 'Salesman "%(user)s" has been edited successfully'
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseLimitList(ListView):
     model = ExpenseLimit
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseLimitCreate(SuccessMessageMixin, CreateView):
     model = ExpenseLimit
     fields = '__all__'
@@ -290,7 +290,7 @@ class ExpenseLimitCreate(SuccessMessageMixin, CreateView):
                       'added successfully'
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseLimitUpdate(SuccessMessageMixin, UpdateView):
     model = ExpenseLimit
     fields = '__all__'
@@ -299,7 +299,7 @@ class ExpenseLimitUpdate(SuccessMessageMixin, UpdateView):
                       'edited successfully'
 
 
-@method_decorator(user_in_groups(['ExpenseAdmin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseLimitDelete(DeleteMessageMixin, DeleteView):
     model = ExpenseLimit
     success_url = reverse_lazy('expense-limit-list')

@@ -9,9 +9,9 @@ class SalesmanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(SalesmanForm, self).__init__(*args, **kwargs)
         self.fields['user'].queryset = User.objects.filter(
-            groups__name__in=['ExpenseSalesman'])
+            groups__name__in=['Expense-User'])
         self.fields['manager'].queryset = User.objects.filter(
-            groups__name__in=['ExpenseManager'])
+            groups__name__in=['Expense-Manager'])
 
     class Meta:
         model = Salesman

@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db import models
-from django.urls import reverse
 from django.contrib.auth.models import User
 from django_extensions.db.models import TimeStampedModel
 from localflavor.us import models as us_models
 from ast import literal_eval
-from django_auth_ldap.backend import populate_user
-from django.dispatch import receiver
 
 
 class ExpenseType(TimeStampedModel, models.Model):
@@ -99,12 +96,3 @@ class ExpenseLine(TimeStampedModel, models.Model):
     expense_type = models.ForeignKey(ExpenseType, on_delete=models.CASCADE)
     region = us_models.USStateField()
     amount = models.DecimalField(max_digits=14, decimal_places=2)
-
-import logging
-logger = logging.getLogger('django_auth_ldap')
-@receiver(populate_user)
-def ldap_post_populate(sender, user, ldap_user, **kwargs):
-    logger.info("User Populate finished! %s" %kwargs)
-    logger.info(ldap_user.group_dns)
-    logger.info(ldap_user.group_names)
-
