@@ -140,7 +140,7 @@ class ExpenseCreate(CreateView):
                 self.object = form.save()
                 formset = self.ExpenseFormSet(
                     self.request.POST, instance=self.object,
-                    form_kwargs={'request': self.request})
+                    form_kwargs={'salesman': self.request.user.salesman})
                 assert formset.is_valid()
                 formset.save()
                 messages.success(self.request,
