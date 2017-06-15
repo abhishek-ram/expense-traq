@@ -8,16 +8,80 @@ from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.db import transaction
+from django.forms import inlineformset_factory
+from django.db.models import Sum
+from django.utils import timezone
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman, ExpenseLimit, ExpenseLine
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseReportForm
-from django.forms import inlineformset_factory
+import maya
 
 
 class Index(TemplateView):
     template_name = 'core/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(Index, self).get_context_data(**kwargs)
+        user_groups = {g.name for g in self.request.user.groups.all()}
+        limit_date = maya.when(timezone.now().isoformat()).subtract(
+            months=3).datetime()
+        if 'Expense-User' in user_groups:
+            expenses = self.request.user.salesman.expenses.filter(
+                transaction_date__gte=limit_date)
+            context.update({
+                'pending_amt': sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='P')]),
+                'approved_amt': sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='A')]),
+                'denied_amt': sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='D')]),
+            })
+        elif 'Expense-Manager' in user_groups:
+            team = self.request.user.team.all()
+            context.update({
+                'team_count': len(team),
+                'pending_amt': 0,
+                'approved_amt': 0,
+                'denied_amt': 0,
+            })
+            for salesman in team:
+                expenses = salesman.expenses.filter(
+                    transaction_date__gte=limit_date)
+                context['pending_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='P')])
+                context['approved_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='A')])
+                context['denied_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='D')])
+        elif 'Expense-Admin' in user_groups:
+            salesmen = Salesman.objects.all()
+            context.update({
+                'team_count': len(salesmen),
+                'pending_amt': 0,
+                'approved_amt': 0,
+                'denied_amt': 0,
+            })
+            for salesman in salesmen:
+                expenses = salesman.expenses.filter(
+                    transaction_date__gte=limit_date)
+                context['pending_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='P')])
+                context['approved_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='A')])
+                context['denied_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='D')])
+        return context
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
