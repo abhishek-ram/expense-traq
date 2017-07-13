@@ -44,7 +44,7 @@ def render_input_text(field, label=None):
 
 
 @register.simple_tag
-def render_input_select(field, label=None):
+def render_input_select(field, label=None, select2=True):
     field_type = field.field.__class__.__name__
     field_values = [str(field.value() or '')]
 
@@ -72,6 +72,7 @@ def render_input_select(field, label=None):
         error_tag = '<div class="alert col-md-2 col-sm-2">{}</div>'.format(
             field.errors[-1])
 
+    select_class = 'select2_single' if select2 else ''
     return mark_safe("""
     <div class="item form-group {6}">
       <label class="control-label col-md-3 col-sm-3 col-xs-12"
@@ -79,14 +80,14 @@ def render_input_select(field, label=None):
         </label>
         <div class="col-md-6 col-sm-6 col-xs-12">
           <select id="id_{0}" name="{0}" {2} {3}
-                  class="form-control col-md-7 col-xs-12 select2_single">
+                  class="form-control col-md-7 col-xs-12 {8}">
             {5}
           </select>
         </div>
         {7}
     </div>
     """.format(field.html_name, label or field.label, multiple, required,
-               required_span, options, error_class, error_tag))
+               required_span, options, error_class, error_tag, select_class))
 
 
 @register.simple_tag

@@ -13,7 +13,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
-    Salesman, ExpenseLimit, ExpenseLine
+    Salesman, ExpenseLimit, ExpenseLine, RecurringExpense
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseReportForm
 import maya
@@ -222,7 +222,8 @@ class ExpenseCreate(CreateView):
         return self.success_message.format(obj)
 
 
-@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin', 'Expense-Manager']),
+                  name='dispatch')
 class ExpenseReport(ListView):
     model = Expense
     form_class = ExpenseReportForm
@@ -257,6 +258,7 @@ class ExpenseReport(ListView):
         kwargs = {
             # 'initial': self.get_initial(),
             # 'prefix': self.get_prefix(),
+            'user': self.request.user,
         }
 
         if self.request.method in ('POST', 'PUT'):
@@ -368,4 +370,35 @@ class ExpenseLimitDelete(DeleteMessageMixin, DeleteView):
     model = ExpenseLimit
     success_url = reverse_lazy('expense-limit-list')
     success_message = 'Expense Type <var>%(id)s</var> has been deleted ' \
+                      'successfully'
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RecurringExpenseList(ListView):
+    model = RecurringExpense
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RecurringExpenseCreate(SuccessMessageMixin, CreateView):
+    model = RecurringExpense
+    fields = '__all__'
+    success_url = reverse_lazy('recur-expense-list')
+    success_message = 'Recurring Expense for <var>%(salesman)s</var> has ' \
+                      'been added successfully'
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RecurringExpenseUpdate(SuccessMessageMixin, UpdateView):
+    model = RecurringExpense
+    fields = '__all__'
+    success_url = reverse_lazy('recur-expense-list')
+    success_message = 'Recurring Expense for <var>%(salesman)s</var> has ' \
+                      'been edited successfully'
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RecurringExpenseDelete(DeleteMessageMixin, DeleteView):
+    model = RecurringExpense
+    success_url = reverse_lazy('recur-expense-list')
+    success_message = 'Recurring Expense <var>%(id)s</var> has been deleted ' \
                       'successfully'

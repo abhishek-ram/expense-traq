@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.auth.models import User
 from django_extensions.db.models import TimeStampedModel
+from django.core.validators import MaxValueValidator, MinValueValidator
 from localflavor.us import models as us_models
 from ast import literal_eval
 
@@ -55,8 +56,9 @@ class RecurringExpense(TimeStampedModel, models.Model):
         Salesman, on_delete=models.CASCADE, related_name='recur_expenses')
     expense_type = models.ForeignKey(
         ExpenseType, on_delete=models.CASCADE)
-    day_of_month = models.IntegerField()
     amount = models.DecimalField(max_digits=14, decimal_places=2)
+    day_of_month = models.IntegerField(
+        choices=zip(range(1, 31), range(1, 31)))
 
 
 class Expense(TimeStampedModel, models.Model):

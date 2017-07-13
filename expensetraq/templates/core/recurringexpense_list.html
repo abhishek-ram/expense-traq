@@ -1,7 +1,7 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
 
-{% block title %}Expense Tracking - Manage Expense Types{% endblock %}
+{% block title %}Expense Tracking - Manage Recurring Expenses{% endblock %}
 
 {% block head_css %}
   <!-- Datatables -->
@@ -14,13 +14,13 @@
   <div class="right_col" role="main">
     <div class="page-title">
       <div class="title_left">
-        <h3>Manage Expense Limits <small>You can find all expense limits listed here</small></h3>
+        <h3>Manage Recurring Expenses <small>You can find all recurring expenses listed here</small></h3>
       </div>
 
       <div class="title_right">
         <a class="btn btn-primary btn-round pull-right" type="button"
-                 href="{% url 'expense-limit-add' %}">
-                <i class="fa fa-plus" ></i> Add Expense Limit</a>
+                 href="{% url 'recur-expense-add' %}">
+                <i class="fa fa-plus" ></i> Add Recurring Expense</a>
       </div>
     </div>
 
@@ -36,20 +36,22 @@
                 <tr>
                   <th>Salesman</th>
                   <th>Expense Type</th>
-                  <th>Expense Limit</th>
+                  <th>Amount</th>
+                  <th>Day Of Month</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {% for el in object_list %}
+                {% for re in object_list %}
                   <tr>
-                    <td>{{ el.salesman }}</td>
-                    <td>{{ el.expense_type }}</td>
-                    <td>${{ el.limit }}</td>
+                    <td>{{ re.salesman }}</td>
+                    <td>{{ re.expense_type }}</td>
+                    <td>${{ re.amount }}</td>
+                    <td>{{ re.day_of_month }}</td>
                     <td>
-                      <a href="{% url 'expense-limit-update' el.pk %}"
+                      <a href="{% url 'recur-expense-update' re.pk %}"
                          class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-                      <button onclick="confirmDelete('{% url 'expense-limit-delete' el.pk %}', '{{ el.salesman }}', '{{ el.expense_type }}')"
+                      <button onclick="confirmDelete('{% url 'recur-expense-delete' re.pk %}', '{{ re.salesman }}', '{{ re.expense_type }}')"
                               class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
                     </td>
                   </tr>
@@ -74,12 +76,12 @@
           </div>
           <div class="modal-body">
             {% csrf_token %}
-            <h5>Are you sure you want to delete the expense limit of type
-              <kbd class="expense_type"></kbd> for <kbd class="salesman"></kbd>?</h5>
+            <h5>Are you sure you want to delete the recurring expense of type
+              <i><b class="expense_type"></b></i> for <i><b class="salesman"></b></i>?</h5>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <input type="submit" class="btn btn-danger" value="Delete Mapping"/>
+            <input type="submit" class="btn btn-danger" value="Delete"/>
           </div>
           </form>
         </div>

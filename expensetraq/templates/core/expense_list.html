@@ -43,6 +43,7 @@
                   <th>Amount</th>
                   <th>Paid By</th>
                   <th>Status</th>
+                  <th>Notes</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -61,6 +62,7 @@
                           <i class="fa fa-history" ></i> Pending</a>
                       {% endif %}
                     </td>
+                    <td>{{ expense.notes|truncatewords:6 }}</td>
                     <td>
                         <a href="{% url 'expense-detail' expense.pk %}"
                            class="btn btn-primary btn-xs">
@@ -184,8 +186,8 @@
             return elem
           }
         },
-        { "searchable": false, "targets": [2, 3, 5] },
-        { "sortable": false, "targets": [2, 3, 4, 5] }
+        { "searchable": false, "targets": [2, 3, 5, 6] },
+        { "sortable": false, "targets": [2, 3, 4, 5, 6] }
       ]
     });
 

@@ -37,7 +37,7 @@
           <div class="left_col scroll-view">
             <div class="navbar nav_title" style="border: 0;">
               <a href="{% url 'index' %}" class="site_title">
-                  <i class="fa fa-road"></i> <span>Expense Tracking</span>
+                  <i class="fa fa-credit-card"></i> <span>Expense Tracking</span>
               </a>
             </div>
 
@@ -64,11 +64,16 @@
                         <i class="fa fa-list-alt" ></i> Expense Types </a></li>
                       <li><a href="{% url 'expense-limit-list' %}">
                         <i class="fa fa-shield" ></i> Expense Limits </a></li>
+                      <li><a href="{% url 'recur-expense-list' %}">
+                        <i class="fa fa-history" ></i> Recurring Expenses </a></li>
                       <li><a href="{% url 'expense-report' %}">
                         <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
                     {% elif "Expense-User" in user_groups %}
                       <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-credit-card" ></i> Expenses </a></li>
+                    {% elif "Expense-Manager" in user_groups %}
+                      <li><a href="{% url 'expense-report' %}">
+                        <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
                     {% endif %}
                   </ul>
                 {% endif %}
