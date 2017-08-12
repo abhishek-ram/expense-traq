@@ -36,23 +36,31 @@
                   <th>Salesman</th>
                   <th>Regions</th>
                   <th>Manager</th>
+                  <th>Has Company Card</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {% for et in object_list %}
+                {% for salesman in object_list %}
                   <tr>
                     <td>
-                      <b>{{ et.user }}</b>
+                      <b>{{ salesman.user }}</b>
                     </td>
                     <td>
-                      {% for r in  et.region_list %}
+                      {% for r in  salesman.region_list %}
                         <span class="label label-default">{{ r }}</span>
                       {% endfor %}
                     </td>
-                    <td>{{ et.manager }}</td>
+                    <td>{{ salesman.manager }}</td>
                     <td>
-                      <a href="{% url 'salesman-update' et.pk %}"
+                      {% if  salesman.has_company_card %}
+                        <i class="fa fa-check-square fa-lg" ></i>
+                      {% else %}
+                        <i class="fa fa-square-o fa-lg" ></i>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'salesman-update' salesman.pk %}"
                          class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
                     </td>
                   </tr>
@@ -80,7 +88,7 @@
       "ordering": false,
       "responsive": true,
       "columnDefs": [
-          { "searchable": false, "targets": [ 3] }
+          { "searchable": false, "targets": [3, 4] }
       ]
     });
   </script>

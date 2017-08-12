@@ -1,5 +1,5 @@
 from django import forms
-from expensetraq.core.models import Salesman, User, ExpenseLine, ExpenseLimit
+from expensetraq.core.models import Salesman, User, ExpenseLine, Expense
 from localflavor.us.models import STATE_CHOICES
 
 
@@ -49,11 +49,14 @@ class ExpenseLineForm(forms.ModelForm):
 class ExpenseReportForm(forms.Form):
     salesman = forms.ModelChoiceField(
         queryset=Salesman.objects.all(), empty_label='')
+    expense_list = forms.ModelMultipleChoiceField(
+        queryset=Expense.objects.all())
+    approved = forms.NullBooleanField()
 
-    def __init__(self, user, *args, **kwargs):
-        super(ExpenseReportForm, self).__init__(*args, **kwargs)
-        if 'Expense-Manager' in {g.name for g in user.groups.all()}:
-            salesman_choices = [
-                (m.id, str(m.user)) for m in user.team.all()]
-            self.fields['salesman'].choices = \
-                [('', '---------')] + salesman_choices
+    # def __init__(self, user, *args, **kwargs):
+    #     super(ExpenseReportForm, self).__init__(*args, **kwargs)
+    #     if 'Expense-Manager' in {g.name for g in user.groups.all()}:
+    #         salesman_choices = [
+    #             (m.id, str(m.user)) for m in user.team.all()]
+    #         self.fields['salesman'].choices = \
+    #             [('', '---------')] + salesman_choices

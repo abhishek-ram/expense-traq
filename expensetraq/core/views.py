@@ -41,6 +41,7 @@ class Index(TemplateView):
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='D')]),
             })
+            print(context)
         elif 'Expense-Manager' in user_groups:
             team = self.request.user.team.all()
             context.update({
@@ -230,25 +231,37 @@ class ExpenseReport(ListView):
     template_name = 'core/expense_report.html'
 
     def get_queryset(self):
-        form = self.get_form()
-        self.salesman = None
-        if form.is_valid():
-            self.salesman = form.cleaned_data['salesman']
-            return Expense.objects.filter(
-                salesman=form.cleaned_data['salesman'])
+        salesman = self.request.GET.get('salesman')
+        if salesman:
+            return Expense.objects.filter(salesman=salesman, status='P')
         else:
             return Expense.objects.none()
 
     def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            ap_display = 'Approved' if form.cleaned_data['approved'] else 'Denied'
+            if form.cleaned_data['approved']:
+                form.cleaned_data['expense_list'].update(status='A')
+            else:
+                form.cleaned_data['expense_list'].update(status='D')
+            messages.success(
+                request, 'Selected expenses have been %s' % ap_display)
+        else:
+            messages.error(
+                request, 'Unable to update expenses, please contact Admin')
         return self.get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """
         Insert the form into the context dict.
         """
-        if 'form' not in kwargs:
-            kwargs['form'] = self.get_form()
-            kwargs['salesman'] = self.salesman
+        if 'Expense-Manager' in \
+                {g.name for g in self.request.user.groups.all()}:
+            kwargs['salesman_list'] = self.request.user.team.objects.all()
+        else:
+            kwargs['salesman_list'] = Salesman.objects.all()
+        kwargs['sel_salesman'] = int(self.request.GET.get('salesman', 0))
         return super(ExpenseReport, self).get_context_data(**kwargs)
 
     def get_form_kwargs(self):
@@ -258,7 +271,7 @@ class ExpenseReport(ListView):
         kwargs = {
             # 'initial': self.get_initial(),
             # 'prefix': self.get_prefix(),
-            'user': self.request.user,
+            # 'user': self.request.user,
         }
 
         if self.request.method in ('POST', 'PUT'):

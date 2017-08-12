@@ -34,6 +34,7 @@ class Salesman(TimeStampedModel, models.Model):
     regions = models.TextField()
     manager = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name='team', null=True)
+    has_company_card = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.user)
@@ -82,6 +83,7 @@ class Expense(TimeStampedModel, models.Model):
     notes = models.TextField(null=True, blank=True)
     receipt = models.ImageField(
         upload_to=receipt_directory_path, null=True, blank=True)
+    pushed_to_gp = models.BooleanField(default=False)
 
     @property
     def total_amount(self):

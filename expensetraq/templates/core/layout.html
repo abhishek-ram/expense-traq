@@ -66,8 +66,13 @@
                         <i class="fa fa-shield" ></i> Expense Limits </a></li>
                       <li><a href="{% url 'recur-expense-list' %}">
                         <i class="fa fa-history" ></i> Recurring Expenses </a></li>
-                      <li><a href="{% url 'expense-report' %}">
-                        <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
+                      <li><a><i class="fa fa-bar-chart" ></i> Expense Reports
+                        <span class="fa fa-chevron-down"></span></a>
+                        <ul class="nav child_menu">
+                          <li><a href="{% url 'expense-report' %}">Approve Expenses</a></li>
+                          <li><a href="asa">Export Expenses</a></li>
+                        </ul>
+                      </li>
                     {% elif "Expense-User" in user_groups %}
                       <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-credit-card" ></i> Expenses </a></li>
@@ -75,6 +80,9 @@
                       <li><a href="{% url 'expense-report' %}">
                         <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
                     {% endif %}
+                    <li><a href="{% url 'index' %}">
+                      <i class="fa fa-envelope-o" ></i> Notifications
+                      <span class="badge bg-green">6</span></a></li>
                   </ul>
                 {% endif %}
               </div>

@@ -55,12 +55,7 @@
                     <td>${{ expense.total_amount|intcomma }}</td>
                     <td>{{ expense.get_paid_by_display }}</td>
                     <td> {{ expense.status }}
-                      {% if expense.status == 'A' %}
-                      {% elif expense.status == 'D' %}
-                      {% else %}
-                        <a class="btn btn-round btn-warning btn-xs">
-                          <i class="fa fa-history" ></i> Pending</a>
-                      {% endif %}
+
                     </td>
                     <td>{{ expense.notes|truncatewords:6 }}</td>
                     <td>
@@ -123,7 +118,7 @@
     }
 
     $('#datatable').DataTable ({
-      dom: "Brtip",
+      dom: "Bfrtip",
       buttons: [
         {
           extend: "pageLength",
@@ -138,19 +133,25 @@
             {
               text: "Pending",
               action: function ( e, dt, node, config ) {
-                  dt.column(4).search('P').draw();
+                dt.column(4).search('Pending').draw();
               }
             },
             {
               text: "Approved",
               action: function ( e, dt, node, config ) {
-                dt.column(4).search('A').draw();
+                dt.column(4).search('Approved').draw();
               }
             },
             {
-              text: "Rejected",
+              text: "Denied",
               action: function ( e, dt, node, config ) {
-                dt.column(4).search('R').draw();
+                dt.column(4).search('Denied').draw();
+              }
+            },
+            {
+              text: "All",
+              action: function ( e, dt, node, config ) {
+                dt.column(4).search('').draw();
               }
             }
           ]
@@ -165,11 +166,11 @@
           targets: [4] ,
           render: function ( data, type, full, meta ) {
             if (data === 'A') {
-              return '<a class="btn btn-round btn-warning btn-xs"> ' +
-                     '<i class="fa fa-history" ></i> Pending</a>'
-            } else if (data === 'R') {
-              return '<a class="btn btn-round btn-warning btn-xs"> ' +
-                     '<i class="fa fa-history" ></i> Pending</a>'
+              return '<a class="btn btn-round btn-success btn-xs"> ' +
+                     '<i class="fa fa-check" ></i> Approved</a>'
+            } else if (data === 'D') {
+              return '<a class="btn btn-round btn-danger btn-xs"> ' +
+                     '<i class="fa fa-times" ></i> Denied</a>'
             } else {
               return '<a class="btn btn-round btn-warning btn-xs"> ' +
                      '<i class="fa fa-history" ></i> Pending</a>'
@@ -186,8 +187,8 @@
             return elem
           }
         },
-        { "searchable": false, "targets": [2, 3, 5, 6] },
-        { "sortable": false, "targets": [2, 3, 4, 5, 6] }
+        { "searchable": false, "targets": [2, 3, 6] },
+        { "sortable": false, "targets": [3, 4, 5, 6] }
       ]
     });
 

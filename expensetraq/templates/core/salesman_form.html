@@ -4,6 +4,9 @@
 {% block title %}Expense Tracking - Manage Salesmen{% endblock %}
 
 {% block head_css %}
+  <!-- iCheck -->
+  <link href="{% static "vendors/iCheck/skins/flat/green.css" %}" rel="stylesheet">
+
   <!-- Select2 -->
   <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
 {% endblock %}
@@ -34,6 +37,18 @@
 
               {% render_input_select form.manager %}
 
+              <div class="form-group">
+                <label class="col-md-3 col-sm-3 col-xs-12 control-label">Has Company Card
+                  <br>
+                  <small class="text-navy">Check this box if Salesman has a company Card</small>
+                </label>
+                <div class="checkbox">
+                  <label class="">
+                    <input type="checkbox" class="flat" id="id_has_company_card" name="has_company_card"
+                      {% if form.instance.has_company_card %} checked {% endif %}>
+                  </label>
+                </div>
+              </div>
 
               <div class="ln_solid"></div>
               <div class="form-group">
@@ -54,6 +69,8 @@
 {% endblock %}
 
 {% block body_js %}
+  <!-- iCheck -->
+  <script src="{% static "vendors/iCheck/icheck.min.js" %}"></script>
   <!-- Select2 -->
   <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
