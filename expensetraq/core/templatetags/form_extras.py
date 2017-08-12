@@ -51,7 +51,10 @@ def render_input_select(field, label=None, select2=True):
     multiple,  = '',
     if 'Multiple' in field_type:
         multiple = 'multiple'
-        field_values = [str(v) for v in literal_eval(field.value() or '[]')]
+        field_values = field.value()
+
+        if type(field.value()) != list:
+            field_values = [str(v) for v in literal_eval(field.value() or '[]')]
 
     options = ''
     for k, v in field.field.choices:

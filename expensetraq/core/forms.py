@@ -46,7 +46,7 @@ class ExpenseLineForm(forms.ModelForm):
         fields = ['expense_type', 'region', 'amount']
 
 
-class ExpenseReportForm(forms.Form):
+class ExpenseApprovalForm(forms.Form):
     salesman = forms.ModelChoiceField(
         queryset=Salesman.objects.all(), empty_label='')
     expense_list = forms.ModelMultipleChoiceField(

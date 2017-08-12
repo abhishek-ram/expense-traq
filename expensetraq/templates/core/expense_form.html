@@ -52,10 +52,27 @@
                       <td>
                         <select id="id_paid_by" name="paid_by" required="required"
                             class="form-control col-md-7 col-xs-12 ">
-                          {% for k, v in form.fields.paid_by.choices %}
-                             <option {% if k == form.instance.paid_by %} selected {% endif %}
-                               value="{{ k }}">{{ v }}</option>
-                          {% endfor %}
+                          {% if form.instance.id %}
+                            {% if form.instance.salesman.has_company_card %}
+                              <option {% if 'E' == form.instance.paid_by %} selected {% endif %}
+                                  value="E">Employee Paid</option>
+                              <option {% if 'C' == form.instance.paid_by %} selected {% endif %}
+                                  value="C">Company Paid</option>
+                            {% else %}
+                              <option selected value="E">Employee Paid</option>
+                            {% endif %}
+                          {% else %}
+                            {% if request.user.salesman.has_company_card %}
+                              <option selected value="E">Employee Paid</option>
+                              <option value="C">Company Paid</option>
+                            {% else %}
+                              <option selected value="E">Employee Paid</option>
+                            {% endif %}
+                          {% endif %}
+{#                          {% for k, v in form.fields.paid_by.choices %}#}
+{#                             <option {% if k == form.instance.paid_by %} selected {% endif %}#}
+{#                               value="{{ k }}">{{ v }}</option>#}
+{#                          {% endfor %}#}
                         </select>
                       </td>
                     </tr>

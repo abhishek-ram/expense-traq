@@ -15,7 +15,7 @@ from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
-    ExpenseReportForm
+    ExpenseApprovalForm
 import maya
 
 
@@ -41,7 +41,6 @@ class Index(TemplateView):
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='D')]),
             })
-            print(context)
         elif 'Expense-Manager' in user_groups:
             team = self.request.user.team.all()
             context.update({
@@ -223,12 +222,11 @@ class ExpenseCreate(CreateView):
         return self.success_message.format(obj)
 
 
-@method_decorator(user_in_groups(['Expense-Admin', 'Expense-Manager']),
-                  name='dispatch')
-class ExpenseReport(ListView):
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class ExpenseApproval(ListView):
     model = Expense
-    form_class = ExpenseReportForm
-    template_name = 'core/expense_report.html'
+    form_class = ExpenseApprovalForm
+    template_name = 'core/expense_approval.html'
 
     def get_queryset(self):
         salesman = self.request.GET.get('salesman')
@@ -262,7 +260,7 @@ class ExpenseReport(ListView):
         else:
             kwargs['salesman_list'] = Salesman.objects.all()
         kwargs['sel_salesman'] = int(self.request.GET.get('salesman', 0))
-        return super(ExpenseReport, self).get_context_data(**kwargs)
+        return super(ExpenseApproval, self).get_context_data(**kwargs)
 
     def get_form_kwargs(self):
         """
@@ -293,7 +291,7 @@ class ExpenseReport(ListView):
 class ExpenseUpdate(UpdateView):
     model = Expense
     fields = ['transaction_date', 'paid_by', 'notes']
-    success_url = reverse_lazy('expense-report')
+    success_url = reverse_lazy('expense-approval')
     success_message = 'Expense "{0.pk}" has been edited successfully'
 
     ExpenseFormSet = inlineformset_factory(
