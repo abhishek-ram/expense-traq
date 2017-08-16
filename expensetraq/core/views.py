@@ -495,7 +495,8 @@ class ExpenseDailyAverage(View):
         for date in maya.MayaInterval(duration=30*24*60*60, end=maya.now().add(
                 days=1)).split(duration=24*60*60):
             daily_expense = request.user.salesman.expenses.\
-                filter(transaction_date=date.start.datetime().date()).\
+                filter(transaction_date=date.start.datetime().date(),
+                       status='A').\
                 aggregate(Sum('lines__amount'))['lines__amount__sum'] or 0
             series.append([date.start.datetime().strftime('%Y-%m-%d'),
                            daily_expense])

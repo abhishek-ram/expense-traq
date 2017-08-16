@@ -87,7 +87,7 @@ class Expense(TimeStampedModel, models.Model):
     pushed_to_gp = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('-transaction_date',)
+        ordering = ('-transaction_date', '-created')
 
     @property
     def total_amount(self):
