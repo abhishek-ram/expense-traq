@@ -93,3 +93,4 @@ ENV/
 db.sqlite3
 settings.py
 uploads/
+!/staticfiles/vendors/morrisjs/lib/

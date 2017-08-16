@@ -86,6 +86,9 @@ class Expense(TimeStampedModel, models.Model):
         upload_to=receipt_directory_path, null=True, blank=True)
     pushed_to_gp = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ('-transaction_date',)
+
     @property
     def total_amount(self):
         return sum([l.amount for l in self.lines.all()])

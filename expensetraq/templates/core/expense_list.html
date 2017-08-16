@@ -11,6 +11,9 @@
   <link href="{% static "vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css" %}" rel="stylesheet">
   <link href="{% static "vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css" %}" rel="stylesheet">
 
+  <!-- Select2 -->
+  <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
+
 {% endblock %}
 
 {% block body_content %}
@@ -19,13 +22,26 @@
   <div class="right_col" role="main">
     <div class="page-title">
       <div class="title_left">
-        <h3>Expense <small>You can find all expenses listed here</small></h3>
+        <h3>Expense List <small>You can find all expenses listed here</small></h3>
       </div>
 
       <div class="title_right">
-        <a class="btn btn-primary btn-round pull-right" type="button"
-                   href="{% url 'expense-add' %}">
-                  <i class="fa fa-plus" ></i> Add Expense</a>
+        {% if "Expense-User" in user_groups%}
+          <a class="btn btn-primary btn-round pull-right" type="button"
+                     href="{% url 'expense-add' %}">
+                    <i class="fa fa-plus" ></i> Add Expense</a>
+        {% else %}
+          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+            <select class="form-control select2_single" id="id_salesman"
+                name="salesman" required>
+              <option value="">----------</option>
+              {% for salesman in salesman_list %}
+                <option {% if salesman.id == request.GET.salesman|add:"0" %} selected {% endif %}
+                  value="{{ salesman.id }}">{{ salesman.user }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
       </div>
     </div>
 
@@ -110,12 +126,25 @@
   <script src="{% static "vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js" %}"></script>
   <script src="{% static "vendors/datatables.net-scroller/js/dataTables.scroller.min.js" %}"></script>
 
+  <!-- Select2 -->
+  <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
+
   <script>
     function confirmDelete(url, salesperson) {
       $(".delete-form").attr("action", url);
       $(".delete-form h4 strong").text(salesperson);
       $(".delete-modal").modal("show");
     }
+    // Initialize Select
+    $(".select2_single").select2({
+        width: '100%',
+        placeholder: "Select a Salesman"
+    }).on('select2:select', function (evt) {
+        if ($(evt.target).val()) {
+          window.location = window.location.href.split('#')[0].split('?')[0]
+              + '?salesman=' + $(evt.target).val();
+        }
+    });
 
     $('#datatable').DataTable ({
       dom: "Bfrtip",

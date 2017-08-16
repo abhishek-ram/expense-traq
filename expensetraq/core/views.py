@@ -5,7 +5,8 @@ from django.views.generic import TemplateView, ListView, CreateView, \
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
+from django.views import View
 from django.contrib import messages
 from django.db import transaction
 from django.forms import inlineformset_factory
@@ -19,6 +20,9 @@ from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm
 import maya
 
+LIMIT_DATE = maya.when(timezone.now().isoformat()).subtract(
+    months=3).datetime()
+
 
 class Index(TemplateView):
     template_name = 'core/index.html'
@@ -26,11 +30,9 @@ class Index(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(Index, self).get_context_data(**kwargs)
         user_groups = {g.name for g in self.request.user.groups.all()}
-        limit_date = maya.when(timezone.now().isoformat()).subtract(
-            months=3).datetime()
         if 'Expense-User' in user_groups:
             expenses = self.request.user.salesman.expenses.filter(
-                transaction_date__gte=limit_date)
+                transaction_date__gte=LIMIT_DATE)
             context.update({
                 'pending_amt': sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
@@ -41,6 +43,7 @@ class Index(TemplateView):
                 'denied_amt': sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='D')]),
+                'expense_list': expenses[:10]
             })
         elif 'Expense-Manager' in user_groups:
             team = self.request.user.team.all()
@@ -49,10 +52,12 @@ class Index(TemplateView):
                 'pending_amt': 0,
                 'approved_amt': 0,
                 'denied_amt': 0,
+                'expense_list': Expense.objects.filter(
+                    salesman__in=team)[:10]
             })
             for salesman in team:
                 expenses = salesman.expenses.filter(
-                    transaction_date__gte=limit_date)
+                    transaction_date__gte=LIMIT_DATE)
                 context['pending_amt'] += sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='P')])
@@ -69,10 +74,12 @@ class Index(TemplateView):
                 'pending_amt': 0,
                 'approved_amt': 0,
                 'denied_amt': 0,
+                'salesman_list': salesmen,
+                'expense_list': Expense.objects.all()[:10]
             })
             for salesman in salesmen:
                 expenses = salesman.expenses.filter(
-                    transaction_date__gte=limit_date)
+                    transaction_date__gte=LIMIT_DATE)
                 context['pending_amt'] += sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='P')])
@@ -172,12 +179,29 @@ class ExpenseTypeDelete(DeleteMessageMixin, DeleteView):
     success_message = 'Expense Type "%(name)s" has been deleted successfully'
 
 
-@method_decorator(user_in_groups(['Expense-User']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-User', 'Expense-Manager']),
+                  name='dispatch')
 class ExpenseList(ListView):
     model = Expense
 
     def get_queryset(self):
-        return Expense.objects.filter(salesman=self.request.user.salesman)
+        if 'Expense-Manager' in \
+                {g.name for g in self.request.user.groups.all()}:
+            salesman = self.request.GET.get('salesman')
+            if salesman:
+                return Expense.objects.filter(
+                    salesman=salesman, transaction_date__gte=LIMIT_DATE)
+            else:
+                return Expense.objects.none()
+        else:
+            return Expense.objects.filter(
+                salesman=self.request.user.salesman,
+                transaction_date__gte=LIMIT_DATE)
+
+    def get_context_data(self, **kwargs):
+        context = super(ExpenseList, self).get_context_data(**kwargs)
+        context['salesman_list'] = self.request.user.team.all()
+        return context
 
 
 @method_decorator(user_in_groups(['Expense-User']), name='dispatch')
@@ -287,7 +311,6 @@ class ExpenseApproval(ListView):
             kwargs['salesman_list'] = self.request.user.team.objects.all()
         else:
             kwargs['salesman_list'] = Salesman.objects.all()
-        kwargs['sel_salesman'] = int(self.request.GET.get('salesman', 0))
         return super(ExpenseApproval, self).get_context_data(**kwargs)
 
     def get_form_kwargs(self):
@@ -341,6 +364,20 @@ class ExpenseUpdate(UpdateView):
                 form_kwargs={'salesman': self.object.salesman})
             assert formset.is_valid()
             formset.save()
+
+            # Create notifications for the salesman and manager
+            Notification.objects.create(
+                user=self.object.salesman.user,
+                title='Expense Updated',
+                text='Admin has edited your expense dated {} for ${}'.format(
+                    self.object.transaction_date, self.object.total_amount))
+            Notification.objects.create(
+                user=self.object.salesman.manager,
+                title='Expense Updated',
+                text='Admin has edited {}\'s expense dated {} for ${}'.format(
+                    self.object.salesman.user, self.object.transaction_date,
+                    self.object.total_amount))
+
             messages.success(self.request,
                              self.get_success_message(self.object))
             return HttpResponseRedirect('%s?salesman=%s' % (
@@ -445,6 +482,21 @@ class RecurringExpenseDelete(DeleteMessageMixin, DeleteView):
 
 class NotificationList(ListView):
     model = Notification
+    paginate_by = 10
 
     def get_queryset(self):
         return self.request.user.notifications.all()
+
+
+class ExpenseDailyAverage(View):
+
+    def get(self, request):
+        series = []
+        for date in maya.MayaInterval(duration=30*24*60*60, end=maya.now().add(
+                days=1)).split(duration=24*60*60):
+            daily_expense = request.user.salesman.expenses.\
+                filter(transaction_date=date.start.datetime().date()).\
+                aggregate(Sum('lines__amount'))['lines__amount__sum'] or 0
+            series.append([date.start.datetime().strftime('%Y-%m-%d'),
+                           daily_expense])
+        return JsonResponse(series, safe=False)

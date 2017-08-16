@@ -36,11 +36,12 @@
 
       <div class="title_right">
           <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
             <select class="form-control select2_single" id="id_salesman"
               name="salesman" required>
                 <option value="">----------</option>
                 {% for salesman in salesman_list %}
-                  <option {% if salesman.id == sel_salesman %} selected {% endif %}
+                  <option {% if salesman.id == request.GET.salesman|add:"0"  %} selected {% endif %}
                     value="{{ salesman.id }}">{{ salesman.user }}</option>
                 {% endfor %}
             </select>
@@ -57,7 +58,7 @@
             <form method="post" id="approval_form">
             {% csrf_token %}
             <input type="hidden" id="id_salesman" name="salesman"
-                   value="{{ sel_salesman }}">
+                   value="{{ request.GET.salesman }}">
             <input type="hidden" id="id_approved" name="approved" value="">
             <table class="table" id="datatable">
               <thead>

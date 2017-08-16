@@ -1,5 +1,6 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
+{% load humanize %}
 
 {% block title %}Expense Tracking - Dashboard{% endblock %}
 
@@ -52,6 +53,67 @@
           </a>
         </div>
       </div>
+      <div class="row">
+        <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Expenses Summary <small>Daily expenses in the last 30 days</small></h2>
+
+  {#                    <div class="filter">#}
+  {#                      <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">#}
+  {#                        <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>#}
+  {#                        <span>December 30, 2014 - January 28, 2015</span> <b class="caret"></b>#}
+  {#                      </div>#}
+  {#                    </div>#}
+                      <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+              <div class="demo-container" style="height:280px">
+                <div id="daily_expense_summary" class="demo-placeholder"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Latest expenses <small>Last 10 expenses created by your team</small></h2>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Salesman</th>
+                    <th>Expense Type</th>
+                    <th>Transaction Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in expense_list %}
+                  <tr>
+                    <td>{{ expense.salesman.user }}</td>
+                    <td>
+                      {% for l in  expense.lines.all %}
+                        <span class="label label-default">{{ l.expense_type.name }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                    <td>${{ expense.total_amount|intcomma }}</td>
+                    <td> {{ expense.get_status_display }}
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+            </div>
+          </div>
+        </div>
+      </div>
     {% endif %}
   {% elif "Expense-Manager" in user_groups %}
     <div class="row top_tiles">
@@ -87,7 +149,92 @@
           <p>Allowance amount denied in the past 3 months..</p>
         </div>
       </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Salesmen <small>List of salesman reporting to you</small></h2>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Regions</th>
+                    <th>Has Company Card</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for salesman in user.team.all %}
+                  <tr>
+                    <td>
+                      <b>{{ salesman.user }}</b>
+                    </td>
+                    <td>
+                      {% for r in  salesman.region_list %}
+                        <span class="label label-default">{{ r }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>
+                      {% if  salesman.has_company_card %}
+                        <i class="fa fa-check-square fa-lg" ></i>
+                      {% else %}
+                        <i class="fa fa-square-o fa-lg" ></i>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'expense-list' %}?salesman={{ salesman.id }}"
+                         class="btn btn-info btn-xs"><i class="fa fa-external-link"></i> View Expenses</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Latest expenses <small>Last 10 expenses created by your team</small></h2>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
 
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Salesman</th>
+                    <th>Expense Type</th>
+                    <th>Transaction Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in expense_list %}
+                  <tr>
+                    <td>{{ expense.salesman.user }}</td>
+                    <td>
+                      {% for l in  expense.lines.all %}
+                        <span class="label label-default">{{ l.expense_type.name }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                    <td>${{ expense.total_amount|intcomma }}</td>
+                    <td> {{ expense.get_status_display }}
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+            </div>
+          </div>
+        </div>
     </div>
   {% elif "Expense-Admin" in user_groups %}
     <div class="row top_tiles">
@@ -123,11 +270,129 @@
           <p>Allowance amount denied in the past 3 months..</p>
         </div>
       </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Salesmen <small>List of salesman reporting to you</small></h2>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Regions</th>
+                    <th>Has Company Card</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for salesman in salesman_list %}
+                  <tr>
+                    <td>
+                      <b>{{ salesman.user }}</b>
+                    </td>
+                    <td>
+                      {% for r in  salesman.region_list %}
+                        <span class="label label-default">{{ r }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>
+                      {% if  salesman.has_company_card %}
+                        <i class="fa fa-check-square fa-lg" ></i>
+                      {% else %}
+                        <i class="fa fa-square-o fa-lg" ></i>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'expense-approval' %}?salesman={{ salesman.id }}"
+                         class="btn btn-info btn-xs"><i class="fa fa-external-link"></i> View Expenses</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Latest expenses <small>Last 10 expenses created by your team</small></h2>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
 
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Salesman</th>
+                    <th>Expense Type</th>
+                    <th>Transaction Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in expense_list %}
+                  <tr>
+                    <td>{{ expense.salesman.user }}</td>
+                    <td>
+                      {% for l in  expense.lines.all %}
+                        <span class="label label-default">{{ l.expense_type.name }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                    <td>${{ expense.total_amount|intcomma }}</td>
+                    <td> {{ expense.get_status_display }}
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+            </div>
+          </div>
+        </div>
     </div>
   {% else %}
     Welcome to the Salesman Expense Tracking System
   {% endif %}
   </div>
   <!-- /page content -->
+{% endblock %}
+
+{% block body_js %}
+  <script src="{% static "vendors/morrisjs/morris.min.js" %}"></script>
+  <script src="{% static "vendors/raphael/raphael.min.js" %}"></script>
+  <script>
+    $(document).ready(function () {
+      if ($('#daily_expense_summary').length ){
+        $.ajax({
+          url: "{% url "expense-daily-average" %}",
+          type: "GET",
+          dataType: "json",
+          success: function (data) {
+
+              Morris.Line({
+                  element: 'daily_expense_summary',
+                  xkey: '0',
+                  ykeys: ['1'],
+                  labels: ['Daily Total'],
+                  hideHover: 'auto',
+                  lineColors: ['#26B99A', '#34495E', '#ACADAC', '#3498DB'],
+                  data: data,
+                  resize: true
+              });
+
+              $MENU_TOGGLE.on('click', function () {
+                  $(window).resize();
+              });
+          }
+			  });
+      }
+    });
+  </script>
 {% endblock %}

@@ -96,5 +96,8 @@ urlpatterns = media_url + [
     url(r'^notifications/$',
         login_required(views.NotificationList.as_view()),
         name='notification-list'),
+    url(r'^expense/daily-average/$',
+        login_required(views.ExpenseDailyAverage.as_view()),
+        name='expense-daily-average'),
     url(r'^.*', login_required(views.Index.as_view())),
 ]
