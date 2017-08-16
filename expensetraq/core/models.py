@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.auth.models import User
 from django_extensions.db.models import TimeStampedModel
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
 from localflavor.us import models as us_models
 from ast import literal_eval
+import humanize
 
 
 class ExpenseType(TimeStampedModel, models.Model):
@@ -100,3 +101,24 @@ class ExpenseLine(TimeStampedModel, models.Model):
     expense_type = models.ForeignKey(ExpenseType, on_delete=models.CASCADE)
     region = us_models.USStateField()
     amount = models.DecimalField(max_digits=14, decimal_places=2)
+
+
+class Notification(TimeStampedModel, models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=200)
+    text = models.TextField()
+    is_read = models.BooleanField(default=False)
+
+    @property
+    def created_slang(self):
+        diff_time = timezone.now() - self.created
+        if diff_time.days == 0:
+            return humanize.naturaltime(timezone.make_naive(self.created))
+        else:
+            return humanize.naturaldate(timezone.make_naive(self.created))
+
+    def mark_read(self):
+        self.is_read = True
+        self.save()
+        return ''

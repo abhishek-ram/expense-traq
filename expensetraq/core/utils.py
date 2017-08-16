@@ -50,4 +50,6 @@ def context_processor(request):
     context = {}
     if request.user.is_authenticated:
         context['user_groups'] = {g.name for g in request.user.groups.all()}
+        context['unread_notifications'] = request.user.notifications.filter(
+            is_read=False)
     return context

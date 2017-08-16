@@ -11,9 +11,10 @@ from django.db import transaction
 from django.forms import inlineformset_factory
 from django.db.models import Sum
 from django.utils import timezone
+from django.contrib.auth.models import User
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
-    Salesman, ExpenseLimit, ExpenseLine, RecurringExpense
+    Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm
 import maya
@@ -207,14 +208,26 @@ class ExpenseCreate(CreateView):
                     form_kwargs={'salesman': self.request.user.salesman})
                 assert formset.is_valid()
                 formset.save()
-                messages.success(self.request,
-                                 self.get_success_message(self.object))
+                messages.success(
+                    self.request, self.get_success_message(self.object))
+
+                # Create notifications for the admin and manager
+                not_message = '{} has added a new expense dated {} for ${}'.format(
+                    self.request.user, self.object.transaction_date,
+                    self.object.total_amount)
+                Notification.objects.create(
+                    user=self.request.user.salesman.manager,
+                    title='New Expense Created',
+                    text=not_message)
+                Notification.objects.create(
+                    user=User.objects.filter(groups__name__in=['Expense-Admin']).first(),
+                    title='New Expense Created',
+                    text=not_message)
                 return HttpResponseRedirect(self.get_success_url())
         except AssertionError:
             form.instance.id = None
             messages.error(
-                self.request,
-                'Failed to record expense, correct errors and resubmit')
+                self.request, 'Failed to record expense, correct errors and resubmit')
             return self.render_to_response(
                 self.get_context_data(form=form, inline_formset=formset))
 
@@ -245,6 +258,21 @@ class ExpenseApproval(ListView):
                 form.cleaned_data['expense_list'].update(status='D')
             messages.success(
                 request, 'Selected expenses have been %s' % ap_display)
+
+            # Create notifications for the salesman and manager
+            for expense in form.cleaned_data['expense_list']:
+                Notification.objects.create(
+                    user=expense.salesman.user,
+                    title='Expense Updated',
+                    text='Admin has {} your expense dated {} for ${}'.format(
+                        ap_display, expense.transaction_date, expense.total_amount))
+                Notification.objects.create(
+                    user=expense.salesman.manager,
+                    title='Expense Updated',
+                    text='Admin has {} {}\'s expense dated {} for ${}'.format(
+                        ap_display, expense.salesman.user,
+                        expense.transaction_date, expense.total_amount))
+
         else:
             messages.error(
                 request, 'Unable to update expenses, please contact Admin')
@@ -413,3 +441,10 @@ class RecurringExpenseDelete(DeleteMessageMixin, DeleteView):
     success_url = reverse_lazy('recur-expense-list')
     success_message = 'Recurring Expense <var>%(id)s</var> has been deleted ' \
                       'successfully'
+
+
+class NotificationList(ListView):
+    model = Notification
+
+    def get_queryset(self):
+        return self.request.user.notifications.all()

@@ -93,5 +93,8 @@ urlpatterns = media_url + [
     url(r'^recur-expense/(?P<pk>[0-9]+)/delete/$',
         login_required(views.RecurringExpenseDelete.as_view()),
         name='recur-expense-delete'),
+    url(r'^notifications/$',
+        login_required(views.NotificationList.as_view()),
+        name='notification-list'),
     url(r'^.*', login_required(views.Index.as_view())),
 ]

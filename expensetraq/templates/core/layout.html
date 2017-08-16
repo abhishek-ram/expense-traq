@@ -77,12 +77,14 @@
                       <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-credit-card" ></i> Expenses </a></li>
                     {% elif "Expense-Manager" in user_groups %}
-                      <li><a href="{% url 'expense-report' %}">
+                      <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
                     {% endif %}
-                    <li><a href="{% url 'index' %}">
+                    <li><a href="{% url 'notification-list' %}">
                       <i class="fa fa-envelope-o" ></i> Notifications
-                      <span class="badge bg-green">6</span></a></li>
+                      {% if unread_notifications %}
+                        <span class="badge bg-green">{{ unread_notifications|length }}</span>
+                      {% endif %}
                   </ul>
                 {% endif %}
               </div>
@@ -115,60 +117,27 @@
                 <li role="presentation" class="dropdown">
                   <a href="javascript:;" class="dropdown-toggle info-number" data-toggle="dropdown" aria-expanded="false">
                     <i class="fa fa-envelope-o"></i>
-                    <span class="badge bg-green">6</span>
+                    {% if unread_notifications %}
+                      <span class="badge bg-green">{{ unread_notifications|length }}</span>
+                    {% endif %}
                   </a>
                   <ul id="menu1" class="dropdown-menu list-unstyled msg_list" role="menu">
-                    <li>
-                      <a>
-                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
-                        <span>
-                          <span>John Smith</span>
-                          <span class="time">3 mins ago</span>
-                        </span>
-                        <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were where...
-                        </span>
-                      </a>
-                    </li>
-                    <li>
-                      <a>
-                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
-                        <span>
-                          <span>John Smith</span>
-                          <span class="time">3 mins ago</span>
-                        </span>
-                        <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were where...
-                        </span>
-                      </a>
-                    </li>
-                    <li>
-                      <a>
-                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
-                        <span>
-                          <span>John Smith</span>
-                          <span class="time">3 mins ago</span>
-                        </span>
-                        <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were where...
-                        </span>
-                      </a>
-                    </li>
-                    <li>
-                      <a>
-                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
-                        <span>
-                          <span>John Smith</span>
-                          <span class="time">3 mins ago</span>
-                        </span>
-                        <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were where...
-                        </span>
-                      </a>
-                    </li>
+                    {% for notificaition in unread_notifications|slice:":5" %}
+                      <li>
+                        <a>
+                          <span>
+                            <span>{{ notificaition.title }}</span>
+                            <span class="time">{{ notificaition.created_slang }}</span>
+                          </span>
+                          <span class="message">
+                            {{ notificaition.text }}
+                          </span>
+                        </a>
+                      </li>
+                    {% endfor %}
                     <li>
                       <div class="text-center">
-                        <a>
+                        <a href="{% url 'notification-list' %}">
                           <strong>See All Alerts</strong>
                           <i class="fa fa-angle-right"></i>
                         </a>
@@ -205,8 +174,12 @@
         {% for message in messages %}
           <li class="{{ message.level_tag }}">{{ message }}</li>
         {% endfor %}
+        {% if unread_notifications %}
+          <li class="success">You have new unread Notifications</li>
+        {% endif %}
       </ul>
     </div>
+
     <!-- /notification -->
 
     <!-- jQuery -->
