@@ -10,7 +10,7 @@ import humanize
 
 
 class ExpenseType(TimeStampedModel, models.Model):
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=100)
     receipt_required = models.BooleanField(default=True)
 
     def __str__(self):
