@@ -28,6 +28,14 @@ def receipt_directory_path(instance, filename):
     return 'expense_receipts/{0}/{1}'.format(instance.salesman.id, filename)
 
 
+class CompanyCard(TimeStampedModel, models.Model):
+    name = models.CharField(max_length=100)
+    gp_vendor_code = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class Salesman(TimeStampedModel, models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='salesman',
@@ -35,7 +43,8 @@ class Salesman(TimeStampedModel, models.Model):
     regions = models.TextField()
     manager = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name='team', null=True)
-    has_company_card = models.BooleanField(default=False)
+    company_cards = models.ManyToManyField(CompanyCard, blank=True)
+    gp_vendor_code = models.CharField(max_length=100)
 
     def __str__(self):
         return str(self.user)
@@ -64,10 +73,6 @@ class RecurringExpense(TimeStampedModel, models.Model):
 
 
 class Expense(TimeStampedModel, models.Model):
-    PAID_BY_CHOICES = (
-        ('E', 'Employee Paid'),
-        ('C', 'Company Paid'),
-    )
     STATUS_CHOICES = (
         ('P', 'Pending'),
         ('A', 'Approved'),
@@ -79,8 +84,7 @@ class Expense(TimeStampedModel, models.Model):
     transaction_date = models.DateField()
     status = models.CharField(
         max_length=2, choices=STATUS_CHOICES, default='P')
-    paid_by = models.CharField(
-        max_length=2, choices=PAID_BY_CHOICES, default='E')
+    paid_by = models.CharField(max_length=100)
     notes = models.TextField(null=True, blank=True)
     receipt = models.ImageField(
         upload_to=receipt_directory_path, null=True, blank=True)

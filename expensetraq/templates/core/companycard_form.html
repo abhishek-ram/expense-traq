@@ -1,44 +1,32 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
 {% load form_extras %}
-{% block title %}Expense Tracking - Manage Salesmen{% endblock %}
+{% block title %}Expense Tracking - Manage Company Cards{% endblock %}
 
 {% block head_css %}
-  <!-- iCheck -->
-  <link href="{% static "vendors/iCheck/skins/flat/green.css" %}" rel="stylesheet">
-
-  <!-- Select2 -->
-  <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
 {% endblock %}
 
 {% block body_content %}
 
     <!-- page content -->
   <div class="right_col" role="main">
-
     <!-- po table -->
     <div class="row">
       <div class="col-md-8 col-sm-8 col-xs-12 col-md-offset-2 col-sm-offset-2">
         <div class="x_panel">
           <div class="x_title">
             {% if form.instance.id %}
-              <h3>Edit Salesman - {{ form.instance.user  }}</h3>
+              <h3>Edit Company Card - {{ form.instance.id  }}</h3>
             {% else %}
-              <h3>On-board a Salesman</h3>
+              <h3>Add a new Company Card</h3>
             {% endif %}
             <div class="clearfix"></div>
           </div>
           <div class="x_content">
             <form class="form-horizontal form-label-left" method="post">
               {% csrf_token %}
-
-              {% render_input_select form.user "Salesman" %}
-              {% render_input_select form.regions %}
-
-              {% render_input_select form.manager %}
-              {% render_input_select form.company_cards %}
+              {% render_input_text form.name %}
               {% render_input_text form.gp_vendor_code %}
-
               <div class="ln_solid"></div>
               <div class="form-group">
                 <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
@@ -59,17 +47,5 @@
 {% endblock %}
 
 {% block body_js %}
-  <!-- iCheck -->
-  <script src="{% static "vendors/iCheck/icheck.min.js" %}"></script>
-  <!-- Select2 -->
-  <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
-  <script>
-      $(document).ready(function() {
-        // Initialize Select
-        $(".select2_single").select2({
-			    allowClear: false
-			  });
-      });
-  </script>
 {% endblock %}

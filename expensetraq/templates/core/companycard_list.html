@@ -1,0 +1,115 @@
+{% extends 'core/layout.html' %}
+{% load staticfiles %}
+
+{% block title %}Expense Tracking - Manage Company Cards{% endblock %}
+
+{% block head_css %}
+  <!-- Datatables -->
+  <link href="{% static "vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block body_content %}
+
+    <!-- page content -->
+  <div class="right_col" role="main">
+    <div class="page-title">
+      <div class="title_left">
+        <h3>Manage Company Cards <small>You can find all company cards listed here</small></h3>
+      </div>
+
+      <div class="title_right">
+        <a class="btn btn-primary btn-round pull-right" type="button"
+                 href="{% url 'company-card-add' %}">
+                <i class="fa fa-plus" ></i> Add Company Card</a>
+      </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <!-- object list -->
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_content">
+            <table class="table table-striped" id="datatable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>GP Vendor Code</th>
+                  <th>Edited On</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cc in object_list %}
+                  <tr>
+                    <td>{{ cc.name }}</td>
+                    <td>{{ cc.gp_vendor_code }}</td>
+                    <td>{{ cc.modified }}</td>
+                    <td>
+                      <a href="{% url 'company-card-update' cc.pk %}"
+                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                      <button onclick="confirmDelete('{% url 'company-card-delete' cc.pk %}', '{{ cc.name }}')"
+                              class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- object list -->
+
+    <!-- delete modal -->
+    <div class="modal fade delete-modal" tabindex="-1" role="dialog"
+         aria-hidden="true" aria-labelledby="deleteModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form class="form-horizontal delete-form" method="post">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="deleteModalLabel">Delete Confirmation Dialog</h4>
+          </div>
+          <div class="modal-body">
+            {% csrf_token %}
+            <h5>Are you sure you want to delete the company card <i><b class="cc_name"></b></i>?</h5>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <input type="submit" class="btn btn-danger" value="Delete"/>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- delete modal -->
+  </div>
+
+<!-- /page content -->
+{% endblock %}
+
+
+
+{% block body_js %}
+  <!-- Datatables -->
+  <script src="{% static "vendors/datatables.net/js/jquery.dataTables.min.js" %}"></script>
+  <script src="{% static "vendors/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+
+  <script>
+    function confirmDelete(url, cc_name) {
+      $(".delete-form").attr("action", url);
+      $(".delete-form .cc_name").text(cc_name);
+      $(".delete-modal").modal("show");
+
+    }
+    $('#datatable').dataTable({
+        "ordering": false,
+        "responsive": true,
+        "columnDefs": [
+            { "searchable": false, "targets": [2, 3] }
+        ]
+      });
+  </script>
+{% endblock %}

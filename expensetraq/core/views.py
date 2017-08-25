@@ -15,7 +15,8 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
-    Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification
+    Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
+    CompanyCard
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm
 import maya
@@ -220,6 +221,7 @@ class ExpenseCreate(CreateView):
         if not context.get('inline_formset'):
             context['inline_formset'] = self.ExpenseFormSet(
                 form_kwargs={'salesman': self.request.user.salesman})
+        context['salesman'] = self.request.user.salesman
         return context
 
     def form_valid(self, form):
@@ -354,6 +356,7 @@ class ExpenseUpdate(UpdateView):
             context['inline_formset'] = self.ExpenseFormSet(
                 form_kwargs={'salesman': context['form'].instance.salesman},
                 instance=context['form'].instance)
+        context['salesman'] = context['form'].instance.salesman
         return context
 
     def form_valid(self, form):
@@ -501,3 +504,34 @@ class ExpenseDailyAverage(View):
             series.append([date.start.datetime().strftime('%Y-%m-%d'),
                            daily_expense])
         return JsonResponse(series, safe=False)
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class CompanyCardList(ListView):
+    model = CompanyCard
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class CompanyCardCreate(SuccessMessageMixin, CreateView):
+    model = CompanyCard
+    fields = '__all__'
+    success_url = reverse_lazy('company-card-list')
+    success_message = 'Company Card <var>%(name)s</var> has ' \
+                      'been added successfully'
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class CompanyCardUpdate(SuccessMessageMixin, UpdateView):
+    model = CompanyCard
+    fields = '__all__'
+    success_url = reverse_lazy('company-card-list')
+    success_message = 'Company Card <var>%(name)s</var> has ' \
+                      'been edited successfully'
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class CompanyCardDelete(DeleteMessageMixin, DeleteView):
+    model = CompanyCard
+    success_url = reverse_lazy('company-card-list')
+    success_message = 'Company Card <var>%(name)s</var> has been deleted ' \
+                      'successfully'

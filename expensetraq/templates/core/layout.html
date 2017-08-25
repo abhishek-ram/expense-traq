@@ -58,6 +58,8 @@
                     <li><a href="{% url 'index' %}">
                       <i class="fa fa-dashboard" ></i> Dashboard </a></li>
                     {% if "Expense-Admin" in user_groups %}
+                      <li><a href="{% url 'company-card-list' %}">
+                        <i class="fa fa-credit-card-alt" ></i> Company Card </a></li>
                       <li><a href="{% url 'salesman-list' %}">
                         <i class="fa fa-group" ></i> Salesmen </a></li>
                       <li><a href="{% url 'expense-type-list' %}">

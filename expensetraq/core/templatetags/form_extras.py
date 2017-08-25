@@ -55,6 +55,8 @@ def render_input_select(field, label=None, select2=True):
 
         if type(field.value()) != list:
             field_values = [str(v) for v in literal_eval(field.value() or '[]')]
+        else:
+            field_values = [str(v) for v in field_values]
 
     options = ''
     for k, v in field.field.choices:

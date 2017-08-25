@@ -9,7 +9,126 @@
 
   <!-- page content -->
   <div class="right_col" role="main">
-  {% if "Expense-User" in user_groups%}
+  {% if "Expense-Admin" in user_groups %}
+    <div class="row top_tiles">
+      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="tile-stats">
+          <div class="icon"><i class="fa fa-users"></i></div>
+          <div class="count">{{ team_count }}</div>
+          <h3>Salesman</h3>
+          <p>Number of registered salesman.</p>
+        </div>
+      </div>
+      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="tile-stats">
+          <div class="icon"><i class="fa fa-clock-o"></i></div>
+          <div class="count">$ {{ pending_amt }}</div>
+          <h3>Pending Amount</h3>
+          <p>Allowance amount still pending to be approved.</p>
+        </div>
+      </div>
+      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="tile-stats">
+          <div class="icon"><i class="fa fa-check-square-o"></i></div>
+          <div class="count green">$ {{ approved_amt }}</div>
+          <h3>Approved Amount</h3>
+          <p>Allowance amount approved in the past 3 months.</p>
+        </div>
+      </div>
+      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="tile-stats">
+          <div class="icon"><i class="fa fa-times"></i></div>
+          <div class="count red">$ {{ denied_amt }}</div>
+          <h3>Denied Amount</h3>
+          <p>Allowance amount denied in the past 3 months..</p>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Salesmen <small>List of salesman reporting to you</small></h2>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Regions</th>
+                    <th>Company Cards</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for salesman in salesman_list %}
+                  <tr>
+                    <td>
+                      <b>{{ salesman.user }}</b>
+                    </td>
+                    <td>
+                      {% for r in  salesman.region_list %}
+                        <span class="label label-default">{{ r }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>
+                      {% for cc in  salesman.company_cards.all %}
+                        <span class="label label-default">{{ cc.name }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>
+                      <a href="{% url 'expense-approval' %}?salesman={{ salesman.id }}"
+                         class="btn btn-info btn-xs"><i class="fa fa-external-link"></i> View Expenses</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>Latest expenses <small>Last 10 expenses created by your team</small></h2>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Salesman</th>
+                    <th>Expense Type</th>
+                    <th>Transaction Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in expense_list %}
+                  <tr>
+                    <td>{{ expense.salesman.user }}</td>
+                    <td>
+                      {% for l in  expense.lines.all %}
+                        <span class="label label-default">{{ l.expense_type.name }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                    <td>${{ expense.total_amount|intcomma }}</td>
+                    <td> {{ expense.get_status_display }}
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+            </div>
+          </div>
+        </div>
+    </div>
+  {% elif "Expense-User" in user_groups%}
     {% if not user.salesman %}
       <div class="col-md-12">
         <div class="col-middle">
@@ -163,7 +282,7 @@
                   <tr>
                     <th>Name</th>
                     <th>Regions</th>
-                    <th>Has Company Card</th>
+                    <th>Company Cards</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -179,11 +298,9 @@
                       {% endfor %}
                     </td>
                     <td>
-                      {% if  salesman.has_company_card %}
-                        <i class="fa fa-check-square fa-lg" ></i>
-                      {% else %}
-                        <i class="fa fa-square-o fa-lg" ></i>
-                      {% endif %}
+                      {% for cc in  salesman.company_cards.all %}
+                        <span class="label label-default">{{ cc.name }}</span>
+                      {% endfor %}
                     </td>
                     <td>
                       <a href="{% url 'expense-list' %}?salesman={{ salesman.id }}"
@@ -192,127 +309,6 @@
                   </tr>
                 {% endfor %}
               </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      <div class="col-md-6 col-sm-6 col-xs-12">
-          <div class="x_panel">
-            <div class="x_title">
-              <h2>Latest expenses <small>Last 10 expenses created by your team</small></h2>
-              <div class="clearfix"></div>
-            </div>
-            <div class="x_content">
-
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Salesman</th>
-                    <th>Expense Type</th>
-                    <th>Transaction Date</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for expense in expense_list %}
-                  <tr>
-                    <td>{{ expense.salesman.user }}</td>
-                    <td>
-                      {% for l in  expense.lines.all %}
-                        <span class="label label-default">{{ l.expense_type.name }}</span>
-                      {% endfor %}
-                    </td>
-                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
-                    <td>${{ expense.total_amount|intcomma }}</td>
-                    <td> {{ expense.get_status_display }}
-                    </td>
-                  </tr>
-                {% endfor %}
-                </tbody>
-              </table>
-
-            </div>
-          </div>
-        </div>
-    </div>
-  {% elif "Expense-Admin" in user_groups %}
-    <div class="row top_tiles">
-      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-          <div class="icon"><i class="fa fa-users"></i></div>
-          <div class="count">{{ team_count }}</div>
-          <h3>Salesman</h3>
-          <p>Number of registered salesman.</p>
-        </div>
-      </div>
-      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-          <div class="icon"><i class="fa fa-clock-o"></i></div>
-          <div class="count">$ {{ pending_amt }}</div>
-          <h3>Pending Amount</h3>
-          <p>Allowance amount still pending to be approved.</p>
-        </div>
-      </div>
-      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-          <div class="icon"><i class="fa fa-check-square-o"></i></div>
-          <div class="count green">$ {{ approved_amt }}</div>
-          <h3>Approved Amount</h3>
-          <p>Allowance amount approved in the past 3 months.</p>
-        </div>
-      </div>
-      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-          <div class="icon"><i class="fa fa-times"></i></div>
-          <div class="count red">$ {{ denied_amt }}</div>
-          <h3>Denied Amount</h3>
-          <p>Allowance amount denied in the past 3 months..</p>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-6 col-sm-6 col-xs-12">
-          <div class="x_panel">
-            <div class="x_title">
-              <h2>Salesmen <small>List of salesman reporting to you</small></h2>
-              <div class="clearfix"></div>
-            </div>
-            <div class="x_content">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Regions</th>
-                    <th>Has Company Card</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for salesman in salesman_list %}
-                  <tr>
-                    <td>
-                      <b>{{ salesman.user }}</b>
-                    </td>
-                    <td>
-                      {% for r in  salesman.region_list %}
-                        <span class="label label-default">{{ r }}</span>
-                      {% endfor %}
-                    </td>
-                    <td>
-                      {% if  salesman.has_company_card %}
-                        <i class="fa fa-check-square fa-lg" ></i>
-                      {% else %}
-                        <i class="fa fa-square-o fa-lg" ></i>
-                      {% endif %}
-                    </td>
-                    <td>
-                      <a href="{% url 'expense-approval' %}?salesman={{ salesman.id }}"
-                         class="btn btn-info btn-xs"><i class="fa fa-external-link"></i> View Expenses</a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
               </table>
             </div>
           </div>

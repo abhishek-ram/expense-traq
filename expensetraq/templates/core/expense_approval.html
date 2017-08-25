@@ -82,7 +82,7 @@
                     <td>{{ expense.expense_types }}</td>
                     <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
                     <td>${{ expense.total_amount|intcomma }}</td>
-                    <td>{{ expense.get_paid_by_display }}</td>
+                    <td>{{ expense.paid_by }}</td>
                     <td>{{ expense.notes|truncatewords:6 }}</td>
                     <td>
                       {% if expense.receipt %}

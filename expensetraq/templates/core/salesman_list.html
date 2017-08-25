@@ -36,7 +36,7 @@
                   <th>Salesman</th>
                   <th>Regions</th>
                   <th>Manager</th>
-                  <th>Has Company Card</th>
+                  <th>Company Cards</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -53,11 +53,9 @@
                     </td>
                     <td>{{ salesman.manager }}</td>
                     <td>
-                      {% if  salesman.has_company_card %}
-                        <i class="fa fa-check-square fa-lg" ></i>
-                      {% else %}
-                        <i class="fa fa-square-o fa-lg" ></i>
-                      {% endif %}
+                      {% for cc in  salesman.company_cards.all %}
+                        <span class="label label-default">{{ cc.name }}</span>
+                      {% endfor %}
                     </td>
                     <td>
                       <a href="{% url 'salesman-update' salesman.pk %}"
