@@ -60,6 +60,8 @@
                     <td>
                       <a href="{% url 'salesman-update' salesman.pk %}"
                          class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                      <a href="{% url 'expense-add'%}?salesman={{ salesman.pk }}"
+                         class="btn btn-dark btn-xs"><i class="fa fa-plus"></i> Create Expense </a>
                     </td>
                   </tr>
                 {% endfor %}

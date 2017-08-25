@@ -49,7 +49,7 @@
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
               <div class="menu_section">
 
-                {% if "Expense-User" in user_groups and not user.salesman%}
+                {% if request.user.is_salesman and not request.user.is_admin and not user.salesman %}
                   <ul class="nav side-menu">
                   </ul>
                 {% else %}
@@ -57,7 +57,7 @@
                   <ul class="nav side-menu">
                     <li><a href="{% url 'index' %}">
                       <i class="fa fa-dashboard" ></i> Dashboard </a></li>
-                    {% if "Expense-Admin" in user_groups %}
+                    {% if request.user.is_admin %}
                       <li><a href="{% url 'company-card-list' %}">
                         <i class="fa fa-credit-card-alt" ></i> Company Card </a></li>
                       <li><a href="{% url 'salesman-list' %}">
@@ -75,10 +75,10 @@
                           <li><a href="asa">Export Expenses</a></li>
                         </ul>
                       </li>
-                    {% elif "Expense-User" in user_groups %}
+                    {% elif request.user.is_salesman %}
                       <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-credit-card" ></i> Expenses </a></li>
-                    {% elif "Expense-Manager" in user_groups %}
+                    {% elif request.user.is_manager %}
                       <li><a href="{% url 'expense-list' %}">
                         <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
                     {% endif %}
@@ -126,7 +126,7 @@
                   <ul id="menu1" class="dropdown-menu list-unstyled msg_list" role="menu">
                     {% for notificaition in unread_notifications|slice:":5" %}
                       <li>
-                        <a>
+                        <a href={% url 'notification-list' %}>
                           <span>
                             <span>{{ notificaition.title }}</span>
                             <span class="time">{{ notificaition.created_slang }}</span>

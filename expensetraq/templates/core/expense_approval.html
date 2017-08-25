@@ -34,19 +34,19 @@
         </h3>
       </div>
 
-      <div class="title_right">
-          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
-
-            <select class="form-control select2_single" id="id_salesman"
-              name="salesman" required>
-                <option value="">----------</option>
-                {% for salesman in salesman_list %}
-                  <option {% if salesman.id == request.GET.salesman|add:"0"  %} selected {% endif %}
-                    value="{{ salesman.id }}">{{ salesman.user }}</option>
-                {% endfor %}
-            </select>
-          </div>
-      </div>
+{#      <div class="title_right">#}
+{#          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">#}
+{##}
+{#            <select class="form-control select2_single" id="id_salesman"#}
+{#              name="salesman" required>#}
+{#                <option value="">----------</option>#}
+{#                {% for salesman in salesman_list %}#}
+{#                  <option {% if salesman.id == request.GET.salesman|add:"0"  %} selected {% endif %}#}
+{#                    value="{{ salesman.id }}">{{ salesman.user }}</option>#}
+{#                {% endfor %}#}
+{#            </select>#}
+{#          </div>#}
+{#      </div>#}
     </div>
 
     <div class="clearfix"></div>
@@ -57,13 +57,14 @@
           <div class="x_content">
             <form method="post" id="approval_form">
             {% csrf_token %}
-            <input type="hidden" id="id_salesman" name="salesman"
-                   value="{{ request.GET.salesman }}">
+{#            <input type="hidden" id="id_salesman" name="salesman"#}
+{#                   value="{{ request.GET.salesman }}">#}
             <input type="hidden" id="id_approved" name="approved" value="">
             <table class="table" id="datatable">
               <thead>
                 <tr>
                   <th><input type="checkbox" id="check_all" class="flat"></th>
+                  <th>Salesman</th>
                   <th>Expense Type</th>
                   <th>Date of Transaction</th>
                   <th>Amount</th>
@@ -79,6 +80,7 @@
 							        <input type="checkbox" id="id_expense_list" name="expense_list"
                              value="{{ expense.id }}" class="flat">
 						        </td>
+                    <td>{{ expense.salesman.user }}</td>
                     <td>{{ expense.expense_types }}</td>
                     <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
                     <td>${{ expense.total_amount|intcomma }}</td>
@@ -86,20 +88,16 @@
                     <td>{{ expense.notes|truncatewords:6 }}</td>
                     <td>
                       {% if expense.receipt %}
-                        <button class="btn btn-primary btn-xs"
+                        <button class="btn btn-primary btn-xs" type="button"
                           onclick="viewReceipt('{{ expense.receipt.url }}', '{{ expense.transaction_date|date:"Y-m-d"}}', '{{ expense.total_amount|intcomma }}')">
                         <i class="fa fa-eye"></i> View Receipt </button>
                       {% else %}
                         <button class="btn btn-primary btn-xs" disabled>No Receipt Uploaded</button>
                       {% endif %}
-                      {% if "Expense-Admin" in user_groups %}
-                        <a href="{% url 'expense-update' expense.pk %}"
-                           class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-                      {% else %}
-                        <a href="{% url 'expense-detail' expense.pk %}"
-                         class="btn btn-primary btn-xs">
-                        <i class="fa fa-folder"></i> View </a>
-                      {% endif %}
+
+                      <a href="{% url 'expense-update' expense.pk %}"
+                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+
 {#                      <button onclick="confirmDelete('{% url 'expense-type-delete' et.pk %}', '{{ et.name }}')"#}
 {#                              class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>#}
                     </td>
@@ -217,11 +215,11 @@
           }
         ],
         responsive: true,
-        order: [[ 2, "desc" ], [ 1, "desc" ]],
+        order: [[ 1, "desc" ], [ 2, "desc" ], [ 3, "desc" ]],
         columnDefs: [
-          { "type": "date", targets: [2] },
+          { "type": "date", targets: [3] },
           {
-            targets: [1] ,
+            targets: [2] ,
             render: function ( data, type, full, meta ) {
               var elem = '';
               data.split('|').forEach(function (item, index) {
@@ -230,14 +228,15 @@
               return elem
             }
           },
-          { "searchable": false, "targets": [0, 2, 3, 6] },
-          { "sortable": false, "targets": [0, 4, 5, 6] }
+          { "searchable": false, "targets": [0, 3, 4, 7] },
+          { "sortable": false, "targets": [0, 5, 6, 7] }
         ],
         createdRow: function( row, data, dataIndex){
             var api = this.api();
             var bg_color = 'rgba(243, 218, 45, 0.40)';
             var pr_data = api.row(dataIndex-1).data();
-            if (pr_data && data[2] == pr_data[2] && data[3] == pr_data[3]){
+            if (pr_data && data[1] == pr_data[1] && data[2] == pr_data[2]
+                && data[3] == pr_data[3] && data[4] == pr_data[4]){
               $(row).css('background-color', bg_color);
               $(row).prev().css('background-color', bg_color);
             }

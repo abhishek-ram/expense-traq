@@ -17,8 +17,7 @@ def user_in_groups(group, login_url=None, raise_exception=True):
         else:
             groups = group
         # First check if the user has the permission (even anon users)
-        user_groups = {g.name for g in user.groups.all()}
-        if user_groups.intersection(set(groups)):
+        if user.user_groups.intersection(set(groups)):
             return True
         # In case the 403 handler should be called raise the exception
         if raise_exception:
@@ -49,7 +48,6 @@ class DeleteMessageMixin(object):
 def context_processor(request):
     context = {}
     if request.user.is_authenticated:
-        context['user_groups'] = {g.name for g in request.user.groups.all()}
         context['unread_notifications'] = request.user.notifications.filter(
             is_read=False)
     return context

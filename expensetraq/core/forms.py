@@ -28,14 +28,16 @@ class ExpenseLineForm(forms.ModelForm):
                 and cleaned_data.get('amount', 0) > expense_limit.limit:
             self.add_error('amount', 'Amount exceeds the Expense limit')
         if cleaned_data.get('expense_type') \
+                and not self.user_is_admin \
                 and cleaned_data['expense_type'].receipt_required \
                 and not cleaned_data['expense'].receipt:
             self.add_error('expense_type',
                            'Receipt is required for this expense type')
 
-    def __init__(self, salesman, *args, **kwargs):
+    def __init__(self, salesman, user_is_admin, *args, **kwargs):
         super(ExpenseLineForm, self).__init__(*args, **kwargs)
         self.salesman = salesman
+        self.user_is_admin = user_is_admin
         region_dict = dict(STATE_CHOICES)
         region_choices = [
             (r, region_dict[r]) for r in salesman.region_list]
@@ -47,8 +49,6 @@ class ExpenseLineForm(forms.ModelForm):
 
 
 class ExpenseApprovalForm(forms.Form):
-    salesman = forms.ModelChoiceField(
-        queryset=Salesman.objects.all(), empty_label='')
     expense_list = forms.ModelMultipleChoiceField(
         queryset=Expense.objects.all())
     approved = forms.NullBooleanField()

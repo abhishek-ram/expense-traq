@@ -1,12 +1,43 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db import models
-from django.contrib.auth.models import User
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
 from localflavor.us import models as us_models
 from ast import literal_eval
+from django.contrib.auth.models import AbstractUser
 import humanize
+
+
+class User(AbstractUser):
+
+    @property
+    def user_groups(self):
+        return {g.name for g in self.groups.all()}
+
+    @property
+    def is_admin(self):
+        if 'Expense-Admin' in self.user_groups:
+            return True
+        else:
+            return False
+
+    @property
+    def is_manager(self):
+        if 'Expense-Manager' in self.user_groups:
+            return True
+        else:
+            return False
+
+    @property
+    def is_salesman(self):
+        if 'Expense-User' in self.user_groups:
+            return True
+        else:
+            return False
+
+    class Meta:
+        db_table = 'auth_user'
 
 
 class ExpenseType(TimeStampedModel, models.Model):
@@ -38,7 +69,8 @@ class CompanyCard(TimeStampedModel, models.Model):
 
 class Salesman(TimeStampedModel, models.Model):
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='salesman',
+        User, on_delete=models.CASCADE,
+        related_name='salesman',
         error_messages={'unique': 'Salesman already on-boarded.'})
     regions = models.TextField()
     manager = models.ForeignKey(
@@ -91,7 +123,7 @@ class Expense(TimeStampedModel, models.Model):
     pushed_to_gp = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('-transaction_date', '-created')
+        ordering = ('-salesman', '-transaction_date', '-created')
 
     @property
     def total_amount(self):

@@ -9,7 +9,7 @@
 
   <!-- page content -->
   <div class="right_col" role="main">
-  {% if "Expense-Admin" in user_groups %}
+  {% if request.user.is_admin %}
     <div class="row top_tiles">
       <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
         <div class="tile-stats">
@@ -128,7 +128,7 @@
           </div>
         </div>
     </div>
-  {% elif "Expense-User" in user_groups%}
+  {% elif request.user.is_salesman %}
     {% if not user.salesman %}
       <div class="col-md-12">
         <div class="col-middle">
@@ -234,7 +234,7 @@
         </div>
       </div>
     {% endif %}
-  {% elif "Expense-Manager" in user_groups %}
+  {% elif request.user.is_manager %}
     <div class="row top_tiles">
       <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
         <div class="tile-stats">

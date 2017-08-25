@@ -12,11 +12,10 @@ from django.db import transaction
 from django.forms import inlineformset_factory
 from django.db.models import Sum
 from django.utils import timezone
-from django.contrib.auth.models import User
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
-    CompanyCard
+    CompanyCard, User
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm
 import maya
@@ -30,45 +29,7 @@ class Index(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Index, self).get_context_data(**kwargs)
-        user_groups = {g.name for g in self.request.user.groups.all()}
-        if 'Expense-User' in user_groups:
-            expenses = self.request.user.salesman.expenses.filter(
-                transaction_date__gte=LIMIT_DATE)
-            context.update({
-                'pending_amt': sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='P')]),
-                'approved_amt': sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='A')]),
-                'denied_amt': sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='D')]),
-                'expense_list': expenses[:10]
-            })
-        elif 'Expense-Manager' in user_groups:
-            team = self.request.user.team.all()
-            context.update({
-                'team_count': len(team),
-                'pending_amt': 0,
-                'approved_amt': 0,
-                'denied_amt': 0,
-                'expense_list': Expense.objects.filter(
-                    salesman__in=team)[:10]
-            })
-            for salesman in team:
-                expenses = salesman.expenses.filter(
-                    transaction_date__gte=LIMIT_DATE)
-                context['pending_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='P')])
-                context['approved_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='A')])
-                context['denied_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='D')])
-        elif 'Expense-Admin' in user_groups:
+        if self.request.user.is_admin:
             salesmen = Salesman.objects.all()
             context.update({
                 'team_count': len(salesmen),
@@ -90,6 +51,44 @@ class Index(TemplateView):
                 context['denied_amt'] += sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='D')])
+        elif self.request.user.is_salesman:
+            expenses = self.request.user.salesman.expenses.filter(
+                transaction_date__gte=LIMIT_DATE)
+            context.update({
+                'pending_amt': sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='P')]),
+                'approved_amt': sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='A')]),
+                'denied_amt': sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='D')]),
+                'expense_list': expenses[:10]
+            })
+        elif self.request.user.is_manager:
+            team = self.request.user.team.all()
+            context.update({
+                'team_count': len(team),
+                'pending_amt': 0,
+                'approved_amt': 0,
+                'denied_amt': 0,
+                'expense_list': Expense.objects.filter(
+                    salesman__in=team)[:10]
+            })
+            for salesman in team:
+                expenses = salesman.expenses.filter(
+                    transaction_date__gte=LIMIT_DATE)
+                context['pending_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='P')])
+                context['approved_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='A')])
+                context['denied_amt'] += sum([
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    for e in expenses.filter(status='D')])
+
         return context
 
 
@@ -186,8 +185,7 @@ class ExpenseList(ListView):
     model = Expense
 
     def get_queryset(self):
-        if 'Expense-Manager' in \
-                {g.name for g in self.request.user.groups.all()}:
+        if self.request.user.is_manager:
             salesman = self.request.GET.get('salesman')
             if salesman:
                 return Expense.objects.filter(
@@ -205,11 +203,11 @@ class ExpenseList(ListView):
         return context
 
 
-@method_decorator(user_in_groups(['Expense-User']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-User',
+                                  'Expense-Admin']), name='dispatch')
 class ExpenseCreate(CreateView):
     model = Expense
-    fields = ['transaction_date', 'paid_by', 'notes', 'receipt']
-    success_url = reverse_lazy('expense-list')
+    fields = ['transaction_date', 'paid_by', 'notes', 'receipt', 'salesman']
     success_message = 'Expense with total ${0.total_amount} has ' \
                       'been recorded successfully'
     ExpenseFormSet = inlineformset_factory(
@@ -218,20 +216,30 @@ class ExpenseCreate(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(ExpenseCreate, self).get_context_data(**kwargs)
+        if self.request.user.is_admin:
+            context['salesman'] = Salesman.objects.get(
+                id=self.request.GET.get('salesman'))
+        else:
+            context['salesman'] = self.request.user.salesman
         if not context.get('inline_formset'):
             context['inline_formset'] = self.ExpenseFormSet(
-                form_kwargs={'salesman': self.request.user.salesman})
-        context['salesman'] = self.request.user.salesman
+                form_kwargs={'salesman': context['salesman'],
+                             'user_is_admin': self.request.user.is_admin})
         return context
 
     def form_valid(self, form):
         try:
             with transaction.atomic():
-                form.instance.salesman = self.request.user.salesman
+                # Save the expense object
                 self.object = form.save()
+
+                # Initialise the expense line formset
                 formset = self.ExpenseFormSet(
                     self.request.POST, instance=self.object,
-                    form_kwargs={'salesman': self.request.user.salesman})
+                    form_kwargs={'salesman': self.object.salesman,
+                                 'user_is_admin': self.request.user.is_admin})
+
+                # Validate and save the formset
                 assert formset.is_valid()
                 formset.save()
                 messages.success(
@@ -242,7 +250,7 @@ class ExpenseCreate(CreateView):
                     self.request.user, self.object.transaction_date,
                     self.object.total_amount)
                 Notification.objects.create(
-                    user=self.request.user.salesman.manager,
+                    user=self.object.salesman.manager,
                     title='New Expense Created',
                     text=not_message)
                 Notification.objects.create(
@@ -257,6 +265,70 @@ class ExpenseCreate(CreateView):
             return self.render_to_response(
                 self.get_context_data(form=form, inline_formset=formset))
 
+    def get_success_url(self):
+        if self.request.user.is_admin:
+            reverse_lazy('expense-approval')
+        else:
+            reverse_lazy('expense-list')
+
+    def get_success_message(self, obj):
+        return self.success_message.format(obj)
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class ExpenseUpdate(UpdateView):
+    model = Expense
+    fields = ['transaction_date', 'paid_by', 'notes']
+    success_url = reverse_lazy('expense-approval')
+    success_message = 'Expense "{0.pk}" has been edited successfully'
+
+    ExpenseFormSet = inlineformset_factory(
+        Expense, ExpenseLine,max_num=5, can_delete=False, form=ExpenseLineForm)
+
+    def get_context_data(self, **kwargs):
+        context = super(ExpenseUpdate, self).get_context_data(**kwargs)
+        if not context.get('inline_formset'):
+            context['inline_formset'] = self.ExpenseFormSet(
+                form_kwargs={'salesman': context['form'].instance.salesman,
+                             'user_is_admin': self.request.user.is_admin},
+                instance=context['form'].instance)
+        context['salesman'] = context['form'].instance.salesman
+        return context
+
+    def form_valid(self, form):
+        try:
+            self.object = form.save()
+            formset = self.ExpenseFormSet(
+                self.request.POST, instance=self.object,
+                form_kwargs={'salesman': self.object.salesman,
+                             'user_is_admin': self.request.user.is_admin})
+            assert formset.is_valid()
+            formset.save()
+
+            # Create notifications for the salesman and manager
+            Notification.objects.create(
+                user=self.object.salesman.user,
+                title='Expense Updated',
+                text='Admin has edited your expense dated {} for ${}'.format(
+                    self.object.transaction_date, self.object.total_amount))
+            Notification.objects.create(
+                user=self.object.salesman.manager,
+                title='Expense Updated',
+                text='Admin has edited {}\'s expense dated {} for ${}'.format(
+                    self.object.salesman.user, self.object.transaction_date,
+                    self.object.total_amount))
+
+            messages.success(self.request,
+                             self.get_success_message(self.object))
+            return HttpResponseRedirect('%s?salesman=%s' % (
+                self.get_success_url(), self.object.salesman.id))
+        except AssertionError:
+            messages.error(
+                self.request,
+                'Failed to record expense, correct errors and resubmit')
+            return self.render_to_response(
+                self.get_context_data(form=form, inline_formset=formset))
+
     def get_success_message(self, obj):
         return self.success_message.format(obj)
 
@@ -268,11 +340,8 @@ class ExpenseApproval(ListView):
     template_name = 'core/expense_approval.html'
 
     def get_queryset(self):
-        salesman = self.request.GET.get('salesman')
-        if salesman:
-            return Expense.objects.filter(salesman=salesman, status='P')
-        else:
-            return Expense.objects.none()
+        # salesman = self.request.GET.get('salesman')
+        return Expense.objects.filter(status='P')
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -308,11 +377,6 @@ class ExpenseApproval(ListView):
         """
         Insert the form into the context dict.
         """
-        if 'Expense-Manager' in \
-                {g.name for g in self.request.user.groups.all()}:
-            kwargs['salesman_list'] = self.request.user.team.objects.all()
-        else:
-            kwargs['salesman_list'] = Salesman.objects.all()
         return super(ExpenseApproval, self).get_context_data(**kwargs)
 
     def get_form_kwargs(self):
@@ -338,62 +402,6 @@ class ExpenseApproval(ListView):
 
     def get_form(self):
         return self.form_class(**self.get_form_kwargs())
-
-
-@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
-class ExpenseUpdate(UpdateView):
-    model = Expense
-    fields = ['transaction_date', 'paid_by', 'notes']
-    success_url = reverse_lazy('expense-approval')
-    success_message = 'Expense "{0.pk}" has been edited successfully'
-
-    ExpenseFormSet = inlineformset_factory(
-        Expense, ExpenseLine,max_num=5, can_delete=False, form=ExpenseLineForm)
-
-    def get_context_data(self, **kwargs):
-        context = super(ExpenseUpdate, self).get_context_data(**kwargs)
-        if not context.get('inline_formset'):
-            context['inline_formset'] = self.ExpenseFormSet(
-                form_kwargs={'salesman': context['form'].instance.salesman},
-                instance=context['form'].instance)
-        context['salesman'] = context['form'].instance.salesman
-        return context
-
-    def form_valid(self, form):
-        try:
-            self.object = form.save()
-            formset = self.ExpenseFormSet(
-                self.request.POST, instance=self.object,
-                form_kwargs={'salesman': self.object.salesman})
-            assert formset.is_valid()
-            formset.save()
-
-            # Create notifications for the salesman and manager
-            Notification.objects.create(
-                user=self.object.salesman.user,
-                title='Expense Updated',
-                text='Admin has edited your expense dated {} for ${}'.format(
-                    self.object.transaction_date, self.object.total_amount))
-            Notification.objects.create(
-                user=self.object.salesman.manager,
-                title='Expense Updated',
-                text='Admin has edited {}\'s expense dated {} for ${}'.format(
-                    self.object.salesman.user, self.object.transaction_date,
-                    self.object.total_amount))
-
-            messages.success(self.request,
-                             self.get_success_message(self.object))
-            return HttpResponseRedirect('%s?salesman=%s' % (
-                self.get_success_url(), self.object.salesman.id))
-        except AssertionError:
-            messages.error(
-                self.request,
-                'Failed to record expense, correct errors and resubmit')
-            return self.render_to_response(
-                self.get_context_data(form=form, inline_formset=formset))
-
-    def get_success_message(self, obj):
-        return self.success_message.format(obj)
 
 
 class ExpenseDetail(DetailView):
