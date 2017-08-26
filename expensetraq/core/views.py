@@ -17,7 +17,7 @@ from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
     CompanyCard, User
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
-    ExpenseApprovalForm
+    ExpenseApprovalForm, ExpenseForm
 import maya
 
 LIMIT_DATE = maya.when(timezone.now().isoformat()).subtract(
@@ -183,7 +183,7 @@ class ExpenseTypeDelete(DeleteMessageMixin, DeleteView):
                                   'Expense-Admin']), name='dispatch')
 class ExpenseCreate(CreateView):
     model = Expense
-    fields = ['transaction_date', 'paid_by', 'notes', 'receipt', 'salesman']
+    form_class = ExpenseForm
     success_message = 'Expense with total ${0.total_amount} has ' \
                       'been recorded successfully'
     ExpenseFormSet = inlineformset_factory(
@@ -243,9 +243,9 @@ class ExpenseCreate(CreateView):
 
     def get_success_url(self):
         if self.request.user.is_admin:
-            reverse_lazy('expense-approval')
+            return reverse_lazy('expense-approval')
         else:
-            reverse_lazy('expense-list')
+            return '%s?action=list' % reverse_lazy('expense-list-export')
 
     def get_success_message(self, obj):
         return self.success_message.format(obj)

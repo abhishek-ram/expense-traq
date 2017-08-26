@@ -175,9 +175,18 @@
       //Initialize the file input
       $("#id_receipt").fileinput({
         showUpload: false,
+        maxFileCount: 1,
+        allowedFileExtensions: ["jpg", "jpeg", "gif", "png", "pdf"],
         browseLabel: "Pick or Capture Receipt",
         browseIcon: "<i class=\"glyphicon glyphicon-picture\"></i> ",
-        initialCaption: "Capture or Select a Receipt"
+        initialCaption: "Capture or Select a Receipt",
+        previewFileIconSettings: {
+          'pdf': '<i class="fa fa-file-pdf-o text-danger"></i>'
+        },
+        previewSettings: {
+          image: {width: "auto", height: "250px"},
+          pdf: {width: "auto", height: "250px"}
+        }
       });
 
       // Calculate total amount on change and on load

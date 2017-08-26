@@ -56,7 +56,8 @@ class ExpenseTypeCode(models.Model):
 
 
 def receipt_directory_path(instance, filename):
-    return 'expense_receipts/{0}/{1}'.format(instance.salesman.id, filename)
+    return 'expense_receipts/{0}/{1}'.format(
+        instance.transaction_date.strftime('%Y%m%d'), filename)
 
 
 class CompanyCard(TimeStampedModel, models.Model):

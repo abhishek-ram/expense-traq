@@ -1,6 +1,10 @@
 from django import forms
 from expensetraq.core.models import Salesman, User, ExpenseLine, Expense
 from localflavor.us.models import STATE_CHOICES
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from wand.image import Image
+from io import BytesIO
+import os
 
 
 class SalesmanForm(forms.ModelForm):
@@ -16,6 +20,45 @@ class SalesmanForm(forms.ModelForm):
     class Meta:
         model = Salesman
         fields = '__all__'
+
+
+class ExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Expense
+        fields = ['transaction_date', 'paid_by', 'notes', 'receipt', 'salesman']
+
+    receipt = forms.FileField(required=False)
+
+    def clean_receipt(self):
+        uploaded_file = self.cleaned_data['receipt']
+        if uploaded_file:
+            formatted_file = BytesIO()
+            formatted_file.name = uploaded_file.name
+            name, ext = os.path.splitext(uploaded_file.name)
+
+            if ext in ['.pdf', '.PDF']:
+                with Image(file=uploaded_file) as img:
+                    uploaded_file.name = '%s.jpg' % name
+                    img.format = 'jpeg'
+                    img.resize(1024, 768)
+                    img.save(formatted_file)
+            else:
+                with Image(file=uploaded_file) as img:
+                    img.resize(1024, 768)
+                    img.save(formatted_file)
+
+            uploaded_file.file = formatted_file
+
+            return InMemoryUploadedFile(
+                file=formatted_file,
+                field_name='receipt',
+                name=uploaded_file.name,
+                content_type=uploaded_file.content_type,
+                size=formatted_file.tell(),
+                charset=uploaded_file.charset
+            )
+        else:
+            return uploaded_file
 
 
 class ExpenseLineForm(forms.ModelForm):
@@ -53,10 +96,3 @@ class ExpenseApprovalForm(forms.Form):
         queryset=Expense.objects.all())
     approved = forms.NullBooleanField()
 
-    # def __init__(self, user, *args, **kwargs):
-    #     super(ExpenseReportForm, self).__init__(*args, **kwargs)
-    #     if 'Expense-Manager' in {g.name for g in user.groups.all()}:
-    #         salesman_choices = [
-    #             (m.id, str(m.user)) for m in user.team.all()]
-    #         self.fields['salesman'].choices = \
-    #             [('', '---------')] + salesman_choices
