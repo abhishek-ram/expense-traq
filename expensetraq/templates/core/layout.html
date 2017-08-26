@@ -72,14 +72,14 @@
                         <span class="fa fa-chevron-down"></span></a>
                         <ul class="nav child_menu">
                           <li><a href="{% url 'expense-approval' %}">Approve Expenses</a></li>
-                          <li><a href="asa">Export Expenses</a></li>
+                          <li><a href="{% url 'expense-list-export' %}">Export Expenses</a></li>
                         </ul>
                       </li>
                     {% elif request.user.is_salesman %}
-                      <li><a href="{% url 'expense-list' %}">
-                        <i class="fa fa-credit-card" ></i> Expenses </a></li>
+                      <li><a href="{% url 'expense-list-export' %}">
+                        <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
                     {% elif request.user.is_manager %}
-                      <li><a href="{% url 'expense-list' %}">
+                      <li><a href="{% url 'expense-list-export' %}">
                         <i class="fa fa-bar-chart" ></i> Expense Reports </a></li>
                     {% endif %}
                     <li><a href="{% url 'notification-list' %}">

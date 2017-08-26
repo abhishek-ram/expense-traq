@@ -2,7 +2,7 @@
 {% load staticfiles %}
 {% load humanize %}
 
-{% block title %}Expense Tracking - Expense Types{% endblock %}
+{% block title %}Expense Tracking - Expense Report{% endblock %}
 
 {% block head_css %}
   <!-- Datatables -->
@@ -14,6 +14,8 @@
   <!-- Select2 -->
   <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
 
+  <!-- bootstrap-daterangepicker -->
+  <link href="{% static "vendors/bootstrap-daterangepicker/daterangepicker.css" %}" rel="stylesheet">
 {% endblock %}
 
 {% block body_content %}
@@ -22,25 +24,16 @@
   <div class="right_col" role="main">
     <div class="page-title">
       <div class="title_left">
-        <h3>Expense List <small>You can find all expenses listed here</small></h3>
+        <h3>Expense Report <small>You can filter to list or export expenses here</small></h3>
       </div>
 
       <div class="title_right">
-        {% if request.user.is_salesman %}
+        {% if request.user.is_salesman and not request.user.is_admin %}
           <a class="btn btn-primary btn-round pull-right" type="button"
                      href="{% url 'expense-add' %}">
                     <i class="fa fa-plus" ></i> Add Expense</a>
         {% else %}
-          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
-            <select class="form-control select2_single" id="id_salesman"
-                name="salesman" required>
-              <option value="">----------</option>
-              {% for salesman in salesman_list %}
-                <option {% if salesman.id == request.GET.salesman|add:"0" %} selected {% endif %}
-                  value="{{ salesman.id }}">{{ salesman.user }}</option>
-              {% endfor %}
-            </select>
-          </div>
+
         {% endif %}
       </div>
     </div>
@@ -48,12 +41,14 @@
     <div class="clearfix"></div>
     <!-- po table -->
     <div class="row">
-      <div class="col-md-12 col-sm-12 col-xs-12">
+      {% if request.GET.action == 'list' %}
+        <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_content">
             <table class="table" id="datatable">
               <thead>
                 <tr>
+                  <th>Salesman</th>
                   <th>Expense Type</th>
                   <th>Date of Transaction</th>
                   <th>Amount</th>
@@ -66,6 +61,7 @@
               <tbody>
                 {% for expense in object_list %}
                   <tr>
+                    <td>{{ expense.salesman.user }}</td>
                     <td>{{ expense.expense_types }}</td>
                     <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
                     <td>${{ expense.total_amount|intcomma }}</td>
@@ -78,10 +74,6 @@
                         <a href="{% url 'expense-detail' expense.pk %}"
                            class="btn btn-primary btn-xs">
                           <i class="fa fa-folder"></i> View </a>
-{#                      <a href="{% url 'expense-type-update' et.pk %}"#}
-{#                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>#}
-{#                      <button onclick="confirmDelete('{% url 'expense-type-delete' et.pk %}', '{{ et.name }}')"#}
-{#                              class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>#}
                     </td>
                   </tr>
                 {% endfor %}
@@ -90,24 +82,78 @@
           </div>
         </div>
       </div>
-    </div>
-    <!-- po table -->
-    <!-- delete modal -->
-    <div class="modal fade delete-modal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-body">
-            <form class="form-horizontal delete-form" method="post">
-              {% csrf_token %}
+      {% else %}
+        <div class="col-md-8 col-sm-8 col-xs-12 col-md-offset-2 col-sm-offset-2">
+        <div class="x_panel">
+          <div class="x_title">
+            <h3>Filter Expenses</h3>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <form class="form-horizontal form-label-left">
 
-              <h4>Are you sure you want to delete the expense type "<strong></strong>"?</h4>
-              <input type="submit" class="btn btn-danger" value="Delete Mapping"/>
+              {% if request.user.is_admin or request.user.is_manager %}
+                <div class="item form-group ">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                    for="salesman">Salesman
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                    <select class="form-control select2_single" id="salesman"
+                      name="salesman" >
+                    <option value="">----------</option>
+                    {% for salesman in salesman_list %}
+                      <option value="{{ salesman.id }}">{{ salesman.user }}</option>
+                    {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              {% endif %}
+
+              <div class="item form-group ">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                  for="status">Status
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select class="form-control select2_single" id="status"
+                    name="salesman" multiple>
+                  <option value="">----------</option>
+                  {% for status in status_list %}
+                    <option value="{{ status.0 }}">{{ status.1 }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="item form-group ">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                  for="status">Date Range
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <div class="input-prepend input-group">
+                    <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                    <input type="text" id="daterange" class="form-control" value="" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="ln_solid"></div>
+              <div class="form-group">
+                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                  <button type="button" class="btn btn-primary action" id="list" >
+                    <i class="fa fa-list"></i> List Expenses</button>
+                  <button type="button" class="btn btn-success action" id="export">
+                    <i class="fa fa-external-link" ></i> Export Expenses</button>
+                </div>
+              </div>
+
             </form>
           </div>
         </div>
       </div>
+        <div class="col-md-2 col-sm-2"></div>
+      {% endif %}
     </div>
-    <!-- delete modal -->
+    <!-- po table -->
   </div>
 
 <!-- /page content -->
@@ -126,99 +172,88 @@
   <script src="{% static "vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js" %}"></script>
   <script src="{% static "vendors/datatables.net-scroller/js/dataTables.scroller.min.js" %}"></script>
 
+  <!-- bootstrap-daterangepicker -->
+  <script src="{% static "vendors/moment/min/moment.min.js" %}"></script>
+  <script src="{% static "vendors/bootstrap-daterangepicker/daterangepicker.js" %}"></script>
   <!-- Select2 -->
   <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
   <script>
-    function confirmDelete(url, salesperson) {
-      $(".delete-form").attr("action", url);
-      $(".delete-form h4 strong").text(salesperson);
-      $(".delete-modal").modal("show");
-    }
-    // Initialize Select
-    $(".select2_single").select2({
-        width: '100%',
-        placeholder: "Select a Salesman"
-    }).on('select2:select', function (evt) {
-        if ($(evt.target).val()) {
-          window.location = window.location.href.split('#')[0].split('?')[0]
-              + '?salesman=' + $(evt.target).val();
-        }
-    });
+    $(document).ready(function() {
+        var base_url = window.location.href.split('#')[0].split('?')[0];
 
-    $('#datatable').DataTable ({
-      dom: "Bfrtip",
-      buttons: [
-        {
-          extend: "pageLength",
-{#          className: "btn-sm"#}
-        },
-        {
-          extend: "collection",
-          text: "Filter By",
-          autoClose: true,
-{#          className: "btn-sm",#}
-          buttons: [
-            {
-              text: "Pending",
-              action: function ( e, dt, node, config ) {
-                dt.column(4).search('Pending').draw();
-              }
-            },
-            {
-              text: "Approved",
-              action: function ( e, dt, node, config ) {
-                dt.column(4).search('Approved').draw();
-              }
-            },
-            {
-              text: "Denied",
-              action: function ( e, dt, node, config ) {
-                dt.column(4).search('Denied').draw();
-              }
-            },
-            {
-              text: "All",
-              action: function ( e, dt, node, config ) {
-                dt.column(4).search('').draw();
-              }
-            }
-          ]
-        }
+        // Initialize Select
+        $(".select2_single").select2({
+            width: '100%',
+            placeholder: "Select a value"
+        });
 
-      ],
-      "responsive": true,
-      "order": [[ 1, "desc" ], [ 0, "desc" ]],
-      "columnDefs": [
-        { "type": "date", targets: [1] },
-        {
-          targets: [4] ,
-          render: function ( data, type, full, meta ) {
-            if (data === 'A') {
-              return '<a class="btn btn-round btn-success btn-xs"> ' +
-                     '<i class="fa fa-check" ></i> Approved</a>'
-            } else if (data === 'D') {
-              return '<a class="btn btn-round btn-danger btn-xs"> ' +
-                     '<i class="fa fa-times" ></i> Denied</a>'
-            } else {
-              return '<a class="btn btn-round btn-warning btn-xs"> ' +
-                     '<i class="fa fa-history" ></i> Pending</a>'
-            }
-          }
-        },
-        {
-          targets: [0] ,
-          render: function ( data, type, full, meta ) {
-            var elem = '';
-            data.split('|').forEach(function (item, index) {
-                elem = elem + ' <kbd>' + item + '</kbd>';
+        // call the export list
+        $(".action").click(function () {
+            var params = {
+                action: $(this).attr('id')
+            };
+            ['salesman', 'status', 'daterange'].forEach(function (p) {
+                var val = $("#" + p).val();
+                if (val) {
+                    params[p] = val;
+                }
             });
-            return elem
-          }
-        },
-        { "searchable": false, "targets": [2, 3, 6] },
-        { "sortable": false, "targets": [3, 4, 5, 6] }
-      ]
+            window.location = base_url + '?' + $.param(params);
+        });
+
+        // Initialize Date range
+        $('#daterange').daterangepicker({
+            locale: {
+                format: 'YYYY-MM-DD'
+            },
+            startDate: moment().subtract(7, 'days'),
+            endDate: moment(),
+            minDate: moment().subtract(3, 'months'),
+            maxDate: moment()
+        });
+
+        $('#datatable').DataTable({
+            dom: "<\"dt-toolbar\">frtip",
+            "responsive": true,
+            "order": [[2, "desc"], [1, "desc"]],
+            "columnDefs": [
+                {"type": "date", targets: [2]},
+                {
+                    targets: [5],
+                    render: function (data, type, full, meta) {
+                        if (data === 'A') {
+                            return '<a class="btn btn-round btn-success btn-xs"> ' +
+                                '<i class="fa fa-check" ></i> Approved</a>'
+                        } else if (data === 'D') {
+                            return '<a class="btn btn-round btn-danger btn-xs"> ' +
+                                '<i class="fa fa-times" ></i> Denied</a>'
+                        } else {
+                            return '<a class="btn btn-round btn-warning btn-xs"> ' +
+                                '<i class="fa fa-history" ></i> Pending</a>'
+                        }
+                    }
+                },
+                {
+                    targets: [1],
+                    render: function (data, type, full, meta) {
+                        var elem = '';
+                        data.split('|').forEach(function (item, index) {
+                            elem = elem + ' <kbd>' + item + '</kbd>';
+                        });
+                        return elem
+                    }
+                },
+                {"searchable": false, "targets": [3, 4, 7]},
+                {"sortable": false, "targets": [4, 5, 6, 7]}
+            ]
+        });
+
+        $("div.dt-toolbar")
+            .html('<a type="button" href="' + base_url +
+                  '" class="btn btn-sm btn-round btn-primary">' +
+                  '<i class="fa fa-sliders" ></i> Filter Expenses</a>')
+            .css("float", "left");
     });
 
   </script>

@@ -179,30 +179,6 @@ class ExpenseTypeDelete(DeleteMessageMixin, DeleteView):
     success_message = 'Expense Type "%(name)s" has been deleted successfully'
 
 
-@method_decorator(user_in_groups(['Expense-User', 'Expense-Manager']),
-                  name='dispatch')
-class ExpenseList(ListView):
-    model = Expense
-
-    def get_queryset(self):
-        if self.request.user.is_manager:
-            salesman = self.request.GET.get('salesman')
-            if salesman:
-                return Expense.objects.filter(
-                    salesman=salesman, transaction_date__gte=LIMIT_DATE)
-            else:
-                return Expense.objects.none()
-        else:
-            return Expense.objects.filter(
-                salesman=self.request.user.salesman,
-                transaction_date__gte=LIMIT_DATE)
-
-    def get_context_data(self, **kwargs):
-        context = super(ExpenseList, self).get_context_data(**kwargs)
-        context['salesman_list'] = self.request.user.team.all()
-        return context
-
-
 @method_decorator(user_in_groups(['Expense-User',
                                   'Expense-Admin']), name='dispatch')
 class ExpenseCreate(CreateView):
@@ -543,3 +519,44 @@ class CompanyCardDelete(DeleteMessageMixin, DeleteView):
     success_url = reverse_lazy('company-card-list')
     success_message = 'Company Card <var>%(name)s</var> has been deleted ' \
                       'successfully'
+
+
+class ExpenseListExport(ListView):
+    model = Expense
+
+    def get_queryset(self):
+        qs = Expense.objects.filter(transaction_date__gte=LIMIT_DATE)
+
+        salesman = self.request.GET.get('salesman')
+        if self.request.user.is_salesman and not self.request.user.is_admin:
+            qs = qs.filter(salesman_id=self.request.user.salesman)
+        elif salesman and self.request.user.is_manager:
+            if salesman not in [s.id for s in self.request.user.team.all()]:
+                qs = qs.none()
+            else:
+                qs = qs.filter(salesman_id=salesman)
+        elif salesman and self.request.user.is_admin:
+            qs = qs.filter(salesman_id=salesman)
+
+        status_list = self.request.GET.getlist('status[]')
+        if status_list:
+            qs = qs.filter(status__in=status_list)
+
+        date_range = self.request.GET.get('daterange')
+        if date_range:
+            qs = qs.filter(transaction_date__gte=date_range.split(' - ')[0]).\
+                filter(transaction_date__lte=date_range.split(' - ')[1])
+        
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(ExpenseListExport, self).get_context_data(**kwargs)
+        if self.request.user.is_manager:
+            context['salesman_list'] = self.request.user.team.all()
+        elif self.request.user.is_admin:
+            context['salesman_list'] = Salesman.objects.all()
+        context['status_list'] = Expense.STATUS_CHOICES
+        return context
+
+    def get(self, request, *args, **kwargs):
+        return super(ExpenseListExport, self).get(request, *args, **kwargs)
