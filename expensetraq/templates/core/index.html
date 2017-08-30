@@ -1,15 +1,22 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
+{% load form_extras %}
 {% load humanize %}
 
 {% block title %}Expense Tracking - Dashboard{% endblock %}
 
+{% block head_css %}
+
+  <!-- bootstrap-daterangepicker -->
+  <link href="{% static "vendors/bootstrap-daterangepicker/daterangepicker.css" %}" rel="stylesheet">
+
+{% endblock %}
 
 {% block body_content %}
 
   <!-- page content -->
   <div class="right_col" role="main">
-  {% if request.user.is_admin %}
+  {% if user.is_admin %}
     <div class="row top_tiles">
       <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
         <div class="tile-stats">
@@ -128,7 +135,7 @@
           </div>
         </div>
     </div>
-  {% elif request.user.is_salesman %}
+  {% elif user.is_salesman %}
     {% if not user.salesman %}
       <div class="col-md-12">
         <div class="col-middle">
@@ -166,10 +173,27 @@
           </div>
         </div>
         <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-          <a class="btn btn-round  btn-block btn-success"
-             href="{% url 'expense-add' %}">
-            <i class="fa fa-plus fa-4x"></i><h3>Add a new Expense </h3>
-          </a>
+          {% if user.salesman.daily_expense > 0 %}
+            <div class="row">
+              <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                <button class="btn btn-round btn-block btn-primary" data-toggle="modal"
+                        data-target="#submitDaily">
+                  <i class="fa fa-calendar-check-o fa-4x"></i><h3>Submit Daily </h3>
+                </button>
+              </div>
+              <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                <a class="btn btn-round  btn-block btn-success"
+                  href="{% url 'expense-add' %}">
+                  <i class="fa fa-plus fa-4x"></i><h3>Other Expense </h3>
+                </a>
+              </div>
+            </div>
+          {% else %}
+            <a class="btn btn-round  btn-block btn-success"
+              href="{% url 'expense-add' %}">
+              <i class="fa fa-plus fa-4x"></i><h3>Add a new Expense </h3>
+            </a>
+          {% endif %}
         </div>
       </div>
       <div class="row">
@@ -233,10 +257,51 @@
           </div>
         </div>
       </div>
+      <!-- Submit daily expense modal -->
+      <div class="modal fade" id="submitDaily" tabindex="-1" role="dialog"
+           aria-hidden="true" aria-labelledby="submitDailyLabel">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form class="form-horizontal" action="{% url 'expense-daily-submit'%}"
+                  method="post">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"
+                      aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title" id="submitDailyLabel">Submit Daily Expense</h4>
+            </div>
+            <div class="modal-body">
+              {% csrf_token %}
+
+              <div class="item form-group ">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                  for="status">Date
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <div class="input-prepend input-group">
+                    <span class="add-on input-group-addon">
+                      <i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                    <input type="text" id="id_transaction_date"  name="transaction_date"
+                           class="form-control" value="" />
+                  </div>
+                </div>
+              </div>
+              {% render_input_select daily_form.region %}
+              {% render_input_select daily_form.worked %}
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <input type="submit" class="btn btn-success" value="Submit"/>
+            </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- delete modal -->
     {% endif %}
-  {% elif request.user.is_manager %}
+  {% elif user.is_manager %}
     <div class="row top_tiles">
-      <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+      <div class="animated flipInY col-lg-3 col-md-w col-sm-6 col-xs-12">
         <div class="tile-stats">
           <div class="icon"><i class="fa fa-users"></i></div>
           <div class="count">{{ team_count }}</div>
@@ -363,8 +428,23 @@
 {% block body_js %}
   <script src="{% static "vendors/morrisjs/morris.min.js" %}"></script>
   <script src="{% static "vendors/raphael/raphael.min.js" %}"></script>
+  <!-- bootstrap-daterangepicker -->
+  <script src="{% static "vendors/moment/min/moment.min.js" %}"></script>
+  <script src="{% static "vendors/bootstrap-daterangepicker/daterangepicker.js" %}"></script>
+
   <script>
     $(document).ready(function () {
+        // Initialize the date picker
+      var trans_date = $('#id_transaction_date')
+      if (trans_date) {
+        trans_date.daterangepicker({
+          minDate: moment().subtract(1, 'month'),
+          maxDate: moment(),
+          singleDatePicker: true,
+          singleClasses: "picker_3"
+        }, function(start, end, label) {});
+      }
+
       if ($('#daily_expense_summary').length ){
         $.ajax({
           url: "{% url "expense-daily-average" %}",

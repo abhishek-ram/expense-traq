@@ -8,7 +8,7 @@ register = template.Library()
 @register.simple_tag
 def render_input_text(field, label=None):
     field_type = field.field.__class__.__name__
-    field_value = field.value() or ''
+    field_value = field.value() if field.value() is not None else ''
 
     required, required_span = '', ''
     if field.field.required:

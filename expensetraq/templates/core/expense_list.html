@@ -24,17 +24,19 @@
   <div class="right_col" role="main">
     <div class="page-title">
       <div class="title_left">
-        <h3>Expense Report <small>You can filter to list or export expenses here</small></h3>
+        <h3>Expense Report <small>You can filter to list or export expenses here</small>
+          {% if request.user.is_salesman and not request.user.is_admin %}
+            <a class="btn btn-primary btn-round" type="button"
+                       href="{% url 'expense-add' %}">
+                      <i class="fa fa-plus" ></i> Add Expense</a>
+          {% endif %}
+            <a class="btn btn-primary btn-round" type="button"
+                         href="{% url 'expense-list-export' %}">
+                        <i class="fa fa-sliders" ></i> Filter Expenses</a>
+        </h3>
       </div>
 
       <div class="title_right">
-        {% if request.user.is_salesman and not request.user.is_admin %}
-          <a class="btn btn-primary btn-round pull-right" type="button"
-                     href="{% url 'expense-add' %}">
-                    <i class="fa fa-plus" ></i> Add Expense</a>
-        {% else %}
-
-        {% endif %}
       </div>
     </div>
 
@@ -98,8 +100,7 @@
                     for="salesman">Salesman
                   </label>
                   <div class="col-md-6 col-sm-6 col-xs-12">
-                    <select class="form-control select2_single" id="salesman"
-                      name="salesman" >
+                    <select class="form-control select2_single" id="salesman">
                     <option value="">----------</option>
                     {% for salesman in salesman_list %}
                       <option value="{{ salesman.id }}">{{ salesman.user }}</option>
@@ -114,8 +115,7 @@
                   for="status">Status
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select class="form-control select2_single" id="status"
-                    name="salesman" multiple>
+                  <select class="form-control select2_single" id="status" multiple>
                   <option value="">----------</option>
                   {% for status in status_list %}
                     <option value="{{ status.0 }}">{{ status.1 }}</option>
@@ -214,7 +214,7 @@
         });
 
         $('#datatable').DataTable({
-            dom: "<\"dt-toolbar\">frtip",
+            "pageLength": 25,
             "responsive": true,
             "order": [[2, "desc"], [1, "desc"]],
             "columnDefs": [
@@ -249,11 +249,6 @@
             ]
         });
 
-        $("div.dt-toolbar")
-            .html('<a type="button" href="' + base_url +
-                  '" class="btn btn-sm btn-round btn-primary">' +
-                  '<i class="fa fa-sliders" ></i> Filter Expenses</a>')
-            .css("float", "left");
     });
 
   </script>

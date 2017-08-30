@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.views.generic import TemplateView, ListView, CreateView, \
-    UpdateView, DeleteView, DetailView
+    UpdateView, DeleteView, DetailView, FormView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
@@ -17,7 +17,7 @@ from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
     CompanyCard, User
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
-    ExpenseApprovalForm, ExpenseForm
+    ExpenseApprovalForm, ExpenseForm, DailyExpenseForm
 import maya
 
 LIMIT_DATE = maya.when(timezone.now().isoformat()).subtract(
@@ -64,7 +64,9 @@ class Index(TemplateView):
                 'denied_amt': sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='D')]),
-                'expense_list': expenses[:10]
+                'expense_list': expenses[:10],
+                'daily_form': DailyExpenseForm(
+                    salesman=self.request.user.salesman)
             })
         elif self.request.user.is_manager:
             team = self.request.user.team.all()
@@ -560,3 +562,65 @@ class ExpenseListExport(ListView):
 
     def get(self, request, *args, **kwargs):
         return super(ExpenseListExport, self).get(request, *args, **kwargs)
+
+
+@method_decorator(user_in_groups(['Expense-User']), name='dispatch')
+class DailyExpenseSubmit(FormView):
+    form_class = DailyExpenseForm
+    success_url = reverse_lazy('index')
+
+    def get_form_kwargs(self):
+        kwargs = super(DailyExpenseSubmit, self).get_form_kwargs()
+        kwargs['salesman'] = self.request.user.salesman
+        return kwargs
+
+    def form_valid(self, form):
+        # Get the expense type for daily expense
+        daily_expense = ExpenseType.objects.get(name='Daily Expense')
+
+        # Get the list of daily expenses logged by the user
+        exist_expense = form.salesman.expenses.filter(
+            transaction_date=form.cleaned_data['transaction_date'],
+            lines__expense_type=daily_expense).first()
+
+        # Calculate expense amount based on the worked hours
+        if form.cleaned_data['worked'] == 'Full':
+            expense_amount = form.salesman.daily_expense
+        else:
+            expense_amount = form.salesman.daily_expense/2
+
+        # Create a new daily if no expense has been logged for that day or
+        # half day has been logged
+        if not exist_expense:
+            expense = Expense.objects.create(
+                salesman=form.salesman,
+                transaction_date=form.cleaned_data['transaction_date'],
+                paid_by='Employee Paid',
+                notes=''
+            )
+            ExpenseLine.objects.create(
+                expense=expense, expense_type=daily_expense,
+                region=form.cleaned_data['region'],
+                amount=expense_amount
+            )
+            messages.success(
+                self.request,
+                '{} Daily Expense has been successfully logged '
+                'for date {}'.format(form.cleaned_data['worked'],
+                                     form.cleaned_data['transaction_date']))
+        elif (exist_expense.total_amount + expense_amount) \
+                == form.salesman.daily_expense:
+            line = exist_expense.lines.all().first()
+            line.amount = exist_expense.total_amount + expense_amount
+            line.save()
+            messages.success(
+                self.request,
+                'Full Daily Expense has been successfully logged '
+                'for date {}'.format(form.cleaned_data['transaction_date']))
+        else:
+            messages.error(
+                self.request,
+                'Cannot log Daily Expense as full expense has already been '
+                'logged for date {}'.format(form.cleaned_data['worked']))
+
+        return super(DailyExpenseSubmit, self).form_valid(form)

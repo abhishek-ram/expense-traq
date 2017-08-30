@@ -1,5 +1,6 @@
 from django import forms
-from expensetraq.core.models import Salesman, User, ExpenseLine, Expense
+from expensetraq.core.models import Salesman, User, ExpenseLine, Expense,\
+    ExpenseType
 from localflavor.us.models import STATE_CHOICES
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from wand.image import Image
@@ -62,6 +63,8 @@ class ExpenseForm(forms.ModelForm):
 
 
 class ExpenseLineForm(forms.ModelForm):
+    expense_type=forms.ModelChoiceField(
+        queryset=ExpenseType.objects.exclude(name__in=['Daily Expense']))
 
     def clean(self):
         cleaned_data = super(ExpenseLineForm, self).clean()
@@ -96,3 +99,20 @@ class ExpenseApprovalForm(forms.Form):
         queryset=Expense.objects.all())
     approved = forms.NullBooleanField()
 
+
+class DailyExpenseForm(forms.Form):
+    WORKED_CHOICES = (
+        ('Full', 'Full Day'),
+        ('Half', 'Half Day'),
+    )
+    transaction_date = forms.DateField()
+    region = forms.ChoiceField()
+    worked = forms.ChoiceField(choices=WORKED_CHOICES)
+
+    def __init__(self, salesman, *args, **kwargs):
+        super(DailyExpenseForm, self).__init__(*args, **kwargs)
+        self.salesman = salesman
+        region_dict = dict(STATE_CHOICES)
+        region_choices = [
+            (r, region_dict[r]) for r in salesman.region_list]
+        self.fields['region'].choices = region_choices
