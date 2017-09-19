@@ -36,9 +36,47 @@
               {% render_input_select form.regions %}
 
               {% render_input_select form.manager %}
-              {% render_input_select form.company_cards %}
               {% render_input_text form.daily_expense %}
-              {% render_input_text form.gp_vendor_code %}
+              {% render_input_text form.gp_cash_vendor_code %}
+
+              <br/>
+
+              {{ cc_formset.management_form }}
+              <div class="accordion col-md-offset-3 col-sm-offset-3"
+                   id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel">
+                  <a class="panel-heading" role="tab" id="headingOne"
+                     data-toggle="collapse" data-parent="#accordion"
+                     href="#companyCards" aria-expanded="true"
+                     aria-controls="companyCards">
+                    <h4 class="panel-title">Company Cards</h4>
+                  </a>
+                  <div id="companyCards" class="panel-collapse collapse in"
+                       role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body">
+                      <table class="table" id="formset">
+                      <thead>
+                        <tr>
+                          <th>Company Card</th>
+                          <th>GP Vendor Code</th>
+                          {% if form.instance.id %}<th>Delete</th>{% endif %}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for i_form in cc_formset %}
+                          <tr>
+                            {% for hidden in i_form.hidden_fields %}
+                              {{ hidden }}
+                            {% endfor %}
+                            {% render_inline_form_tb i_form %}
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div class="ln_solid"></div>
               <div class="form-group">
@@ -65,12 +103,30 @@
   <!-- Select2 -->
   <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
+  <!-- Formset -->
+  <script src="{% static "js/django.formset.js" %}"></script>
+
   <script>
       $(document).ready(function() {
         // Initialize Select
         $(".select2_single").select2({
-			    allowClear: false
+			    allowClear: true,
+          width: '100%'
 			  });
+      });
+      $('#formset').find('tbody tr').formset({
+        addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
+        addCssClass: 'add-row btn btn-sm btn-info pull-right',
+        deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
+        deleteCssClass: 'del-row btn btn-sm btn-danger',
+        prefix: '{{ cc_formset.prefix }}',
+        added: function (row) {
+          row.find(".select2_single").select2({
+            placeholder: "Select a card",
+			      allowClear: true,
+            width: '100%'
+			    });
+        }
       });
   </script>
 {% endblock %}

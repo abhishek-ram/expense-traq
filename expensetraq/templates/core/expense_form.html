@@ -54,8 +54,8 @@
                         <select id="id_paid_by" name="paid_by" required="required"
                             class="form-control col-md-7 col-xs-12 ">
                             {% for cc in salesman.company_cards.all %}
-                              <option {% if cc.name == form.instance.paid_by %} selected {% endif %}
-                                  value="{{ cc.name }}">{{ cc.name }}</option>
+                              <option {% if cc.company_card.name == form.instance.paid_by %} selected {% endif %}
+                                  value="{{ cc.company_card }}">{{ cc.company_card }}</option>
                             {% endfor %}
                               <option {% if 'Employee Paid' == form.instance.paid_by %} selected {% endif %}
                                   value="Employee Paid">Employee Paid</option>

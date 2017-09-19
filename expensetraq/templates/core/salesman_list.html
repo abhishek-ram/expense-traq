@@ -54,7 +54,7 @@
                     <td>{{ salesman.manager }}</td>
                     <td>
                       {% for cc in  salesman.company_cards.all %}
-                        <span class="label label-default">{{ cc.name }}</span>
+                        <span class="label label-default">{{ cc.gp_vendor_code }}</span>
                       {% endfor %}
                     </td>
                     <td>

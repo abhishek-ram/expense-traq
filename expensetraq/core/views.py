@@ -15,7 +15,7 @@ from django.utils import timezone
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
-    CompanyCard, User
+    CompanyCard, User, SalesmanCompanyCard
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm, ExpenseForm, DailyExpenseForm
 import maya
@@ -397,6 +397,37 @@ class SalesmanCreate(SuccessMessageMixin, CreateView):
     form_class = SalesmanForm
     success_url = reverse_lazy('salesman-list')
     success_message = 'Salesman "%(user)s" has been added successfully'
+    CCFormSet = inlineformset_factory(
+        Salesman, SalesmanCompanyCard, extra=2, can_delete=False,
+        fields=['company_card', 'gp_vendor_code'])
+
+    def get_context_data(self, **kwargs):
+        context = super(SalesmanCreate, self).get_context_data(**kwargs)
+        if not context.get('cc_formset'):
+            context['cc_formset'] = self.CCFormSet()
+        return context
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                self.object = form.save()
+                formset = self.CCFormSet(
+                    self.request.POST, instance=self.object)
+                assert formset.is_valid()
+                formset.save()
+                messages.success(self.request,
+                                 self.get_success_message(form.cleaned_data))
+                return HttpResponseRedirect(self.get_success_url())
+        except AssertionError:
+            messages.error(
+                self.request, 'Failed to save Saleman, Errors are '
+                              '{}'.format(formset.errors[0].as_ul())
+            )
+            return self.render_to_response(
+                self.get_context_data(form=form, cc_formset=formset))
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % cleaned_data
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
@@ -405,6 +436,33 @@ class SalesmanUpdate(SuccessMessageMixin, UpdateView):
     form_class = SalesmanForm
     success_url = reverse_lazy('salesman-list')
     success_message = 'Salesman "%(user)s" has been edited successfully'
+
+    CCFormSet = inlineformset_factory(
+        Salesman, SalesmanCompanyCard, extra=1,
+        fields=['company_card', 'gp_vendor_code'])
+
+    def get_context_data(self, **kwargs):
+        context = super(SalesmanUpdate, self).get_context_data(**kwargs)
+        if not context.get('cc_formset'):
+            context['cc_formset'] = self.CCFormSet(
+                instance=context['form'].instance)
+        return context
+
+    def form_valid(self, form):
+        self.object = form.save()
+        formset = self.CCFormSet(self.request.POST, instance=self.object)
+        if formset.is_valid():
+            formset.save()
+            messages.success(
+                self.request, self.get_success_message(form.cleaned_data))
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            messages.error(
+                self.request, 'Failed to save Salesman, Errors are '
+                              '{}'.format(formset.errors[0].as_ul())
+            )
+            return self.render_to_response(
+                self.get_context_data(form=form, cc_formset=formset))
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')

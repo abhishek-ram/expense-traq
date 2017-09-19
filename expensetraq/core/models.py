@@ -62,7 +62,6 @@ def receipt_directory_path(instance, filename):
 
 class CompanyCard(TimeStampedModel, models.Model):
     name = models.CharField(max_length=100)
-    gp_vendor_code = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
@@ -76,8 +75,7 @@ class Salesman(TimeStampedModel, models.Model):
     regions = models.TextField()
     manager = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name='team', null=True)
-    company_cards = models.ManyToManyField(CompanyCard, blank=True)
-    gp_vendor_code = models.CharField(max_length=100)
+    gp_cash_vendor_code = models.CharField(max_length=100)
     daily_expense = models.DecimalField(
         max_digits=14, decimal_places=2, default=0)
 
@@ -87,6 +85,17 @@ class Salesman(TimeStampedModel, models.Model):
     @property
     def region_list(self):
         return literal_eval(self.regions)
+
+
+class SalesmanCompanyCard(TimeStampedModel, models.Model):
+    salesman = models.ForeignKey(
+        Salesman, on_delete=models.CASCADE, related_name='company_cards')
+    company_card = models.ForeignKey(
+        CompanyCard, on_delete=models.CASCADE)
+    gp_vendor_code = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.gp_vendor_code
 
 
 class ExpenseLimit(TimeStampedModel, models.Model):

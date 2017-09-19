@@ -35,7 +35,6 @@
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>GP Vendor Code</th>
                   <th>Edited On</th>
                   <th>Actions</th>
                 </tr>
@@ -44,7 +43,6 @@
                 {% for cc in object_list %}
                   <tr>
                     <td>{{ cc.name }}</td>
-                    <td>{{ cc.gp_vendor_code }}</td>
                     <td>{{ cc.modified }}</td>
                     <td>
                       <a href="{% url 'company-card-update' cc.pk %}"
