@@ -58,9 +58,45 @@
   <script>
       $(document).ready(function() {
         // Initialize Select
-        $(".select2_single").select2({
-			    allowClear: false
-			  });
+        var et_select = $("#id_expense_type").select2({
+          allowClear: false
+        });
+        var existVal = et_select.val();
+        et_select.empty();
+
+        var sl_select = $("#id_salesman").select2({
+          allowClear: false
+        }).on('select2:select', function (e) {
+          var data = e.params.data;
+          $.ajax({
+            type: 'GET',
+            url: '/salesman/' + (data.id || 0) + '/expense-types/'
+          }).then(function (expense_types) {
+            // get exist value and clear list
+            et_select.empty();
+
+            // for each expense type append it to the list
+            expense_types.forEach(function(et) {
+              if (existVal == et[0].toString()){
+                var option = new Option(et[1], et[0], false, true);
+              } else {
+                var option = new Option(et[1], et[0], false, false);
+              }
+
+              et_select.append(option).trigger('change');
+            });
+          });
+        });
+
+        // If salesman already selected the retrieve the expense types
+        if (sl_select.val()){
+            sl_select.trigger({
+              type: 'select2:select',
+              params: {
+                data: {id: sl_select.val()}
+              }
+          });
+        }
       });
   </script>
 {% endblock %}

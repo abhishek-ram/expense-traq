@@ -661,3 +661,12 @@ class DailyExpenseSubmit(FormView):
                 'logged for date {}'.format(form.cleaned_data['worked']))
 
         return super(DailyExpenseSubmit, self).form_valid(form)
+
+
+class SalesmanExpenseTypeList(View):
+
+    def get(self, request, salesman_id):
+        expense_types = [['', '---------']]
+        for et in SalesmanExpenseType.objects.filter(salesman=salesman_id):
+            expense_types.append([et.id, str(et)])
+        return JsonResponse(expense_types, safe=False)
