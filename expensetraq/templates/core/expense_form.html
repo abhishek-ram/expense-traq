@@ -76,7 +76,6 @@
                   <thead>
                     <tr>
                       <th>Expense Type</th>
-                      <th>Region</th>
                       <th>Amount</th>
                     </tr>
                   </thead>
@@ -107,7 +106,8 @@
                   <img src="{{ form.instance.receipt.url }}" class="img-thumbnail"
                        style="max-height: 600px;">
                   {% else %}
-                    <img src="{% static "images/default_receipt.jpg" %}" class="img-thumbnail">
+                    <img src="{% static "images/default_receipt.jpg" %}"
+                         class="img-thumbnail" style="max-height: 600px;">
                   {% endif %}
                 {% else %}
                   <input type="file" accept="image/*" capture="camera"

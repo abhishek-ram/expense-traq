@@ -119,7 +119,7 @@
                     <td>{{ expense.salesman.user }}</td>
                     <td>
                       {% for l in  expense.lines.all %}
-                        <span class="label label-default">{{ l.expense_type.name }}</span>
+                        <span class="label label-default">{{ l.expense_type }}</span>
                       {% endfor %}
                     </td>
                     <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
@@ -241,7 +241,7 @@
                     <td>{{ expense.salesman.user }}</td>
                     <td>
                       {% for l in  expense.lines.all %}
-                        <span class="label label-default">{{ l.expense_type.name }}</span>
+                        <span class="label label-default">{{ l.expense_type }}</span>
                       {% endfor %}
                     </td>
                     <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
@@ -285,7 +285,6 @@
                   </div>
                 </div>
               </div>
-              {% render_input_select daily_form.region %}
               {% render_input_select daily_form.worked %}
 
             </div>
@@ -402,7 +401,7 @@
                     <td>{{ expense.salesman.user }}</td>
                     <td>
                       {% for l in  expense.lines.all %}
-                        <span class="label label-default">{{ l.expense_type.name }}</span>
+                        <span class="label label-default">{{ l.expense_type }}</span>
                       {% endfor %}
                     </td>
                     <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>

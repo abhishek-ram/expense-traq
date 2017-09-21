@@ -1,6 +1,6 @@
 from django import forms
 from expensetraq.core.models import Salesman, User, ExpenseLine, Expense,\
-    ExpenseType
+    SalesmanExpenseType
 from localflavor.us.models import STATE_CHOICES
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from wand.image import Image
@@ -63,8 +63,6 @@ class ExpenseForm(forms.ModelForm):
 
 
 class ExpenseLineForm(forms.ModelForm):
-    expense_type=forms.ModelChoiceField(
-        queryset=ExpenseType.objects.exclude(name__in=['Daily Expense']))
 
     def clean(self):
         cleaned_data = super(ExpenseLineForm, self).clean()
@@ -75,7 +73,7 @@ class ExpenseLineForm(forms.ModelForm):
             self.add_error('amount', 'Amount exceeds the Expense limit')
         if cleaned_data.get('expense_type') \
                 and not self.user_is_admin \
-                and cleaned_data['expense_type'].receipt_required \
+                and cleaned_data['expense_type'].expense_type.receipt_required \
                 and not cleaned_data['expense'].receipt:
             self.add_error('expense_type',
                            'Receipt is required for this expense type')
@@ -84,14 +82,17 @@ class ExpenseLineForm(forms.ModelForm):
         super(ExpenseLineForm, self).__init__(*args, **kwargs)
         self.salesman = salesman
         self.user_is_admin = user_is_admin
-        region_dict = dict(STATE_CHOICES)
-        region_choices = [
-            (r, region_dict[r]) for r in salesman.region_list]
-        self.fields['region'].choices = [('', '---------')] + region_choices
+        self.fields['expense_type'].queryset = \
+            SalesmanExpenseType.objects.filter(salesman=salesman)
+        # self.fields['expense_type'].choices =
+        # region_dict = dict(STATE_CHOICES)
+        # region_choices = [
+        #     (r, region_dict[r]) for r in salesman.region_list]
+        # self.fields['region'].choices = [('', '---------')] + region_choices
 
     class Meta:
         model = ExpenseLine
-        fields = ['expense_type', 'region', 'amount']
+        fields = ['expense_type', 'amount']
 
 
 class ExpenseApprovalForm(forms.Form):
@@ -106,13 +107,13 @@ class DailyExpenseForm(forms.Form):
         ('Half', 'Half Day'),
     )
     transaction_date = forms.DateField()
-    region = forms.ChoiceField()
+    # region = forms.ChoiceField()
     worked = forms.ChoiceField(choices=WORKED_CHOICES)
 
     def __init__(self, salesman, *args, **kwargs):
         super(DailyExpenseForm, self).__init__(*args, **kwargs)
         self.salesman = salesman
-        region_dict = dict(STATE_CHOICES)
-        region_choices = [
-            (r, region_dict[r]) for r in salesman.region_list]
-        self.fields['region'].choices = region_choices
+        # region_dict = dict(STATE_CHOICES)
+        # region_choices = [
+        #     (r, region_dict[r]) for r in salesman.region_list]
+        # self.fields['region'].choices = region_choices

@@ -34,7 +34,6 @@
               <thead>
                 <tr>
                   <th>Salesman</th>
-                  <th>Regions</th>
                   <th>Manager</th>
                   <th>Company Cards</th>
                   <th>Actions</th>
@@ -45,11 +44,6 @@
                   <tr>
                     <td>
                       <b>{{ salesman.user }}</b>
-                    </td>
-                    <td>
-                      {% for r in  salesman.region_list %}
-                        <span class="label label-default">{{ r }}</span>
-                      {% endfor %}
                     </td>
                     <td>{{ salesman.manager }}</td>
                     <td>

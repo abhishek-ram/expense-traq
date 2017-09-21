@@ -4,9 +4,6 @@
 {% block title %}Expense Tracking - Manage Salesmen{% endblock %}
 
 {% block head_css %}
-  <!-- iCheck -->
-  <link href="{% static "vendors/iCheck/skins/flat/green.css" %}" rel="stylesheet">
-
   <!-- Select2 -->
   <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
 {% endblock %}
@@ -33,7 +30,6 @@
               {% csrf_token %}
 
               {% render_input_select form.user "Salesman" %}
-              {% render_input_select form.regions %}
 
               {% render_input_select form.manager %}
               {% render_input_text form.daily_expense %}
@@ -41,7 +37,7 @@
 
               <br/>
 
-              {{ cc_formset.management_form }}
+
               <div class="accordion col-md-offset-3 col-sm-offset-3"
                    id="accordion" role="tablist" aria-multiselectable="true">
                 <div class="panel">
@@ -54,25 +50,59 @@
                   <div id="companyCards" class="panel-collapse collapse in"
                        role="tabpanel" aria-labelledby="headingOne">
                     <div class="panel-body">
-                      <table class="table" id="formset">
-                      <thead>
-                        <tr>
-                          <th>Company Card</th>
-                          <th>GP Vendor Code</th>
-                          {% if form.instance.id %}<th>Delete</th>{% endif %}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for i_form in cc_formset %}
+                      {{ cc_formset.management_form }}
+                      <table class="table" id="cc_formset">
+                        <thead>
                           <tr>
-                            {% for hidden in i_form.hidden_fields %}
-                              {{ hidden }}
-                            {% endfor %}
-                            {% render_inline_form_tb i_form %}
+                            <th>Company Card</th>
+                            <th>GP Vendor Code</th>
+                            {% if form.instance.id %}<th>Delete</th>{% endif %}
                           </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {% for i_form in cc_formset %}
+                            <tr>
+                              {% for hidden in i_form.hidden_fields %}
+                                {{ hidden }}
+                              {% endfor %}
+                              {% render_inline_form_tb i_form %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel">
+                  <a class="panel-heading collapsed" role="tab" id="headingTwo"
+                     data-toggle="collapse" data-parent="#accordion"
+                     href="#etCodes" aria-expanded="false" aria-controls="etCodes">
+                    <h4 class="panel-title">Expense Type Code</h4>
+                  </a>
+                  <div id="etCodes" class="panel-collapse collapse"
+                       role="tabpanel" aria-labelledby="headingTwo">
+                    <div class="panel-body">
+                      {{ et_formset.management_form }}
+                      <table class="table" id="et_formset">
+                        <thead>
+                          <tr>
+                            <th>Expense Type</th>
+                            <th>Nick Name</th>
+                            <th>GL Code Suffix</th>
+                            {% if form.instance.id %}<th>Delete</th>{% endif %}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for i_form in et_formset %}
+                            <tr>
+                              {% for hidden in i_form.hidden_fields %}
+                                {{ hidden }}
+                              {% endfor %}
+                              {% render_inline_form_tb i_form %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -98,9 +128,7 @@
 {% endblock %}
 
 {% block body_js %}
-  <!-- iCheck -->
-  <script src="{% static "vendors/iCheck/icheck.min.js" %}"></script>
-  <!-- Select2 -->
+   <!-- Select2 -->
   <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
   <!-- Formset -->
@@ -114,7 +142,7 @@
           width: '100%'
 			  });
       });
-      $('#formset').find('tbody tr').formset({
+      $('#cc_formset').find('tbody tr').formset({
         addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
         addCssClass: 'add-row btn btn-sm btn-info pull-right',
         deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
@@ -122,7 +150,19 @@
         prefix: '{{ cc_formset.prefix }}',
         added: function (row) {
           row.find(".select2_single").select2({
-            placeholder: "Select a card",
+			      allowClear: true,
+            width: '100%'
+			    });
+        }
+      });
+      $('#et_formset').find('tbody tr').formset({
+        addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
+        addCssClass: 'add-et btn btn-sm btn-info pull-right',
+        deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
+        deleteCssClass: 'del-et btn btn-sm btn-danger',
+        prefix: '{{ et_formset.prefix }}',
+        added: function (row) {
+          row.find(".select2_single").select2({
 			      allowClear: true,
             width: '100%'
 			    });

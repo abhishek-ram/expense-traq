@@ -135,7 +135,8 @@
             }
             if (hasChildElements(row)) {
                 row.addClass(options.formCssClass);
-                if (row.is(':visible') && del.length) {
+                // if (row.is(':visible') && del.length) {
+                if (del.length) {
                     insertDeleteLink(row);
                     applyExtraClasses(row, i);
                 }

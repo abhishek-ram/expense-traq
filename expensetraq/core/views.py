@@ -13,9 +13,9 @@ from django.forms import inlineformset_factory
 from django.db.models import Sum
 from django.utils import timezone
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
-from expensetraq.core.models import Expense, ExpenseType, ExpenseTypeCode, \
+from expensetraq.core.models import Expense, ExpenseType, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
-    CompanyCard, User, SalesmanCompanyCard
+    CompanyCard, User, SalesmanCompanyCard, SalesmanExpenseType
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm, ExpenseForm, DailyExpenseForm
 import maya
@@ -105,37 +105,6 @@ class ExpenseTypeCreate(CreateView):
     fields = '__all__'
     success_url = reverse_lazy('expense-type-list')
     success_message = 'Expense Type "%(name)s" has been created successfully'
-    ETCFormSet = inlineformset_factory(
-        ExpenseType, ExpenseTypeCode, extra=2, can_delete=False,
-        fields=['region', 'gl_code'])
-
-    def get_context_data(self, **kwargs):
-        context = super(ExpenseTypeCreate, self).get_context_data(**kwargs)
-        if not context.get('inline_formset'):
-            context['inline_formset'] = self.ETCFormSet()
-        return context
-
-    def form_valid(self, form):
-        try:
-            with transaction.atomic():
-                self.object = form.save()
-                formset = self.ETCFormSet(
-                    self.request.POST, instance=self.object)
-                assert formset.is_valid()
-                formset.save()
-                messages.success(self.request,
-                                 self.get_success_message(form.cleaned_data))
-                return HttpResponseRedirect(self.get_success_url())
-        except AssertionError:
-            messages.error(
-                self.request, 'Failed to save Expense type, Errors are '
-                              '{}'.format(formset.errors[0].as_ul())
-            )
-            return self.render_to_response(
-                self.get_context_data(form=form, inline_formset=formset))
-
-    def get_success_message(self, cleaned_data):
-        return self.success_message % cleaned_data
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
@@ -144,34 +113,6 @@ class ExpenseTypeUpdate(UpdateView):
     fields = '__all__'
     success_url = reverse_lazy('expense-type-list')
     success_message = 'Expense Type "%(name)s" has been edited successfully'
-    ETCFormSet = inlineformset_factory(
-        ExpenseType, ExpenseTypeCode, extra=2, fields=['region', 'gl_code'])
-
-    def get_context_data(self, **kwargs):
-        context = super(ExpenseTypeUpdate, self).get_context_data(**kwargs)
-        if not context.get('inline_formset'):
-            context['inline_formset'] = self.ETCFormSet(
-                instance=context['form'].instance)
-        return context
-
-    def form_valid(self, form):
-        self.object = form.save()
-        formset = self.ETCFormSet(self.request.POST, instance=self.object)
-        if formset.is_valid():
-            formset.save()
-            messages.success(
-                self.request, self.get_success_message(form.cleaned_data))
-            return HttpResponseRedirect(self.get_success_url())
-        else:
-            messages.error(
-                self.request, 'Failed to save Expense type, Errors are '
-                              '{}'.format(formset.errors[0].as_ul())
-            )
-            return self.render_to_response(
-                self.get_context_data(form=form, inline_formset=formset))
-
-    def get_success_message(self, cleaned_data):
-        return self.success_message % cleaned_data
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
@@ -400,31 +341,52 @@ class SalesmanCreate(SuccessMessageMixin, CreateView):
     CCFormSet = inlineformset_factory(
         Salesman, SalesmanCompanyCard, extra=2, can_delete=False,
         fields=['company_card', 'gp_vendor_code'])
+    ETFormSet = inlineformset_factory(
+        Salesman, SalesmanExpenseType, extra=5, can_delete=False,
+        fields=['expense_type', 'name', 'gl_code_suffix'])
 
     def get_context_data(self, **kwargs):
         context = super(SalesmanCreate, self).get_context_data(**kwargs)
         if not context.get('cc_formset'):
             context['cc_formset'] = self.CCFormSet()
+        if not context.get('et_formset'):
+            context['et_formset'] = self.ETFormSet()
         return context
 
     def form_valid(self, form):
         try:
             with transaction.atomic():
                 self.object = form.save()
-                formset = self.CCFormSet(
+                cc_formset = self.CCFormSet(
                     self.request.POST, instance=self.object)
-                assert formset.is_valid()
-                formset.save()
+                et_formset = self.ETFormSet(
+                    self.request.POST, instance=self.object)
+
+                # Save the credit cards for the salesman
+                assert cc_formset.is_valid()
+                cc_formset.save()
+
+                # Save the expense types for the salesman
+                assert et_formset.is_valid()
+                et_formset.save()
+
                 messages.success(self.request,
                                  self.get_success_message(form.cleaned_data))
                 return HttpResponseRedirect(self.get_success_url())
         except AssertionError:
-            messages.error(
-                self.request, 'Failed to save Saleman, Errors are '
-                              '{}'.format(formset.errors[0].as_ul())
-            )
+            if cc_formset.errors:
+                messages.error(
+                    self.request, 'Failed to save Salesman, Errors are '
+                                  '{}'.format(cc_formset.errors[0].as_ul())
+                )
+            else:
+                messages.error(
+                    self.request, 'Failed to save Salesman, Errors are '
+                                  '{}'.format(et_formset.errors[0].as_ul())
+                )
             return self.render_to_response(
-                self.get_context_data(form=form, cc_formset=formset))
+                self.get_context_data(
+                    form=form, cc_formset=cc_formset, et_formset=et_formset))
 
     def get_success_message(self, cleaned_data):
         return self.success_message % cleaned_data
@@ -441,28 +403,45 @@ class SalesmanUpdate(SuccessMessageMixin, UpdateView):
         Salesman, SalesmanCompanyCard, extra=1,
         fields=['company_card', 'gp_vendor_code'])
 
+    ETFormSet = inlineformset_factory(
+        Salesman, SalesmanExpenseType, extra=3,
+        fields=['expense_type', 'name', 'gl_code_suffix'])
+
     def get_context_data(self, **kwargs):
         context = super(SalesmanUpdate, self).get_context_data(**kwargs)
         if not context.get('cc_formset'):
             context['cc_formset'] = self.CCFormSet(
                 instance=context['form'].instance)
+        if not context.get('et_formset'):
+            context['et_formset'] = self.ETFormSet(
+                instance=context['form'].instance)
         return context
 
     def form_valid(self, form):
         self.object = form.save()
-        formset = self.CCFormSet(self.request.POST, instance=self.object)
-        if formset.is_valid():
-            formset.save()
+        # Save the company card and expense types for the salesman
+        cc_formset = self.CCFormSet(self.request.POST, instance=self.object)
+        et_formset = self.ETFormSet(self.request.POST, instance=self.object)
+        if cc_formset.is_valid() and et_formset.is_valid():
+            cc_formset.save()
+            et_formset.save()
             messages.success(
                 self.request, self.get_success_message(form.cleaned_data))
             return HttpResponseRedirect(self.get_success_url())
         else:
-            messages.error(
-                self.request, 'Failed to save Salesman, Errors are '
-                              '{}'.format(formset.errors[0].as_ul())
-            )
+            if cc_formset.errors:
+                messages.error(
+                    self.request, 'Failed to save Salesman, Errors are '
+                                  '{}'.format(cc_formset.errors[0].as_ul())
+                )
+            else:
+                messages.error(
+                    self.request, 'Failed to save Salesman, Errors are '
+                                  '{}'.format(et_formset.errors[0].as_ul())
+                )
             return self.render_to_response(
-                self.get_context_data(form=form, cc_formset=formset))
+                self.get_context_data(
+                    form=form, cc_formset=cc_formset, et_formset=et_formset))
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')

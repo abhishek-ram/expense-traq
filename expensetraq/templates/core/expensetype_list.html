@@ -35,6 +35,7 @@
               <thead>
                 <tr>
                   <th>Name</th>
+                  <th>GL Code Prefix</th>
                   <th>Receipt Required</th>
                   <th>Edited On</th>
                   <th>Actions</th>
@@ -45,6 +46,9 @@
                   <tr>
                     <td>
                       <b>{{ et.name }}</b>
+                    </td>
+                    <td>
+                      {{ et.gl_code_prefix }}
                     </td>
                     <td>
                       {% if  et.receipt_required %}
