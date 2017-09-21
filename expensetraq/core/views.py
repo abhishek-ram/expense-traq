@@ -52,22 +52,23 @@ class Index(TemplateView):
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='D')])
         elif self.request.user.is_salesman:
-            expenses = self.request.user.salesman.expenses.filter(
-                transaction_date__gte=LIMIT_DATE)
-            context.update({
-                'pending_amt': sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='P')]),
-                'approved_amt': sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='A')]),
-                'denied_amt': sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='D')]),
-                'expense_list': expenses[:10],
-                'daily_form': DailyExpenseForm(
-                    salesman=self.request.user.salesman)
-            })
+            if hasattr(self.request.user, 'salesman'):
+                expenses = self.request.user.salesman.expenses.filter(
+                    transaction_date__gte=LIMIT_DATE)
+                context.update({
+                    'pending_amt': sum([
+                        e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                        for e in expenses.filter(status='P')]),
+                    'approved_amt': sum([
+                        e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                        for e in expenses.filter(status='A')]),
+                    'denied_amt': sum([
+                        e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                        for e in expenses.filter(status='D')]),
+                    'expense_list': expenses[:10],
+                    'daily_form': DailyExpenseForm(
+                        salesman=self.request.user.salesman)
+                })
         elif self.request.user.is_manager:
             team = self.request.user.team.all()
             context.update({
