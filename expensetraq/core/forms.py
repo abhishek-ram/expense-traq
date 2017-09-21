@@ -9,7 +9,6 @@ import os
 
 
 class SalesmanForm(forms.ModelForm):
-    regions = forms.MultipleChoiceField(choices=STATE_CHOICES)
 
     def __init__(self, *args, **kwargs):
         super(SalesmanForm, self).__init__(*args, **kwargs)
