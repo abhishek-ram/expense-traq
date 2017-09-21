@@ -63,7 +63,6 @@
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Regions</th>
                     <th>Company Cards</th>
                     <th>Actions</th>
                   </tr>
@@ -73,11 +72,6 @@
                   <tr>
                     <td>
                       <b>{{ salesman.user }}</b>
-                    </td>
-                    <td>
-                      {% for r in  salesman.region_list %}
-                        <span class="label label-default">{{ r }}</span>
-                      {% endfor %}
                     </td>
                     <td>
                       {% for cc in  salesman.company_cards.all %}
@@ -345,7 +339,6 @@
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Regions</th>
                     <th>Company Cards</th>
                     <th>Actions</th>
                   </tr>
@@ -355,11 +348,6 @@
                   <tr>
                     <td>
                       <b>{{ salesman.user }}</b>
-                    </td>
-                    <td>
-                      {% for r in  salesman.region_list %}
-                        <span class="label label-default">{{ r }}</span>
-                      {% endfor %}
                     </td>
                     <td>
                       {% for cc in  salesman.company_cards.all %}
