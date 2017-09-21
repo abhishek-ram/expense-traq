@@ -18,6 +18,7 @@ from expensetraq.core.models import Expense, ExpenseType, \
     CompanyCard, User, SalesmanCompanyCard, SalesmanExpenseType
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm, ExpenseForm, DailyExpenseForm
+import json
 import maya
 
 LIMIT_DATE = maya.when(timezone.now().isoformat()).subtract(
@@ -352,6 +353,8 @@ class SalesmanCreate(SuccessMessageMixin, CreateView):
             context['cc_formset'] = self.CCFormSet()
         if not context.get('et_formset'):
             context['et_formset'] = self.ETFormSet()
+        context['expense_prefixes'] = json.dumps(
+            {et.id: et.gl_code_prefix for et in ExpenseType.objects.all()})
         return context
 
     def form_valid(self, form):
@@ -416,6 +419,8 @@ class SalesmanUpdate(SuccessMessageMixin, UpdateView):
         if not context.get('et_formset'):
             context['et_formset'] = self.ETFormSet(
                 instance=context['form'].instance)
+        context['expense_prefixes'] = json.dumps(
+            {et.id: et.gl_code_prefix for et in ExpenseType.objects.all()})
         return context
 
     def form_valid(self, form):

@@ -134,38 +134,73 @@
   <script src="{% static "js/django.formset.js" %}"></script>
 
   <script>
+      function updatePrefix(rowId, value) {
+        var expense_prefixes = {{ expense_prefixes|safe }};
+        var prefix = expense_prefixes[value];
+        var rowIdSplit = rowId.split('-');
+        rowIdSplit.pop();
+        var suffixInput = $('#' + rowIdSplit.join('-') + '-gl_code_suffix');
+
+        if(suffixInput.parent()[0].nodeName == 'TD') {
+            var existHtml = suffixInput.parent().html();
+            suffixInput.parent().html(
+                '<div class="input-prepend input-group">\n' +
+                '<span class="add-on input-group-addon">' + (prefix || '') +
+                '</span>' + existHtml + '</div>'
+            );
+        } else {
+          suffixInput.prev().text(prefix);
+        }
+      }
+
       $(document).ready(function() {
         // Initialize Select
         $(".select2_single").select2({
 			    allowClear: true,
           width: '100%'
-			  });
-      });
-      $('#cc_formset').find('tbody tr').formset({
-        addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
-        addCssClass: 'add-row btn btn-sm btn-info pull-right',
-        deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
-        deleteCssClass: 'del-row btn btn-sm btn-danger',
-        prefix: '{{ cc_formset.prefix }}',
-        added: function (row) {
-          row.find(".select2_single").select2({
-			      allowClear: true,
-            width: '100%'
-			    });
-        }
-      });
-      $('#et_formset').find('tbody tr').formset({
-        addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
-        addCssClass: 'add-et btn btn-sm btn-info pull-right',
-        deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
-        deleteCssClass: 'del-et btn btn-sm btn-danger',
-        prefix: '{{ et_formset.prefix }}',
-        added: function (row) {
-          row.find(".select2_single").select2({
-			      allowClear: true,
-            width: '100%'
-			    });
-        }
+			  }).on('select2:select', function(e){
+			      var rowId = e.currentTarget.id.split('-');
+            if (rowId.pop() == 'expense_type'){
+              updatePrefix(e.currentTarget.id, e.params.data.id.toString());
+            }
+        });
+
+        $(".select2_single").each(function(i) {
+
+          if ($(this).attr('id').split('-').pop() == 'expense_type'){
+            updatePrefix($(this).attr('id'), $(this).val());
+          }
+        });
+
+
+        $('#cc_formset').find('tbody tr').formset({
+          addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
+          addCssClass: 'add-row btn btn-sm btn-info pull-right',
+          deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
+          deleteCssClass: 'del-row btn btn-sm btn-danger',
+          prefix: '{{ cc_formset.prefix }}',
+          added: function (row) {
+            row.find(".select2_single").select2({
+              allowClear: true,
+              width: '100%'
+            });
+          }
+        });
+        $('#et_formset').find('tbody tr').formset({
+          addText: '<i class="fa fa-plus fa-lg"></i> Add Row',
+          addCssClass: 'add-et btn btn-sm btn-info pull-right',
+          deleteText: '<i class="fa fa-trash-o fa-lg"></i>',
+          deleteCssClass: 'del-et btn btn-sm btn-danger',
+          prefix: '{{ et_formset.prefix }}',
+          added: function (row) {
+            row.find(".select2_single").select2({
+              allowClear: true,
+              width: '100%'
+            }).on('select2:select', function(e){
+                updatePrefix(e.currentTarget.id, e.params.data.id.toString());
+            })
+          }
+        });
       });
   </script>
 {% endblock %}
