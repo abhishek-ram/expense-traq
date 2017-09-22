@@ -72,7 +72,7 @@ class Salesman(TimeStampedModel, models.Model):
         max_digits=14, decimal_places=2, default=0)
 
     def __str__(self):
-        return str(self.user)
+        return self.user.get_full_name()
 
 
 class SalesmanCompanyCard(TimeStampedModel, models.Model):

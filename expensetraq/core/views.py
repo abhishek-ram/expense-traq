@@ -49,7 +49,7 @@ class Index(TemplateView):
                 expenses = salesman.expenses.filter(
                     transaction_date__gte=LIMIT_DATE)
                 context['pending_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum'] or 0
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
                     for e in expenses.filter(status='P')])
                 context['approved_amt'] += sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
@@ -867,6 +867,7 @@ class DailyExpenseSubmit(FormView):
         kwargs['salesman'] = self.request.user.salesman
         return kwargs
 
+    @transaction.atomic
     def form_valid(self, form):
         # Get the list of daily expenses logged by the user
         exist_expense = form.salesman.expenses.filter(
