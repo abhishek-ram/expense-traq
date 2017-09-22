@@ -49,7 +49,7 @@ class Index(TemplateView):
                 expenses = salesman.expenses.filter(
                     transaction_date__gte=LIMIT_DATE)
                 context['pending_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
+                    e.lines.all().aggregate(Sum('amount'))['amount__sum'] or 0
                     for e in expenses.filter(status='P')])
                 context['approved_amt'] += sum([
                     e.lines.all().aggregate(Sum('amount'))['amount__sum']
