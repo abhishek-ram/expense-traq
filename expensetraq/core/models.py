@@ -65,7 +65,8 @@ class Salesman(TimeStampedModel, models.Model):
         related_name='salesman',
         error_messages={'unique': 'Salesman already on-boarded.'})
     manager = models.ForeignKey(
-        User, on_delete=models.SET_NULL, related_name='team', null=True)
+        User, on_delete=models.SET_NULL, related_name='team',
+        null=True, blank=True)
     gp_cash_vendor_code = models.CharField(max_length=100)
     daily_expense = models.DecimalField(
         max_digits=14, decimal_places=2, default=0)

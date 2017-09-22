@@ -100,7 +100,7 @@
                     for="salesman">Salesman
                   </label>
                   <div class="col-md-6 col-sm-6 col-xs-12">
-                    <select class="form-control select2_single" id="salesman">
+                    <select class="form-control select2_single" id="salesman" required>
                     <option value="">----------</option>
                     {% for salesman in salesman_list %}
                       <option value="{{ salesman.id }}">{{ salesman.user }}</option>

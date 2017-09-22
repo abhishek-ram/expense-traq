@@ -45,7 +45,7 @@
                     <td>
                       <b>{{ salesman.user }}</b>
                     </td>
-                    <td>{{ salesman.manager }}</td>
+                    <td>{{ salesman.manager|default:'' }}</td>
                     <td>
                       {% for cc in  salesman.company_cards.all %}
                         <span class="label label-default">{{ cc.gp_vendor_code }}</span>

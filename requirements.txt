@@ -4,3 +4,4 @@ Pillow==4.1.1
 django-extensions==1.7.8
 maya==0.3.2
 wand==0.4.4
+openpyxl==2.4.8
