@@ -36,6 +36,7 @@
                   <th>Salesman</th>
                   <th>Manager</th>
                   <th>Company Cards</th>
+                  <th>Expense Types</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -45,10 +46,15 @@
                     <td>
                       <b>{{ salesman.user }}</b>
                     </td>
-                    <td>{{ salesman.manager }}</td>
+                    <td>{{ salesman.manager|default:'' }}</td>
                     <td>
                       {% for cc in  salesman.company_cards.all %}
                         <span class="label label-default">{{ cc.gp_vendor_code }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>
+                      {% for et in  salesman.expense_types.all %}
+                        <span class="label label-default">{{ et }}</span>
                       {% endfor %}
                     </td>
                     <td>
