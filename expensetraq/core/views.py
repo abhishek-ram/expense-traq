@@ -867,6 +867,12 @@ class DailyExpenseSubmit(FormView):
         kwargs['salesman'] = self.request.user.salesman
         return kwargs
 
+    def form_invalid(self, form):
+        messages.error(
+            self.request,
+            'Daily Expense was not logged, Please select an expense type')
+        return HttpResponseRedirect(reverse_lazy('index'))
+
     @transaction.atomic
     def form_valid(self, form):
         # Get the list of daily expenses logged by the user

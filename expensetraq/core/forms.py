@@ -103,7 +103,10 @@ class DailyExpenseForm(forms.Form):
     )
     transaction_date = forms.DateField()
     expense_type = forms.ModelChoiceField(
-        queryset=SalesmanExpenseType.objects.all(), empty_label=None)
+        queryset=SalesmanExpenseType.objects.all(),
+        empty_label=None,
+        required=True
+    )
     worked = forms.ChoiceField(choices=WORKED_CHOICES)
 
     def __init__(self, salesman, *args, **kwargs):
