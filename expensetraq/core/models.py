@@ -3,8 +3,6 @@ from __future__ import unicode_literals
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
-from localflavor.us import models as us_models
-from ast import literal_eval
 from django.contrib.auth.models import AbstractUser
 import humanize
 

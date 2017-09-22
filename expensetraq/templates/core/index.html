@@ -214,7 +214,7 @@
         <div class="col-md-6 col-sm-6 col-xs-12">
           <div class="x_panel">
             <div class="x_title">
-              <h2>Latest expenses <small>Last 10 expenses created by your team</small></h2>
+              <h2>Latest expenses <small>Last 10 expenses created by you</small></h2>
               <div class="clearfix"></div>
             </div>
             <div class="x_content">
@@ -279,6 +279,7 @@
                   </div>
                 </div>
               </div>
+              {% render_input_select daily_form.expense_type %}
               {% render_input_select daily_form.worked %}
 
             </div>

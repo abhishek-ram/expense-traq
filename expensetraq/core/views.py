@@ -618,13 +618,11 @@ class DailyExpenseSubmit(FormView):
         return kwargs
 
     def form_valid(self, form):
-        # Get the expense type for daily expense
-        daily_expense = ExpenseType.objects.get(name='Daily Expense')
-
         # Get the list of daily expenses logged by the user
         exist_expense = form.salesman.expenses.filter(
             transaction_date=form.cleaned_data['transaction_date'],
-            lines__expense_type=daily_expense).first()
+            lines__expense_type=form.cleaned_data['expense_type']
+        ).first()
 
         # Calculate expense amount based on the worked hours
         if form.cleaned_data['worked'] == 'Full':
@@ -642,8 +640,8 @@ class DailyExpenseSubmit(FormView):
                 notes=''
             )
             ExpenseLine.objects.create(
-                expense=expense, expense_type=daily_expense,
-                region=form.cleaned_data['region'],
+                expense=expense,
+                expense_type=form.cleaned_data['expense_type'],
                 amount=expense_amount
             )
             messages.success(
@@ -673,6 +671,11 @@ class SalesmanExpenseTypeList(View):
 
     def get(self, request, salesman_id):
         expense_types = [['', '---------']]
-        for et in SalesmanExpenseType.objects.filter(salesman=salesman_id):
+        all_expenses = SalesmanExpenseType.objects.\
+            filter(salesman=salesman_id).\
+            exclude(expense_type__name__in=['Daily Expense'])
+        for et in all_expenses:
             expense_types.append([et.id, str(et)])
         return JsonResponse(expense_types, safe=False)
+
+from openpyxl import load_workbook, Workbook

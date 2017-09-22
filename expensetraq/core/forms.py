@@ -81,13 +81,9 @@ class ExpenseLineForm(forms.ModelForm):
         super(ExpenseLineForm, self).__init__(*args, **kwargs)
         self.salesman = salesman
         self.user_is_admin = user_is_admin
-        self.fields['expense_type'].queryset = \
-            SalesmanExpenseType.objects.filter(salesman=salesman)
-        # self.fields['expense_type'].choices =
-        # region_dict = dict(STATE_CHOICES)
-        # region_choices = [
-        #     (r, region_dict[r]) for r in salesman.region_list]
-        # self.fields['region'].choices = [('', '---------')] + region_choices
+        self.fields['expense_type'].queryset = SalesmanExpenseType.objects.\
+            filter(salesman=salesman).\
+            exclude(expense_type__name__in=['Daily Expense'])
 
     class Meta:
         model = ExpenseLine
@@ -106,13 +102,12 @@ class DailyExpenseForm(forms.Form):
         ('Half', 'Half Day'),
     )
     transaction_date = forms.DateField()
-    # region = forms.ChoiceField()
+    expense_type = forms.ModelChoiceField(
+        queryset=SalesmanExpenseType.objects.all(), empty_label=None)
     worked = forms.ChoiceField(choices=WORKED_CHOICES)
 
     def __init__(self, salesman, *args, **kwargs):
         super(DailyExpenseForm, self).__init__(*args, **kwargs)
         self.salesman = salesman
-        # region_dict = dict(STATE_CHOICES)
-        # region_choices = [
-        #     (r, region_dict[r]) for r in salesman.region_list]
-        # self.fields['region'].choices = region_choices
+        self.fields['expense_type'].queryset = SalesmanExpenseType.objects. \
+            filter(salesman=salesman, expense_type__name__in=['Daily Expense'])
