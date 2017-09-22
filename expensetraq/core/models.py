@@ -34,6 +34,9 @@ class User(AbstractUser):
         else:
             return False
 
+    def __str__(self):
+        return self.get_full_name() or self.username
+
     class Meta:
         db_table = 'auth_user'
 
@@ -72,7 +75,7 @@ class Salesman(TimeStampedModel, models.Model):
         max_digits=14, decimal_places=2, default=0)
 
     def __str__(self):
-        return self.user.get_full_name()
+        return str(self.user)
 
 
 class SalesmanCompanyCard(TimeStampedModel, models.Model):
