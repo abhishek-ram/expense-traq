@@ -94,13 +94,13 @@
           <div class="x_content">
             <form class="form-horizontal form-label-left">
 
-              {% if request.user.is_admin or request.user.is_manager %}
+              {% if user.is_admin or user.is_manager %}
                 <div class="item form-group ">
                   <label class="control-label col-md-3 col-sm-3 col-xs-12"
                     for="salesman">Salesman
                   </label>
                   <div class="col-md-6 col-sm-6 col-xs-12">
-                    <select class="form-control select2_single" id="salesman" required>
+                    <select class="form-control select2_single" id="salesman" multiple>
                     <option value="">----------</option>
                     {% for salesman in salesman_list %}
                       <option value="{{ salesman.id }}">{{ salesman.user }}</option>
@@ -108,6 +108,8 @@
                     </select>
                   </div>
                 </div>
+              {% else %}
+                <input type="hidden" id="salesman" value="{{  user.salesman.id }}">
               {% endif %}
 
               <div class="item form-group ">
@@ -196,7 +198,20 @@
             ['salesman', 'status', 'daterange'].forEach(function (p) {
                 var val = $("#" + p).val();
                 if (val) {
-                    params[p] = val;
+                    if (p === 'salesman' && val.constructor != Array) {
+                        params[p] = [val];
+                    } else {
+                        params[p] = val;
+                    }
+                } else{
+                    if (p === 'salesman') {
+                        params[p] = [];
+                        $("#salesman").find("option").each(function () {
+                            if ($(this).val()) {
+                              params[p].push($(this).val());
+                            }
+                        });
+                    }
                 }
             });
             window.location = base_url + '?' + $.param(params);

@@ -23,6 +23,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from datetime import timedelta
 from io import BytesIO
+from zipfile import ZipFile, ZIP_DEFLATED
 import json
 import maya
 
@@ -577,16 +578,27 @@ class ExpenseListExport(ListView):
     def get_queryset(self):
         qs = Expense.objects.filter(transaction_date__gte=LIMIT_DATE)
 
-        salesman = self.request.GET.get('salesman')
-        if self.request.user.is_salesman and not self.request.user.is_admin:
-            qs = qs.filter(salesman_id=self.request.user.salesman)
-        elif salesman and self.request.user.is_manager:
-            if salesman not in [s.id for s in self.request.user.team.all()]:
-                qs = qs.none()
-            else:
-                qs = qs.filter(salesman_id=salesman)
-        elif salesman and self.request.user.is_admin:
-            qs = qs.filter(salesman_id=salesman)
+        # maintain a list of salesman to be used in the export
+        salesman_list = self.request.GET.getlist('salesman[]')
+        if salesman_list:
+            qs = qs.filter(salesman_id__in=salesman_list)
+
+        # if self.request.user.is_salesman and not self.request.user.is_admin:
+        #     self.salesman_list.append(self.request.user.salesman.id)
+        #     qs = qs.filter(salesman_id=self.request.user.salesman)
+        #
+
+        #     if self.request.user.is_manager:
+        #         if salesman not in [s.id for s in self.request.user.team.all()]:
+        #             qs = qs.none()
+        #         else:
+        #             qs = qs.filter(salesman_id=salesman)
+        #     elif salesman and self.request.user.is_admin:
+        #         qs = qs.filter(salesman_id=salesman)
+        # else:
+        #     if self.request.user.is_manager:
+        #
+        #     else:
 
         status_list = self.request.GET.getlist('status[]')
         if status_list:
@@ -611,18 +623,20 @@ class ExpenseListExport(ListView):
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('action') == 'export':
             salesman_expenses = {}
+            date_range = self.request.GET.get('daterange')
+            # Initialize the array of salesman
+            for salesman in self.request.GET.getlist('salesman[]'):
+                salesman_expenses[int(salesman)] = {
+                    'cash_expenses': {
+                        'total': {}
+                    },
+                    'card_expenses': {
+                        'total': {}
+                    }
+                }
 
             # Loop through the expense types and sort it
             for et in self.get_queryset().all():
-                if not salesman_expenses.get(et.salesman.id):
-                    salesman_expenses[et.salesman.id] = {
-                        'cash_expenses': {
-                            'total': {}
-                        },
-                        'card_expenses': {
-                            'total': {}
-                        }
-                    }
                 if et.paid_by == 'Employee Paid':
                     paid_by_key = 'cash_expenses'
                 else:
@@ -649,6 +663,7 @@ class ExpenseListExport(ListView):
                     salesman_expenses[et.salesman.id][
                         paid_by_key]['total'][trans_date] += line.amount
 
+            expense_report_files = {}
             for sid, expense_list in salesman_expenses.items():                
                 salesman = Salesman.objects.get(pk=sid)
                 total_expenses = 0
@@ -672,7 +687,6 @@ class ExpenseListExport(ListView):
                 main_sheet['B2'] = str(salesman)
     
                 # Loop through the days and add the columns
-                date_range = self.request.GET.get('daterange')
                 date_range_it = maya.MayaInterval(
                         start=maya.when(date_range.split(' - ')[0]),
                         end=maya.when(date_range.split(' - ')[1]).add(days=1)
@@ -747,7 +761,7 @@ class ExpenseListExport(ListView):
                             col_label = day_col_labels[t_date]
                             main_sheet[col_label + str(cur_row)] = amount
                             main_sheet[col_label + str(cur_row)].font = Font(
-                                name='Helvetica Neue', size=10, bold=True)
+                                name='Helvetica Neue', size=10, bold=False)
                             line_amount += amount
                         main_sheet[last_col_label + str(cur_row)] = line_amount
                         main_sheet[last_col_label + str(cur_row)].font = Font(
@@ -800,7 +814,7 @@ class ExpenseListExport(ListView):
                             col_label = day_col_labels[t_date]
                             main_sheet[col_label + str(cur_row)] = amount
                             main_sheet[col_label + str(cur_row)].font = Font(
-                                name='Helvetica Neue', size=10, bold=True)
+                                name='Helvetica Neue', size=10, bold=False)
                             line_amount += amount
                         main_sheet[last_col_label + str(cur_row)] = line_amount
                         main_sheet[last_col_label + str(cur_row)].font = Font(
@@ -845,14 +859,32 @@ class ExpenseListExport(ListView):
                 # Create the report and create the django response from it
                 out_stream = BytesIO()
                 expense_report.save(out_stream)
+
+                filename = 'ExpenseReport_%s_%s.xlsx' % (salesman, date_range)
+                expense_report_files[filename] = out_stream.getvalue()
+
+            file_names = list(expense_report_files.keys())
+            if len(file_names) == 1:
+                filename = file_names[0]
                 response = HttpResponse(
-                    out_stream.getvalue(),
+                    expense_report_files[filename],
                     content_type='application/vnd.openxmlformats-officedocument.'
                                  'spreadsheetml.sheet')
                 response['Content-Disposition'] = \
-                    'attachment; filename=' \
-                    '"ExpenseReport_%s_%s.xlsx"' % (salesman, date_range)
-                return response
+                    'attachment; filename="%s"' % filename
+            else:
+                zip_stream = BytesIO()
+                with ZipFile(zip_stream, mode='w',
+                             compression=ZIP_DEFLATED) as zf:
+                    for filename, content in expense_report_files.items():
+                        zf.writestr(filename, content)
+                response = HttpResponse(
+                    zip_stream.getvalue(),
+                    content_type='application/x-zip-compressed')
+                response['Content-Disposition'] = \
+                    'attachment; filename="ExpenseReports_%s.zip"' % date_range
+
+            return response
         else:
             return super(ExpenseListExport, self).get(request, *args, **kwargs)
 
