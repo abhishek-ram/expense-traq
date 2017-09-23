@@ -916,8 +916,10 @@ class DailyExpenseSubmit(FormView):
         # Calculate expense amount based on the worked hours
         if form.cleaned_data['worked'] == 'Full':
             expense_amount = form.salesman.daily_expense
-        else:
-            expense_amount = form.salesman.daily_expense/2
+        elif form.cleaned_data['worked'] == 'Half':
+            expense_amount = form.salesman.daily_expense / 2
+        elif form.cleaned_data['worked'] == 'Quart':
+            expense_amount = form.salesman.daily_expense / 4
 
         # Create a new daily if no expense has been logged for that day or
         # half day has been logged
@@ -939,7 +941,7 @@ class DailyExpenseSubmit(FormView):
                 'for date {}'.format(form.cleaned_data['worked'],
                                      form.cleaned_data['transaction_date']))
         elif (exist_expense.total_amount + expense_amount) \
-                == form.salesman.daily_expense:
+                <= form.salesman.daily_expense:
             line = exist_expense.lines.all().first()
             line.amount = exist_expense.total_amount + expense_amount
             line.save()
@@ -948,10 +950,12 @@ class DailyExpenseSubmit(FormView):
                 'Full Daily Expense has been successfully logged '
                 'for date {}'.format(form.cleaned_data['transaction_date']))
         else:
+            print(exist_expense.total_amount)
+            print(expense_amount)
             messages.error(
                 self.request,
-                'Cannot log Daily Expense as full expense has already been '
-                'logged for date {}'.format(form.cleaned_data['worked']))
+                'Cannot log Daily Expense as expense has already been logged '
+                'for date {}'.format(form.cleaned_data['transaction_date']))
 
         return super(DailyExpenseSubmit, self).form_valid(form)
 

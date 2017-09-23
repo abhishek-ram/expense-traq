@@ -100,6 +100,7 @@ class DailyExpenseForm(forms.Form):
     WORKED_CHOICES = (
         ('Full', 'Full Day'),
         ('Half', 'Half Day'),
+        ('Quart', 'Quarter Day'),
     )
     transaction_date = forms.DateField()
     expense_type = forms.ModelChoiceField(
