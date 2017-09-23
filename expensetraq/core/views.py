@@ -176,10 +176,11 @@ class ExpenseCreate(CreateView):
                 not_message = '{} has added a new expense dated {} for ${}'.format(
                     self.request.user, self.object.transaction_date,
                     self.object.total_amount)
-                Notification.objects.create(
-                    user=self.object.salesman.manager,
-                    title='New Expense Created',
-                    text=not_message)
+                if self.object.salesman.manager:
+                    Notification.objects.create(
+                        user=self.object.salesman.manager,
+                        title='New Expense Created',
+                        text=not_message)
                 Notification.objects.create(
                     user=User.objects.filter(groups__name__in=['Expense-Admin']).first(),
                     title='New Expense Created',
@@ -582,23 +583,12 @@ class ExpenseListExport(ListView):
         salesman_list = self.request.GET.getlist('salesman[]')
         if salesman_list:
             qs = qs.filter(salesman_id__in=salesman_list)
-
-        # if self.request.user.is_salesman and not self.request.user.is_admin:
-        #     self.salesman_list.append(self.request.user.salesman.id)
-        #     qs = qs.filter(salesman_id=self.request.user.salesman)
-        #
-
-        #     if self.request.user.is_manager:
-        #         if salesman not in [s.id for s in self.request.user.team.all()]:
-        #             qs = qs.none()
-        #         else:
-        #             qs = qs.filter(salesman_id=salesman)
-        #     elif salesman and self.request.user.is_admin:
-        #         qs = qs.filter(salesman_id=salesman)
-        # else:
-        #     if self.request.user.is_manager:
-        #
-        #     else:
+        else:
+            if self.request.user.is_salesman and not self.request.user.is_admin:
+                qs = qs.filter(salesman_id=self.request.user.salesman)
+            elif self.request.user.is_manager:
+                qs.filter(
+                    salesman_id__in=[s.id for s in self.request.user.team.all()])
 
         status_list = self.request.GET.getlist('status[]')
         if status_list:
@@ -950,8 +940,6 @@ class DailyExpenseSubmit(FormView):
                 'Full Daily Expense has been successfully logged '
                 'for date {}'.format(form.cleaned_data['transaction_date']))
         else:
-            print(exist_expense.total_amount)
-            print(expense_amount)
             messages.error(
                 self.request,
                 'Cannot log Daily Expense as expense has already been logged '

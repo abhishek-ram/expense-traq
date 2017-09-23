@@ -67,11 +67,13 @@
               </div>
               <div class="col-md-6 col-sm-6 col-xs-12">
                 {% if object.receipt %}
-                  <img src="{{ object.receipt.url }}" class="img-thumbnail"
-                       style="max-height: 600px;">
+                  <a href="{{ object.receipt.url }}" target="_blank">
+                    <img src="{{ object.receipt.url }}" class="img-thumbnail"
+                       style="max-height: 1024px;">
+                  </a>
                 {% else %}
                   <img src="{% static "images/default_receipt.jpg" %}"
-                       class="img-thumbnail" style="max-height: 600px">
+                       class="img-thumbnail" style="max-height: 1024px">
                 {% endif %}
               </div>
             </div>

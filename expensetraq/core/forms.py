@@ -1,7 +1,6 @@
 from django import forms
 from expensetraq.core.models import Salesman, User, ExpenseLine, Expense,\
     SalesmanExpenseType
-from localflavor.us.models import STATE_CHOICES
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from wand.image import Image
 from io import BytesIO
@@ -37,11 +36,23 @@ class ExpenseForm(forms.ModelForm):
             name, ext = os.path.splitext(uploaded_file.name)
 
             if ext in ['.pdf', '.PDF']:
-                with Image(file=uploaded_file) as img:
+                with Image(file=uploaded_file, resolution=200) as pdf:
+                    uploaded_file.name = '%s.png' % name
+                    pages = len(pdf.sequence)
+                    image = Image(
+                        width=pdf.width,
+                        height=pdf.height * pages
+                    )
+                    for i in range(pages):
+                        image.composite(
+                            pdf.sequence[i],
+                            top=pdf.height * i,
+                            left=0
+                        )
                     uploaded_file.name = '%s.jpg' % name
-                    img.format = 'jpeg'
-                    img.resize(1024, 768)
-                    img.save(formatted_file)
+                    image.format = 'png'
+                    # image.resize(1024, 768)
+                    image.save(formatted_file)
             else:
                 with Image(file=uploaded_file) as img:
                     img.resize(1024, 768)
