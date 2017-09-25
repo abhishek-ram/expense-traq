@@ -40,64 +40,48 @@ class Index(TemplateView):
             salesmen = Salesman.objects.all()
             context.update({
                 'team_count': len(salesmen),
-                'pending_amt': 0,
-                'approved_amt': 0,
-                'denied_amt': 0,
+                'pending_amt': sum([
+                    e.total_amount for e in Expense.objects.filter(status='P')
+                ]),
+                'approved_amt': sum([
+                    e.total_amount for e in Expense.objects.filter(status='A')
+                ]),
+                'denied_amt': sum([
+                    e.total_amount for e in Expense.objects.filter(status='D')
+                ]),
                 'salesman_list': salesmen,
                 'expense_list': Expense.objects.all()[:10]
             })
-            for salesman in salesmen:
-                expenses = salesman.expenses.filter(
-                    transaction_date__gte=LIMIT_DATE)
-                context['pending_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='P')])
-                context['approved_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='A')])
-                context['denied_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='D')])
+
         elif self.request.user.is_salesman:
             if hasattr(self.request.user, 'salesman'):
                 expenses = self.request.user.salesman.expenses.filter(
                     transaction_date__gte=LIMIT_DATE)
                 context.update({
                     'pending_amt': sum([
-                        e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                        for e in expenses.filter(status='P')]),
+                        e.total_amount for e in expenses.filter(status='P')]),
                     'approved_amt': sum([
-                        e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                        for e in expenses.filter(status='A')]),
+                        e.total_amount for e in expenses.filter(status='A')]),
                     'denied_amt': sum([
-                        e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                        for e in expenses.filter(status='D')]),
+                        e.total_amount for e in expenses.filter(status='D')]),
                     'expense_list': expenses[:10],
                     'daily_form': DailyExpenseForm(
                         salesman=self.request.user.salesman)
                 })
         elif self.request.user.is_manager:
             team = self.request.user.team.all()
+            expenses = Expense.objects.filter(
+                transaction_date__gte=LIMIT_DATE, salesman__in=team)
             context.update({
                 'team_count': len(team),
-                'pending_amt': 0,
-                'approved_amt': 0,
-                'denied_amt': 0,
-                'expense_list': Expense.objects.filter(
-                    salesman__in=team)[:10]
+                'pending_amt': sum([
+                    e.total_amount for e in expenses.filter(status='P')]),
+                'approved_amt': sum([
+                    e.total_amount for e in expenses.filter(status='A')]),
+                'denied_amt': sum([
+                    e.total_amount for e in expenses.filter(status='D')]),
+                'expense_list': expenses[:10]
             })
-            for salesman in team:
-                expenses = salesman.expenses.filter(
-                    transaction_date__gte=LIMIT_DATE)
-                context['pending_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='P')])
-                context['approved_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='A')])
-                context['denied_amt'] += sum([
-                    e.lines.all().aggregate(Sum('amount'))['amount__sum']
-                    for e in expenses.filter(status='D')])
 
         return context
 
