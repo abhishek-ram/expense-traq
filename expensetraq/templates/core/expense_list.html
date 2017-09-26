@@ -73,13 +73,42 @@
                     </td>
                     <td>{{ expense.notes|truncatewords:6 }}</td>
                     <td>
-                        <a href="{% url 'expense-detail' expense.pk %}"
-                           class="btn btn-primary btn-xs">
-                          <i class="fa fa-folder"></i> View </a>
+                      <a href="{% url 'expense-detail' expense.pk %}"
+                         class="btn btn-primary btn-xs">
+                        <i class="fa fa-folder"></i> View </a>
+                        {% if expense.status == 'P' %}
+                          <a href="{% url 'expense-update' expense.pk %}"
+                             class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                        {% endif %}
+
                     </td>
                   </tr>
                 {% endfor %}
               </tbody>
+              <tfoot>
+                <tr>
+                  <th>
+                    {% for salesman in  all_salesman %}
+                        <span class="label label-default">{{ salesman }}</span>
+                    {% endfor %}
+                  </th>
+                  <th>{{ all_expense_type|length }}</th>
+                  <th>{{ request.GET.daterange }}</th>
+                  <th>${{ total_amount }}</th>
+                  <th>
+                    {% for paid_by in  all_paid_by %}
+                        <span class="label label-default">{{ paid_by }}</span>
+                    {% endfor %}
+                  </th>
+                  <th>
+                    {% for status in  all_status %}
+                        <span class="label label-default">{{ status }}</span>
+                    {% endfor %}
+                  </th>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -121,6 +150,20 @@
                   <option value="">----------</option>
                   {% for status in status_list %}
                     <option value="{{ status.0 }}">{{ status.1 }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="item form-group ">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                  for="status">Paid By
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select class="form-control select2_single" id="paid_by" multiple>
+                  <option value="">----------</option>
+                  {% for paid_by in paid_by_list %}
+                    <option value="{{ paid_by }}">{{ paid_by }}</option>
                   {% endfor %}
                   </select>
                 </div>
@@ -195,7 +238,7 @@
             var params = {
                 action: $(this).attr('id')
             };
-            ['salesman', 'status', 'daterange'].forEach(function (p) {
+            ['salesman', 'status', 'paid_by', 'daterange'].forEach(function (p) {
                 var val = $("#" + p).val();
                 if (val) {
                     if (p === 'salesman' && val.constructor != Array) {

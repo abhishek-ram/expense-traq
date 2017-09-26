@@ -12,6 +12,7 @@ from django.db import transaction
 from django.forms import inlineformset_factory
 from django.db.models import Sum
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
@@ -166,7 +167,8 @@ class ExpenseCreate(CreateView):
                         title='New Expense Created',
                         text=not_message)
                 Notification.objects.create(
-                    user=User.objects.filter(groups__name__in=['Expense-Admin']).first(),
+                    user=User.objects.filter(
+                        groups__name__in=['Expense-Admin']).first(),
                     title='New Expense Created',
                     text=not_message)
                 return HttpResponseRedirect(self.get_success_url())
@@ -187,15 +189,15 @@ class ExpenseCreate(CreateView):
         return self.success_message.format(obj)
 
 
-@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+@method_decorator(user_in_groups(['Expense-Admin', 'Expense-User']),
+                  name='dispatch')
 class ExpenseUpdate(UpdateView):
     model = Expense
     fields = ['transaction_date', 'paid_by', 'notes']
-    success_url = reverse_lazy('expense-approval')
     success_message = 'Expense "{0.pk}" has been edited successfully'
 
     ExpenseFormSet = inlineformset_factory(
-        Expense, ExpenseLine,max_num=5, can_delete=False, form=ExpenseLineForm)
+        Expense, ExpenseLine, max_num=5, can_delete=False, form=ExpenseLineForm)
 
     def get_context_data(self, **kwargs):
         context = super(ExpenseUpdate, self).get_context_data(**kwargs)
@@ -205,6 +207,9 @@ class ExpenseUpdate(UpdateView):
                              'user_is_admin': self.request.user.is_admin},
                 instance=context['form'].instance)
         context['salesman'] = context['form'].instance.salesman
+        if not self.request.user.is_admin \
+                and context['salesman'] != self.request.user.salesman:
+            raise PermissionDenied
         return context
 
     def form_valid(self, form):
@@ -218,22 +223,24 @@ class ExpenseUpdate(UpdateView):
             formset.save()
 
             # Create notifications for the salesman and manager
-            Notification.objects.create(
-                user=self.object.salesman.user,
-                title='Expense Updated',
-                text='Admin has edited your expense dated {} for ${}'.format(
-                    self.object.transaction_date, self.object.total_amount))
-            Notification.objects.create(
-                user=self.object.salesman.manager,
-                title='Expense Updated',
-                text='Admin has edited {}\'s expense dated {} for ${}'.format(
-                    self.object.salesman.user, self.object.transaction_date,
-                    self.object.total_amount))
+            if self.request.user.salesman != self.object.salesman:
+                Notification.objects.create(
+                    user=self.object.salesman.user,
+                    title='Expense Updated',
+                    text='Admin has edited your expense dated {} for ${}'.format(
+                        self.object.transaction_date, self.object.total_amount))
+            else:
+                Notification.objects.create(
+                    user=User.objects.filter(
+                        groups__name__in=['Expense-Admin']).first(),
+                    title='Expense Updated',
+                    text='{}\'s has edited his expense dated {} for ${}'.format(
+                        self.object.salesman.user, self.object.transaction_date,
+                        self.object.total_amount))
 
             messages.success(self.request,
                              self.get_success_message(self.object))
-            return HttpResponseRedirect('%s?salesman=%s' % (
-                self.get_success_url(), self.object.salesman.id))
+            return HttpResponseRedirect(self.get_success_url())
         except AssertionError:
             messages.error(
                 self.request,
@@ -243,6 +250,13 @@ class ExpenseUpdate(UpdateView):
 
     def get_success_message(self, obj):
         return self.success_message.format(obj)
+
+    def get_success_url(self):
+        if self.request.user.is_admin:
+            return reverse_lazy('expense-approval')
+        else:
+            print('%s?action=list' % reverse_lazy('expense-list-export'))
+            return '%s?action=list' % reverse_lazy('expense-list-export')
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
@@ -318,6 +332,16 @@ class ExpenseApproval(ListView):
 
 class ExpenseDetail(DetailView):
     model = Expense
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class ExpenseDelete(DeleteMessageMixin, DeleteView):
+    model = Expense
+    success_message = 'Expense <var>%(id)s</var> has been deleted ' \
+                      'successfully'
+
+    def get_success_url(self):
+        return self.request.POST['success_url']
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
@@ -578,11 +602,15 @@ class ExpenseListExport(ListView):
         if status_list:
             qs = qs.filter(status__in=status_list)
 
+        paid_by_list = self.request.GET.getlist('paid_by[]')
+        if paid_by_list:
+            qs = qs.filter(paid_by__in=paid_by_list)
+
         date_range = self.request.GET.get('daterange')
         if date_range:
             qs = qs.filter(transaction_date__gte=date_range.split(' - ')[0]).\
                 filter(transaction_date__lte=date_range.split(' - ')[1])
-        
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -592,6 +620,22 @@ class ExpenseListExport(ListView):
         elif self.request.user.is_admin:
             context['salesman_list'] = Salesman.objects.all()
         context['status_list'] = Expense.STATUS_CHOICES
+        context['paid_by_list'] = ['Employee Paid'] + \
+                                  [cc.name for cc in CompanyCard.objects.all()]
+        if self.request.GET.get('action') == 'list':
+            context['total_amount'] = sum(
+                [e.total_amount for e in self.object_list])
+            context['all_status'] = {
+                e.get_status_display() for e in self.object_list}
+            context['all_paid_by'] = {
+                e.paid_by for e in self.object_list}
+            context['all_salesman'] = {
+                str(e.salesman) for e in self.object_list}
+            expense_types = []
+            for expense in self.object_list:
+                expense_types.extend(
+                    [el.expense_type for el in expense.lines.all()])
+            context['all_expense_type'] = set(expense_types)
         return context
 
     def get(self, request, *args, **kwargs):
@@ -600,42 +644,35 @@ class ExpenseListExport(ListView):
             date_range = self.request.GET.get('daterange')
             # Initialize the array of salesman
             for salesman in self.request.GET.getlist('salesman[]'):
-                salesman_expenses[int(salesman)] = {
-                    'cash_expenses': {
-                        'total': {}
-                    },
-                    'card_expenses': {
-                        'total': {}
-                    }
-                }
+                salesman_expenses[int(salesman)] = {}
 
             # Loop through the expense types and sort it
             for et in self.get_queryset().all():
-                if et.paid_by == 'Employee Paid':
-                    paid_by_key = 'cash_expenses'
-                else:
-                    paid_by_key = 'card_expenses'
+                if not salesman_expenses[et.salesman.id].get(et.paid_by):
+                    salesman_expenses[et.salesman.id][et.paid_by] = {
+                        'total': {}
+                    }
 
                 trans_date = et.transaction_date.strftime('%Y-%m-%d')
                 for line in et.lines.all():
                     e_type = str(line.expense_type)
 
                     if not salesman_expenses[et.salesman.id][
-                            paid_by_key].get(e_type):
+                            et.paid_by].get(e_type):
                         salesman_expenses[et.salesman.id][
-                            paid_by_key][e_type] = {}
+                            et.paid_by][e_type] = {}
                     if not salesman_expenses[et.salesman.id][
-                            paid_by_key][e_type].get(trans_date):
+                            et.paid_by][e_type].get(trans_date):
                         salesman_expenses[et.salesman.id][
-                            paid_by_key][e_type][trans_date] = 0
+                            et.paid_by][e_type][trans_date] = 0
                     if not salesman_expenses[et.salesman.id][
-                            paid_by_key]['total'].get(trans_date):
+                            et.paid_by]['total'].get(trans_date):
                         salesman_expenses[et.salesman.id][
-                            paid_by_key]['total'][trans_date] = 0
+                            et.paid_by]['total'][trans_date] = 0
                     salesman_expenses[et.salesman.id][
-                        paid_by_key][e_type][trans_date] += line.amount
+                        et.paid_by][e_type][trans_date] += line.amount
                     salesman_expenses[et.salesman.id][
-                        paid_by_key]['total'][trans_date] += line.amount
+                        et.paid_by]['total'][trans_date] += line.amount
 
             expense_report_files = {}
             for sid, expense_list in salesman_expenses.items():                
@@ -708,111 +745,113 @@ class ExpenseListExport(ListView):
                     name='Helvetica Neue', size=11, bold=True, color='FFFFFF')
                 main_sheet[last_col_label + '3'].fill = PatternFill(
                     start_color='2F7115', end_color='2F7115', fill_type='solid')
-    
-                # Set the header for cash expenses
-                main_sheet['A4'] = 'Cash Expenses'
-                main_sheet['A4'].font = Font(
-                    name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
-                main_sheet['A4'].fill = PatternFill(
-                    start_color='004C7F', end_color='004C7F', fill_type='solid')
 
-                for col_label in all_col_labels:
-                    main_sheet[col_label + '4'].font = Font(
+                # Loop through the paid by and add it as a group
+                cur_row = 4
+                for paid_by in expense_list.keys():
+                    # Set the header for cash expenses
+                    main_sheet['A%s' % cur_row] = paid_by
+                    main_sheet['A%s' % cur_row].font = Font(
                         name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
-                    main_sheet[col_label + '4'].fill = PatternFill(
+                    main_sheet['A%s' % cur_row].fill = PatternFill(
                         start_color='004C7F', end_color='004C7F', fill_type='solid')
-                cur_row = 5
 
-                # Add all the cash expenses here
-                for expense_type, amounts in expense_list[
-                        'cash_expenses'].items():
-                    if expense_type != 'total':
-                        main_sheet['A%s' % cur_row] = expense_type
-                        main_sheet['A%s' % cur_row].font = Font(
-                            name='Helvetica Neue', size=10, bold=True)
-                        line_amount = 0
-                        for t_date, amount in amounts.items():
-                            col_label = day_col_labels[t_date]
-                            main_sheet[col_label + str(cur_row)] = amount
-                            main_sheet[col_label + str(cur_row)].font = Font(
-                                name='Helvetica Neue', size=10, bold=False)
-                            line_amount += amount
-                        main_sheet[last_col_label + str(cur_row)] = line_amount
-                        main_sheet[last_col_label + str(cur_row)].font = Font(
-                            name='Helvetica Neue', size=10, bold=True)
-                        cur_row += 1
+                    for col_label in all_col_labels:
+                        main_sheet[col_label + str(cur_row)].font = Font(
+                            name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
+                        main_sheet[col_label + str(cur_row)].fill = PatternFill(
+                            start_color='004C7F', end_color='004C7F', fill_type='solid')
+                    cur_row += 1
 
-                # Set the trailer for cash expenses
-                main_sheet.row_dimensions[cur_row].height = 22
-                main_sheet['A%s' % cur_row] = 'Total Cash Expenses'
-                main_sheet['A%s' % cur_row].font = Font(
-                    name='Helvetica Neue', size=10, bold=True)
-                line_amount = 0
-                for t_date, amount in expense_list[
-                        'cash_expenses']['total'].items():
-                    col_label = day_col_labels[t_date]
-                    main_sheet[col_label + str(cur_row)] = amount
-                    main_sheet[col_label + str(cur_row)].font = Font(
+                    # Add all the cash expenses here
+                    for expense_type, amounts in expense_list[paid_by].items():
+                        if expense_type != 'total':
+                            main_sheet['A%s' % cur_row] = expense_type
+                            main_sheet['A%s' % cur_row].font = Font(
+                                name='Helvetica Neue', size=10, bold=True)
+                            line_amount = 0
+                            for t_date, amount in amounts.items():
+                                col_label = day_col_labels[t_date]
+                                main_sheet[col_label + str(cur_row)] = amount
+                                main_sheet[col_label + str(cur_row)].font = Font(
+                                    name='Helvetica Neue', size=10, bold=False)
+                                line_amount += amount
+                            main_sheet[last_col_label + str(cur_row)] = line_amount
+                            main_sheet[last_col_label + str(cur_row)].font = Font(
+                                name='Helvetica Neue', size=10, bold=True)
+                            cur_row += 1
+
+                    # Set the trailer for cash expenses
+                    main_sheet.row_dimensions[cur_row].height = 22
+                    main_sheet['A%s' % cur_row] = 'Total Cash Expenses'
+                    main_sheet['A%s' % cur_row].font = Font(
                         name='Helvetica Neue', size=10, bold=True)
-                    line_amount += amount
-                main_sheet[last_col_label + str(cur_row)] = line_amount
-                main_sheet[last_col_label + str(cur_row)].font = Font(
-                    name='Helvetica Neue', size=10, bold=True)
-                total_expenses += line_amount
-                cur_row += 1
+                    line_amount = 0
+                    for t_date, amount in expense_list[
+                            paid_by]['total'].items():
+                        col_label = day_col_labels[t_date]
+                        main_sheet[col_label + str(cur_row)] = amount
+                        main_sheet[col_label + str(cur_row)].font = Font(
+                            name='Helvetica Neue', size=10, bold=True)
+                        line_amount += amount
+                    main_sheet[last_col_label + str(cur_row)] = line_amount
+                    main_sheet[last_col_label + str(cur_row)].font = Font(
+                        name='Helvetica Neue', size=10, bold=True)
+                    total_expenses += line_amount
+                    cur_row += 1
     
-                # Set the header for card expenses
-                main_sheet.row_dimensions[cur_row].height = 22
-                main_sheet['A%s' % cur_row] = 'Card Expenses'
-                main_sheet['A%s' % cur_row].font = Font(
-                    name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
-                main_sheet['A%s' % cur_row].fill = PatternFill(
-                    start_color='004C7F', end_color='004C7F', fill_type='solid')
-
-                for col_label in all_col_labels:
-                    main_sheet[col_label + str(cur_row)].font = Font(
-                        name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
-                    main_sheet[col_label + str(cur_row)].fill = PatternFill(
-                        start_color='004C7F', end_color='004C7F', fill_type='solid')
-                cur_row += 1
-
-                # Add all the card expenses here
-                for expense_type, amounts in expense_list[
-                        'card_expenses'].items():
-                    if expense_type != 'total':
-                        main_sheet['A%s' % cur_row] = expense_type
-                        main_sheet['A%s' % cur_row].font = Font(
-                            name='Helvetica Neue', size=10, bold=True)
-                        line_amount = 0
-                        for t_date, amount in amounts.items():
-                            col_label = day_col_labels[t_date]
-                            main_sheet[col_label + str(cur_row)] = amount
-                            main_sheet[col_label + str(cur_row)].font = Font(
-                                name='Helvetica Neue', size=10, bold=False)
-                            line_amount += amount
-                        main_sheet[last_col_label + str(cur_row)] = line_amount
-                        main_sheet[last_col_label + str(cur_row)].font = Font(
-                            name='Helvetica Neue', size=10, bold=True)
-                        cur_row += 1
-
-                # Set the trailer for cash expenses
-                main_sheet.row_dimensions[cur_row].height = 22
-                main_sheet['A%s' % cur_row] = 'Total Card Expenses'
-                main_sheet['A%s' % cur_row].font = Font(
-                    name='Helvetica Neue', size=10, bold=True)
-                line_amount = 0
-                for t_date, amount in expense_list[
-                        'card_expenses']['total'].items():
-                    col_label = day_col_labels[t_date]
-                    main_sheet[col_label + str(cur_row)] = amount
-                    main_sheet[col_label + str(cur_row)].font = Font(
-                        name='Helvetica Neue', size=10, bold=True)
-                    line_amount += amount
-                main_sheet[last_col_label + str(cur_row)] = line_amount
-                main_sheet[last_col_label + str(cur_row)].font = Font(
-                    name='Helvetica Neue', size=10, bold=True)
-                total_expenses += line_amount
-                cur_row += 1
+                # # Set the header for card expenses
+                # main_sheet.row_dimensions[cur_row].height = 22
+                # main_sheet['A%s' % cur_row] = 'Card Expenses'
+                # main_sheet['A%s' % cur_row].font = Font(
+                #     name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
+                # main_sheet['A%s' % cur_row].fill = PatternFill(
+                #     start_color='004C7F', end_color='004C7F', fill_type='solid')
+                #
+                # for col_label in all_col_labels:
+                #     main_sheet[col_label + str(cur_row)].font = Font(
+                #         name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
+                #     main_sheet[col_label + str(cur_row)].fill = PatternFill(
+                #         start_color='004C7F', end_color='004C7F', fill_type='solid')
+                # cur_row += 1
+                #
+                # # Add all the card expenses here
+                # for expense_type, amounts in expense_list[
+                #         'card_expenses'].items():
+                #     if expense_type != 'total':
+                #         main_sheet['A%s' % cur_row] = expense_type
+                #         main_sheet['A%s' % cur_row].font = Font(
+                #             name='Helvetica Neue', size=10, bold=True)
+                #         line_amount = 0
+                #         for t_date, amount in amounts.items():
+                #             col_label = day_col_labels[t_date]
+                #             main_sheet[col_label + str(cur_row)] = amount
+                #             main_sheet[col_label + str(cur_row)].font = Font(
+                #                 name='Helvetica Neue', size=10, bold=False)
+                #             line_amount += amount
+                #         main_sheet[last_col_label + str(cur_row)] = line_amount
+                #         main_sheet[last_col_label + str(cur_row)].font = Font(
+                #             name='Helvetica Neue', size=10, bold=True)
+                #         cur_row += 1
+                #
+                # # Set the trailer for cash expenses
+                # main_sheet.row_dimensions[cur_row].height = 22
+                # main_sheet['A%s' % cur_row] = 'Total Card Expenses'
+                # main_sheet['A%s' % cur_row].font = Font(
+                #     name='Helvetica Neue', size=10, bold=True)
+                # line_amount = 0
+                # for t_date, amount in expense_list[
+                #         'card_expenses']['total'].items():
+                #     col_label = day_col_labels[t_date]
+                #     main_sheet[col_label + str(cur_row)] = amount
+                #     main_sheet[col_label + str(cur_row)].font = Font(
+                #         name='Helvetica Neue', size=10, bold=True)
+                #     line_amount += amount
+                # main_sheet[last_col_label + str(cur_row)] = line_amount
+                # main_sheet[last_col_label + str(cur_row)].font = Font(
+                #     name='Helvetica Neue', size=10, bold=True)
+                # total_expenses += line_amount
+                # cur_row += 1
     
                 # Set the trailer for the whole file
                 main_sheet.row_dimensions[cur_row].height = 22
