@@ -769,6 +769,8 @@ class ExpenseListExport(ListView):
                             main_sheet['A%s' % cur_row] = expense_type
                             main_sheet['A%s' % cur_row].font = Font(
                                 name='Helvetica Neue', size=10, bold=True)
+                            main_sheet['A%s' % cur_row].alignment = Alignment(
+                                wrap_text=True)
                             line_amount = 0
                             for t_date, amount in amounts.items():
                                 col_label = day_col_labels[t_date]
