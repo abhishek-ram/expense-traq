@@ -1,6 +1,6 @@
 from django import forms
 from expensetraq.core.models import Salesman, User, ExpenseLine, Expense,\
-    SalesmanExpenseType
+    SalesmanExpenseType, Region
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from wand.image import Image
 from io import BytesIO
@@ -73,6 +73,7 @@ class ExpenseForm(forms.ModelForm):
 
 
 class ExpenseLineForm(forms.ModelForm):
+    region = forms.ChoiceField()
 
     def clean(self):
         cleaned_data = super(ExpenseLineForm, self).clean()
@@ -95,10 +96,18 @@ class ExpenseLineForm(forms.ModelForm):
         self.fields['expense_type'].queryset = SalesmanExpenseType.objects.\
             filter(salesman=salesman).\
             exclude(expense_type__name__in=['Daily Expense'])
+        regions = {}
+        for et in self.fields['expense_type'].queryset:
+            regions[et.region.id] = et.region.name
+
+        self.fields['region'].choices = [('', '----------')] + \
+                                        list(regions.items())
+        if self.instance.id:
+            self.fields['region'].initial = self.instance.expense_type.region_id
 
     class Meta:
         model = ExpenseLine
-        fields = ['expense_type', 'amount']
+        fields = ['region', 'expense_type', 'amount']
 
 
 class ExpenseApprovalForm(forms.Form):

@@ -103,7 +103,6 @@ class SalesmanExpenseType(models.Model):
         ExpenseType, on_delete=models.CASCADE)
     region = models.ForeignKey(
         Region, on_delete=models.SET_NULL, null=True)
-    name = models.CharField(max_length=100)
     gl_code_suffix = models.CharField(max_length=100)
 
     def __str__(self):

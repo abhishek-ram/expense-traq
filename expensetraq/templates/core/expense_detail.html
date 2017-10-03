@@ -42,16 +42,16 @@
                 <table class="table table-condensed">
                   <thead>
                     <tr>
-                      <th>Expense Type</th>
                       <th>Region</th>
+                      <th>Expense Type</th>
                       <th>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for line in object.lines.all %}
                       <tr>
-                        <td>{{ line.expense_type }}</td>
-                        <td>{{ line.get_region_display }}</td>
+                        <td>{{ line.expense_type.region }}</td>
+                        <td>{{ line.expense_type.expense_type }}</td>
                         <td>${{ line.amount }}</td>
                       </tr>
                     {% endfor %}

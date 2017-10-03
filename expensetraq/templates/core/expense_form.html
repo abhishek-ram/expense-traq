@@ -75,6 +75,7 @@
                   <table class="table table-condensed" id="formset">
                     <thead>
                       <tr>
+                        <th>Region</th>
                         <th>Expense Type</th>
                         <th>Amount</th>
                       </tr>
@@ -158,9 +159,11 @@
             total_sum = total_sum + parseFloat($(this).val() || 0);
           });
 
-          $("#total-sum").html('$' + total_sum );
+          $("#total-sum").html('$' + total_sum.toFixed(2) );
     }
     $(document).ready(function() {
+      var expense_types = {{ expense_types|safe }};
+
       // Initialize the date picker
       $('#id_transaction_date').daterangepicker({
         minDate: moment().subtract(1, 'month'),
@@ -170,10 +173,44 @@
       }, function(start, end, label) {});
 
       // Initialize Select
-      $(".select2_single").select2({
-        width: '100%',
-        allowClear: true
+      [0, 1, 2, 3 , 4].forEach(function (form_id) {
+        var et_select = $("#id_lines-" + form_id + "-expense_type").select2({
+          width: '100%',
+          allowClear: false
+        });
+        var exist_et = et_select.val();
+        et_select.empty();
+        console.log(exist_et)
+        var region_select = $("#id_lines-" + form_id + "-region")
+          .select2({
+            width: '100%',
+            allowClear: false
+          }).on('select2:select', function (e) {
+              var data = e.params.data;
+              // for each expense type append it to the list
+              et_select.empty();
+              (expense_types[data.id] || []).forEach(function(et) {
+                if (exist_et == et[0].toString()){
+                  var option = new Option(et[1], et[0], false, true);
+                } else {
+                  var option = new Option(et[1], et[0], false, false);
+                }
+                et_select.append(option).trigger('change');
+              });
+          });
+
+        // If region already selected the retrieve the expense types
+        console.log(region_select.val())
+        if (region_select.val()){
+            region_select.trigger({
+              type: 'select2:select',
+              params: {
+                data: {id: region_select.val()}
+              }
+          });
+        }
       });
+
 
       //Initialize the file input
       $("#id_receipt").fileinput({

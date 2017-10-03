@@ -133,6 +133,14 @@ class ExpenseCreate(CreateView):
                 id=self.request.GET.get('salesman'))
         else:
             context['salesman'] = self.request.user.salesman
+        expense_types = {}
+        for et in context['salesman'].expense_types\
+                .exclude(expense_type__name__in=['Daily Expense']):
+            if not expense_types.get(et.region.id):
+                expense_types[et.region.id] = []
+            expense_types[et.region.id].append([et.id, et.expense_type.name])
+        context['expense_types'] = json.dumps(expense_types)
+
         if not context.get('inline_formset'):
             context['inline_formset'] = self.ExpenseFormSet(
                 form_kwargs={'salesman': context['salesman'],
@@ -207,6 +215,15 @@ class ExpenseUpdate(UpdateView):
                              'user_is_admin': self.request.user.is_admin},
                 instance=context['form'].instance)
         context['salesman'] = context['form'].instance.salesman
+
+        expense_types = {}
+        for et in context['salesman'].expense_types \
+                .exclude(expense_type__name__in=['Daily Expense']):
+            if not expense_types.get(et.region.id):
+                expense_types[et.region.id] = []
+            expense_types[et.region.id].append([et.id, et.expense_type.name])
+        context['expense_types'] = json.dumps(expense_types)
+
         if not self.request.user.is_admin \
                 and context['salesman'] != self.request.user.salesman:
             raise PermissionDenied
