@@ -16,7 +16,7 @@ from django.core.exceptions import PermissionDenied
 from expensetraq.core.utils import user_in_groups, DeleteMessageMixin
 from expensetraq.core.models import Expense, ExpenseType, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
-    CompanyCard, User, SalesmanCompanyCard, SalesmanExpenseType
+    CompanyCard, User, SalesmanCompanyCard, SalesmanExpenseType, Region
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm, ExpenseForm, DailyExpenseForm
 from openpyxl import Workbook
@@ -360,7 +360,7 @@ class SalesmanCreate(SuccessMessageMixin, CreateView):
         fields=['company_card', 'gp_vendor_code'])
     ETFormSet = inlineformset_factory(
         Salesman, SalesmanExpenseType, extra=5, can_delete=False,
-        fields=['expense_type', 'name', 'gl_code_suffix'])
+        fields=['expense_type', 'region', 'gl_code_suffix'])
 
     def get_context_data(self, **kwargs):
         context = super(SalesmanCreate, self).get_context_data(**kwargs)
@@ -424,7 +424,7 @@ class SalesmanUpdate(SuccessMessageMixin, UpdateView):
 
     ETFormSet = inlineformset_factory(
         Salesman, SalesmanExpenseType, extra=3,
-        fields=['expense_type', 'name', 'gl_code_suffix'])
+        fields=['expense_type', 'region', 'gl_code_suffix'])
 
     def get_context_data(self, **kwargs):
         context = super(SalesmanUpdate, self).get_context_data(**kwargs)
@@ -801,60 +801,7 @@ class ExpenseListExport(ListView):
                         name='Helvetica Neue', size=10, bold=True)
                     total_expenses += line_amount
                     cur_row += 1
-    
-                # # Set the header for card expenses
-                # main_sheet.row_dimensions[cur_row].height = 22
-                # main_sheet['A%s' % cur_row] = 'Card Expenses'
-                # main_sheet['A%s' % cur_row].font = Font(
-                #     name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
-                # main_sheet['A%s' % cur_row].fill = PatternFill(
-                #     start_color='004C7F', end_color='004C7F', fill_type='solid')
-                #
-                # for col_label in all_col_labels:
-                #     main_sheet[col_label + str(cur_row)].font = Font(
-                #         name='Helvetica Neue', size=10, bold=True, color='FFFFFF')
-                #     main_sheet[col_label + str(cur_row)].fill = PatternFill(
-                #         start_color='004C7F', end_color='004C7F', fill_type='solid')
-                # cur_row += 1
-                #
-                # # Add all the card expenses here
-                # for expense_type, amounts in expense_list[
-                #         'card_expenses'].items():
-                #     if expense_type != 'total':
-                #         main_sheet['A%s' % cur_row] = expense_type
-                #         main_sheet['A%s' % cur_row].font = Font(
-                #             name='Helvetica Neue', size=10, bold=True)
-                #         line_amount = 0
-                #         for t_date, amount in amounts.items():
-                #             col_label = day_col_labels[t_date]
-                #             main_sheet[col_label + str(cur_row)] = amount
-                #             main_sheet[col_label + str(cur_row)].font = Font(
-                #                 name='Helvetica Neue', size=10, bold=False)
-                #             line_amount += amount
-                #         main_sheet[last_col_label + str(cur_row)] = line_amount
-                #         main_sheet[last_col_label + str(cur_row)].font = Font(
-                #             name='Helvetica Neue', size=10, bold=True)
-                #         cur_row += 1
-                #
-                # # Set the trailer for cash expenses
-                # main_sheet.row_dimensions[cur_row].height = 22
-                # main_sheet['A%s' % cur_row] = 'Total Card Expenses'
-                # main_sheet['A%s' % cur_row].font = Font(
-                #     name='Helvetica Neue', size=10, bold=True)
-                # line_amount = 0
-                # for t_date, amount in expense_list[
-                #         'card_expenses']['total'].items():
-                #     col_label = day_col_labels[t_date]
-                #     main_sheet[col_label + str(cur_row)] = amount
-                #     main_sheet[col_label + str(cur_row)].font = Font(
-                #         name='Helvetica Neue', size=10, bold=True)
-                #     line_amount += amount
-                # main_sheet[last_col_label + str(cur_row)] = line_amount
-                # main_sheet[last_col_label + str(cur_row)].font = Font(
-                #     name='Helvetica Neue', size=10, bold=True)
-                # total_expenses += line_amount
-                # cur_row += 1
-    
+
                 # Set the trailer for the whole file
                 main_sheet.row_dimensions[cur_row].height = 22
                 main_sheet[all_col_labels[-2] + str(cur_row)] = 'Total:'
@@ -983,3 +930,45 @@ class SalesmanExpenseTypeList(View):
         for et in all_expenses:
             expense_types.append([et.id, str(et)])
         return JsonResponse(expense_types, safe=False)
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RegionList(ListView):
+    model = Region
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RegionCreate(CreateView):
+    model = Region
+    fields = '__all__'
+    success_url = reverse_lazy('region-list')
+    success_message = 'Region "%(name)s" has been created successfully'
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RegionUpdate(UpdateView):
+    model = Region
+    fields = '__all__'
+    success_url = reverse_lazy('region-list')
+    success_message = 'Region "%(name)s" has been edited successfully'
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class RegionDelete(DeleteMessageMixin, DeleteView):
+    model = Region
+    success_url = reverse_lazy('region-list')
+    success_message = 'Region "%(name)s" has been deleted successfully'
+
+    def delete(self, request, *args, **kwargs):
+        region = self.get_object()
+        expense_type = SalesmanExpenseType.objects.filter(region=region).first()
+        if expense_type:
+            messages.error(
+                self.request,
+                'Cannot Delete region "{}" as it is still used by '
+                'salesman "{}"'.format(region, expense_type.salesman)
+            )
+            return HttpResponseRedirect(reverse_lazy('region-list'))
+        else:
+            return super(RegionDelete, self).delete(request, *args, **kwargs)
+

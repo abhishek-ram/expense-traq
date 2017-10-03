@@ -55,6 +55,13 @@ def receipt_directory_path(instance, filename):
         instance.transaction_date.strftime('%Y%m%d'), filename)
 
 
+class Region(TimeStampedModel, models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class CompanyCard(TimeStampedModel, models.Model):
     name = models.CharField(max_length=100)
 
@@ -94,11 +101,13 @@ class SalesmanExpenseType(models.Model):
         Salesman, on_delete=models.CASCADE, related_name='expense_types')
     expense_type = models.ForeignKey(
         ExpenseType, on_delete=models.CASCADE)
+    region = models.ForeignKey(
+        Region, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100)
     gl_code_suffix = models.CharField(max_length=100)
 
     def __str__(self):
-        return '%s - %s' % (self.expense_type.name, self.name)
+        return '%s - %s' % (self.expense_type.name, self.region)
 
 
 class ExpenseLimit(TimeStampedModel, models.Model):
