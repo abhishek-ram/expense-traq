@@ -62,6 +62,24 @@
                           </select>
                         </td>
                       </tr>
+                      {% if form.instance.id %}
+                        {% if user.is_admin %}
+                          <tr>
+                            <th>Status</th>
+                            <td>
+                              <select id="id_status" name="status" required="required"
+                                  class="form-control col-md-7 col-xs-12 ">
+                                  {% for k, v in form.fields.status.choices %}
+                                    <option {% if k == form.instance.status %} selected {% endif %}
+                                        value="{{ k }}">{{ v }}</option>
+                                  {% endfor %}
+                              </select>
+                            </td>
+                          </tr>
+                        {% else %}
+                          <input type="hidden" id="id_status" name="status" value="{{ form.instance.status }}">
+                        {% endif %}
+                      {% endif %}
                       <tr>
                         <th>Notes</th>
                         <td>

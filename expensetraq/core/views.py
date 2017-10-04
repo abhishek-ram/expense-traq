@@ -201,7 +201,7 @@ class ExpenseCreate(CreateView):
                   name='dispatch')
 class ExpenseUpdate(UpdateView):
     model = Expense
-    fields = ['transaction_date', 'paid_by', 'notes']
+    fields = ['status', 'transaction_date', 'paid_by', 'notes']
     success_message = 'Expense "{0.pk}" has been edited successfully'
 
     ExpenseFormSet = inlineformset_factory(

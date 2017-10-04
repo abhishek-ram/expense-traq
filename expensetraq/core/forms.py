@@ -135,3 +135,4 @@ class DailyExpenseForm(forms.Form):
         self.salesman = salesman
         self.fields['expense_type'].queryset = SalesmanExpenseType.objects. \
             filter(salesman=salesman, expense_type__name__in=['Daily Expense'])
+        self.fields['expense_type'].label_from_instance = lambda obj: obj.region.name

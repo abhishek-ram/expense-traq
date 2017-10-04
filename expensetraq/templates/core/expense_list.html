@@ -76,7 +76,7 @@
                       <a href="{% url 'expense-detail' expense.pk %}"
                          class="btn btn-primary btn-xs">
                         <i class="fa fa-folder"></i> View </a>
-                        {% if expense.status == 'P' %}
+                        {% if expense.status == 'P' or user.is_admin %}
                           <a href="{% url 'expense-update' expense.pk %}"
                              class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
                         {% endif %}
