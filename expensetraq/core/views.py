@@ -289,13 +289,15 @@ class ExpenseApproval(ListView):
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         if form.is_valid():
-            ap_display = 'Approved' if form.cleaned_data['approved'] else 'Denied'
-            if form.cleaned_data['approved']:
+
+            if form.cleaned_data['action'] == 'Approved':
                 form.cleaned_data['expense_list'].update(status='A')
-            else:
+            elif form.cleaned_data['action'] == 'Denied':
                 form.cleaned_data['expense_list'].update(status='D')
+            elif form.cleaned_data['action'] == 'Deleted':
+                form.cleaned_data['expense_list'].delete()
             messages.success(
-                request, 'Selected expenses have been %s' % ap_display)
+                request, 'Selected expenses have been %s' % form.cleaned_data['action'])
 
             # Create notifications for the salesman and manager
             for expense in form.cleaned_data['expense_list']:
@@ -303,15 +305,17 @@ class ExpenseApproval(ListView):
                     user=expense.salesman.user,
                     title='Expense Updated',
                     text='Admin has {} your expense dated {} for ${}'.format(
-                        ap_display, expense.transaction_date, expense.total_amount))
+                        form.cleaned_data['action'], expense.transaction_date,
+                        expense.total_amount))
                 Notification.objects.create(
                     user=expense.salesman.manager,
                     title='Expense Updated',
                     text='Admin has {} {}\'s expense dated {} for ${}'.format(
-                        ap_display, expense.salesman.user,
+                        form.cleaned_data['action'], expense.salesman.user,
                         expense.transaction_date, expense.total_amount))
 
         else:
+            print(form.errors)
             messages.error(
                 request, 'Unable to update expenses, please contact Admin')
         return self.get(request, *args, **kwargs)

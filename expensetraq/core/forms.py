@@ -113,7 +113,7 @@ class ExpenseLineForm(forms.ModelForm):
 class ExpenseApprovalForm(forms.Form):
     expense_list = forms.ModelMultipleChoiceField(
         queryset=Expense.objects.all())
-    approved = forms.NullBooleanField()
+    action = forms.CharField()
 
 
 class DailyExpenseForm(forms.Form):

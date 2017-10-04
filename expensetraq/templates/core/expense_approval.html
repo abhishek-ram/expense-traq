@@ -59,7 +59,7 @@
             {% csrf_token %}
 {#            <input type="hidden" id="id_salesman" name="salesman"#}
 {#                   value="{{ request.GET.salesman }}">#}
-            <input type="hidden" id="id_approved" name="approved" value="">
+            <input type="hidden" id="id_action" name="action" value="">
             <table class="table" id="datatable">
               <thead>
                 <tr>
@@ -98,9 +98,6 @@
                       <a href="{% url 'expense-update' expense.pk %}"
                          class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
 
-                      <button type="button" class="btn btn-danger btn-xs"
-                              onclick="confirmDelete('{% url 'expense-delete' expense.pk %}','{{ expense.salesman }}','{{ expense.transaction_date }}','{{ expense.total_amount }}')">
-                        <i class="fa fa-trash-o"></i> Delete </button>
                     </td>
                   </tr>
                 {% endfor %}
@@ -112,32 +109,7 @@
       </div>
     </div>
     <!-- po table -->
-    <!-- delete modal -->
-    <div class="modal fade delete-modal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form class="form-horizontal delete-form" method="post">
-          <div class="modal-header">
-            <button type="button" class="close"
-                    data-dismiss="modal"><span aria-hidden="true">×</span></button>
-            <h4 class="modal-title" id="myModalLabel">Delete Confirmation Dialog</h4>
-          </div>
-          <div class="modal-body">
-              {% csrf_token %}
-              <input type="hidden" name="success_url" value="{{ request.path }}">
-              <h5> Are you sure you want to delete the expense record  of amount <strong class="amount"></strong>
-                for salesman <strong class="salesan"></strong> dated <strong class="date"></strong>?
-              </h5>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <input type="submit" class="btn btn-danger" value="Delete Expense"/>
-          </div>
-          </form>
-        </div>
-      </div>
-    </div>
-    <!-- delete modal -->
+
 
     <!-- Image modal -->
     <div class="modal fade image-modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -179,13 +151,6 @@
   <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
 
   <script>
-    function confirmDelete(url, salesman, date, amount) {
-      $(".delete-form").attr("action", url);
-      $(".delete-form h5 .salesman").text(salesman);
-      $(".delete-form h5 .date").text(date);
-      $(".delete-form h5 .amount").text(amount);
-      $(".delete-modal").modal("show");
-    }
 
     function viewReceipt(url, date, amount) {
       $("#receipt-image").attr("src", url);
@@ -216,14 +181,21 @@
           {
             text: "Approve Selected",
             action: function ( e, dt, node, config ) {
-              $("#id_approved").val('True');
+              $("#id_action").val('Approved');
               $("#approval_form").submit();
             }
           },
           {
             text: "Deny Selected",
             action: function ( e, dt, node, config ) {
-              $("#id_approved").val('False');
+              $("#id_action").val('Denied');
+              $("#approval_form").submit();
+            }
+          },
+          {
+            text: "Delete Selected",
+            action: function ( e, dt, node, config ) {
+              $("#id_action").val('Deleted');
               $("#approval_form").submit();
             }
           }
