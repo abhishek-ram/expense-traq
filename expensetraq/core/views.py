@@ -315,7 +315,6 @@ class ExpenseApproval(ListView):
                         expense.transaction_date, expense.total_amount))
 
         else:
-            print(form.errors)
             messages.error(
                 request, 'Unable to update expenses, please contact Admin')
         return self.get(request, *args, **kwargs)

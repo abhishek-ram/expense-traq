@@ -49,6 +49,9 @@ class ExpenseType(TimeStampedModel, models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
+
 
 def receipt_directory_path(instance, filename):
     return 'expense_receipts/{0}/{1}'.format(
@@ -60,6 +63,9 @@ class Region(TimeStampedModel, models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ('name',)
 
 
 class CompanyCard(TimeStampedModel, models.Model):
@@ -107,6 +113,9 @@ class SalesmanExpenseType(models.Model):
 
     def __str__(self):
         return '%s - %s' % (self.expense_type.name, self.region)
+
+    class Meta:
+        ordering = ('expense_type__name', 'region__name')
 
 
 class ExpenseLimit(TimeStampedModel, models.Model):

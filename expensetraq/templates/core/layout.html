@@ -176,11 +176,10 @@
     <div class="notification">
       <ul>
         {% for message in messages %}
-          <li class="{{ message.level_tag }}">{{ message }}</li>
+          {% if message.level_tag != "success" %}
+            <li class="{{ message.level_tag }}">{{ message }}</li>
+          {% endif %}
         {% endfor %}
-        {% if unread_notifications %}
-          <li class="success">You have new unread Notifications</li>
-        {% endif %}
       </ul>
     </div>
 

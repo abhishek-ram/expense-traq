@@ -100,8 +100,10 @@ class ExpenseLineForm(forms.ModelForm):
         for et in self.fields['expense_type'].queryset:
             regions[et.region.id] = et.region.name
 
-        self.fields['region'].choices = [('', '----------')] + \
-                                        list(regions.items())
+        region_list = list(regions.items())
+        region_list.sort(key=lambda x: x[1])
+        self.fields['region'].choices = [('', '----------')] + region_list
+
         if self.instance.id:
             self.fields['region'].initial = self.instance.expense_type.region_id
 
