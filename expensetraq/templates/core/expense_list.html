@@ -26,17 +26,18 @@
     <div class="page-title">
       <div class="title_left">
         <h3>Expense Report <small>You can filter to list or export expenses here</small>
-          {% if request.user.is_salesman and not request.user.is_admin %}
-            <a class="btn btn-primary btn-round" type="button"
-                       href="{% url 'expense-add' %}">
-                      <i class="fa fa-plus" ></i> Add Expense</a>
-          {% endif %}
+
 
         </h3>
       </div>
 
       <div class="title_right">
         {% if request.GET.action == 'list' %}
+            {% if request.user.is_salesman and not request.user.is_admin %}
+              <a class="btn btn-primary btn-round" type="button"
+                         href="{% url 'expense-add' %}">
+                        <i class="fa fa-plus" ></i> Add Expense</a>
+            {% endif %}
             <a class="btn btn-primary btn-round" type="button"
                          href="{% url 'expense-list-export' %}">
                         <i class="fa fa-sliders" ></i> Filter Expenses</a>
