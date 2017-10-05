@@ -1,6 +1,7 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
 {% load humanize %}
+{% load form_extras %}
 
 {% block title %}Expense Tracking - Expense Report{% endblock %}
 
@@ -30,13 +31,19 @@
                        href="{% url 'expense-add' %}">
                       <i class="fa fa-plus" ></i> Add Expense</a>
           {% endif %}
-            <a class="btn btn-primary btn-round" type="button"
-                         href="{% url 'expense-list-export' %}">
-                        <i class="fa fa-sliders" ></i> Filter Expenses</a>
+
         </h3>
       </div>
 
       <div class="title_right">
+        {% if request.GET.action == 'list' %}
+            <a class="btn btn-primary btn-round" type="button"
+                         href="{% url 'expense-list-export' %}">
+                        <i class="fa fa-sliders" ></i> Filter Expenses</a>
+            <a class="btn btn-success btn-round" type="button"
+                         href="{{ current_path|replace:"/action=list/action=export" }}">
+                        <i class="fa fa-external-link" ></i> Export Expenses</a>
+          {% endif %}
       </div>
     </div>
 

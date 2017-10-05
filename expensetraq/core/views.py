@@ -272,7 +272,6 @@ class ExpenseUpdate(UpdateView):
         if self.request.user.is_admin:
             return reverse_lazy('expense-approval')
         else:
-            print('%s?action=list' % reverse_lazy('expense-list-export'))
             return '%s?action=list' % reverse_lazy('expense-list-export')
 
 

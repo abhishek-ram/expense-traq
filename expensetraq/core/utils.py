@@ -50,4 +50,6 @@ def context_processor(request):
     if request.user.is_authenticated:
         context['unread_notifications'] = request.user.notifications.filter(
             is_read=False)
+    context['current_path'] = request.get_full_path()
+
     return context

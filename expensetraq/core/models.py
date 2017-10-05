@@ -74,6 +74,9 @@ class CompanyCard(TimeStampedModel, models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
+
 
 class Salesman(TimeStampedModel, models.Model):
     user = models.OneToOneField(
