@@ -154,21 +154,16 @@
       }
 
       $(document).ready(function() {
-        // Initialize Select
-        $(".select2_single").select2({
-			    allowClear: true,
-          width: '100%'
-			  }).on('select2:select', function(e){
-			      var rowId = e.currentTarget.id.split('-');
-            if (rowId.pop() == 'expense_type'){
-              updatePrefix(e.currentTarget.id, e.params.data.id.toString());
-            }
-        });
 
         $(".select2_single").each(function(i) {
-
           if ($(this).attr('id').split('-').pop() == 'expense_type'){
             updatePrefix($(this).attr('id'), $(this).val());
+          }
+        });
+
+        $(".select2_single").on('change', function(){
+          if ($(this).attr('id').split('-').pop() == 'expense_type') {
+            updatePrefix(this.id, this.value.toString());
           }
         });
 
@@ -180,10 +175,7 @@
           deleteCssClass: 'del-row btn btn-sm btn-danger',
           prefix: '{{ cc_formset.prefix }}',
           added: function (row) {
-            row.find(".select2_single").select2({
-              allowClear: true,
-              width: '100%'
-            });
+            console.log(row.find(".select2_single"))
           }
         });
         $('#et_formset').find('tbody tr').formset({
@@ -193,12 +185,9 @@
           deleteCssClass: 'del-et btn btn-sm btn-danger',
           prefix: '{{ et_formset.prefix }}',
           added: function (row) {
-            row.find(".select2_single").select2({
-              allowClear: true,
-              width: '100%'
-            }).on('select2:select', function(e){
-                updatePrefix(e.currentTarget.id, e.params.data.id.toString());
-            })
+            row.find(".select2_single").on('change', function(){
+                updatePrefix(this.id, this.value.toString());
+            });
           }
         });
       });

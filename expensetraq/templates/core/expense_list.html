@@ -31,6 +31,7 @@
         </h3>
       </div>
 
+
       <div class="title_right">
         {% if request.GET.action == 'list' %}
             {% if request.user.is_salesman and not request.user.is_admin %}
@@ -46,9 +47,11 @@
                         <i class="fa fa-external-link" ></i> Export Expenses</a>
           {% endif %}
       </div>
+
     </div>
 
     <div class="clearfix"></div>
+
     <!-- po table -->
     <div class="row">
       {% if request.GET.action == 'list' %}
