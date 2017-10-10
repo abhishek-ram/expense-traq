@@ -109,10 +109,11 @@
 
     }
     $('#datatable').dataTable({
-        "ordering": false,
+        "order": [[0, "desc"], [1, "desc"]],
         "responsive": true,
         "columnDefs": [
-            { "searchable": false, "targets": [2, 3] }
+            { "searchable": false, "targets": [2, 3] },
+            { "sortable": false, "targets": [2, 3, 4] }
         ]
       });
   </script>
