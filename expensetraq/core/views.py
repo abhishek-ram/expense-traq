@@ -132,7 +132,7 @@ class ExpenseCreate(CreateView):
             context['salesman'] = self.request.user.salesman
         expense_types = {}
         for et in context['salesman'].expense_types\
-                .exclude(expense_type__name__in=['Daily Expense']):
+                .exclude(expense_type__name__in=['Daily Rate']):
             if not expense_types.get(et.region.id):
                 expense_types[et.region.id] = []
             expense_types[et.region.id].append([et.id, et.expense_type.name])
@@ -215,7 +215,7 @@ class ExpenseUpdate(UpdateView):
 
         expense_types = {}
         for et in context['salesman'].expense_types \
-                .exclude(expense_type__name__in=['Daily Expense']):
+                .exclude(expense_type__name__in=['Daily Rate']):
             if not expense_types.get(et.region.id):
                 expense_types[et.region.id] = []
             expense_types[et.region.id].append([et.id, et.expense_type.name])
@@ -736,12 +736,12 @@ class DailyExpenseSubmit(FormView):
     def form_invalid(self, form):
         messages.error(
             self.request,
-            'Daily Expense was not logged, Please select an expense type')
+            'Daily Rate was not logged, Please select an expense type')
         return HttpResponseRedirect(reverse_lazy('index'))
 
     @transaction.atomic
     def form_valid(self, form):
-        # Get the list of daily expenses logged by the user
+        # Get the list of daily rates logged by the user
         exist_expense = form.salesman.expenses.filter(
             transaction_date=form.cleaned_data['transaction_date'],
             lines__expense_type=form.cleaned_data['expense_type']
@@ -771,7 +771,7 @@ class DailyExpenseSubmit(FormView):
             )
             messages.success(
                 self.request,
-                '{} Daily Expense has been successfully logged '
+                '{} Daily Rate has been successfully logged '
                 'for date {}'.format(form.cleaned_data['worked'],
                                      form.cleaned_data['transaction_date']))
         elif (exist_expense.total_amount + expense_amount) \
@@ -781,12 +781,12 @@ class DailyExpenseSubmit(FormView):
             line.save()
             messages.success(
                 self.request,
-                'Full Daily Expense has been successfully logged '
+                'Full Daily Rate has been successfully logged '
                 'for date {}'.format(form.cleaned_data['transaction_date']))
         else:
             messages.error(
                 self.request,
-                'Cannot log Daily Expense as expense has already been logged '
+                'Cannot log Daily Rate as expense has already been logged '
                 'for date {}'.format(form.cleaned_data['transaction_date']))
 
         return super(DailyExpenseSubmit, self).form_valid(form)
@@ -798,7 +798,7 @@ class SalesmanExpenseTypeList(View):
         expense_types = [['', '---------']]
         all_expenses = SalesmanExpenseType.objects.\
             filter(salesman=salesman_id).\
-            exclude(expense_type__name__in=['Daily Expense'])
+            exclude(expense_type__name__in=['Daily Rate'])
         for et in all_expenses:
             expense_types.append([et.id, str(et)])
         return JsonResponse(expense_types, safe=False)

@@ -95,7 +95,7 @@ class ExpenseLineForm(forms.ModelForm):
         self.user_is_admin = user_is_admin
         self.fields['expense_type'].queryset = SalesmanExpenseType.objects.\
             filter(salesman=salesman).\
-            exclude(expense_type__name__in=['Daily Expense'])
+            exclude(expense_type__name__in=['Daily Rate'])
         regions = {}
         for et in self.fields['expense_type'].queryset:
             regions[et.region.id] = et.region.name
@@ -136,5 +136,5 @@ class DailyExpenseForm(forms.Form):
         super(DailyExpenseForm, self).__init__(*args, **kwargs)
         self.salesman = salesman
         self.fields['expense_type'].queryset = SalesmanExpenseType.objects. \
-            filter(salesman=salesman, expense_type__name__in=['Daily Expense'])
+            filter(salesman=salesman, expense_type__name__in=['Daily Rate'])
         self.fields['expense_type'].label_from_instance = lambda obj: obj.region.name
