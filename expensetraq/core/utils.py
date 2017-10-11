@@ -211,7 +211,7 @@ def generate_expense_report(salesman, date_range, expense_list,
 
     elif r_format == 'pdf':
         expense_report = SimpleDocTemplate(
-            'Expense_report.pdf',
+            expense_report_stream,
             rightMargin=72,
             leftMargin=72,
             topMargin=30,

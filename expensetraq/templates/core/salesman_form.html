@@ -154,6 +154,14 @@
       }
 
       $(document).ready(function() {
+        $("#id_user").select2({
+           placeholder: 'Select a Salesman'
+        });
+
+        $("#id_manager").select2({
+           placeholder: 'Select a Manager',
+           allowClear: true
+        });
 
         $(".select2_single").each(function(i) {
           if ($(this).attr('id').split('-').pop() == 'expense_type'){
