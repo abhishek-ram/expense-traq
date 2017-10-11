@@ -120,7 +120,9 @@
                 <h4 class="modal-title" id="receipt-title">Expense Receipt</h4>
             </div>
             <div class="modal-body">
-                <img id="receipt-image" class="img-responsive" src="">
+                <a id="receipt-image-link" href="" target="_blank">
+                  <img id="receipt-image" class="img-responsive" src="">
+                </a>
             </div>
         </div>
       </div>
@@ -153,6 +155,7 @@
   <script>
 
     function viewReceipt(url, date, amount) {
+      $("#receipt-image-link").attr("href", url);
       $("#receipt-image").attr("src", url);
       $("#receipt-title").text(
           "Receipt of Expense on " + date + " for $" + amount);
