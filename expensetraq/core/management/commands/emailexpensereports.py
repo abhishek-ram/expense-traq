@@ -102,4 +102,4 @@ class Command(BaseCommand):
                     reports_zip_stream.getvalue(),
                     'application/x-zip-compressed'
                 )
-                # report_email.send(fail_silently=False)
+                report_email.send(fail_silently=False)
