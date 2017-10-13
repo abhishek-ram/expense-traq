@@ -8,8 +8,9 @@ from expensetraq.core.models import User
 from expensetraq.core.utils import generate_expense_report
 from zipfile import ZipFile, ZIP_DEFLATED
 from io import BytesIO
+from django.utils import timezone
+from datetime import timedelta
 import logging
-import maya
 logger = logging.getLogger('expensetraq')
 
 
@@ -18,11 +19,11 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        to_date = maya.now()
-        from_date = to_date.subtract(days=7)
+        to_date = timezone.localtime(timezone.now()).date() - timedelta(days=1)
+        from_date = to_date - timedelta(days=1)
         date_range = '{} - {}'.format(
-            from_date.datetime().strftime('%Y-%m-%d'),
-            to_date.datetime().strftime('%Y-%m-%d'),
+            from_date.strftime('%Y-%m-%d'),
+            to_date.strftime('%Y-%m-%d'),
         )
 
         # Send the report to each manager registered on the System
@@ -38,8 +39,8 @@ class Command(BaseCommand):
                     logger.info("Generating report for salesman %s" % salesman)
                     weekly_expenses = salesman.expenses.\
                         filter(status__in=['P', 'A']).\
-                        filter(transaction_date__gte=from_date.datetime().date()).\
-                        filter(transaction_date__lte=to_date.datetime().date())
+                        filter(transaction_date__gte=from_date).\
+                        filter(transaction_date__lte=to_date)
 
                     expense_list = {}
                     for expense in weekly_expenses:
