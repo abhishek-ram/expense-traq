@@ -3,8 +3,11 @@ from django.urls import reverse_lazy
 from django.db import transaction
 from django.conf import settings
 from django.utils.http import urlencode
+from django.core.mail import EmailMessage
 from expensetraq.core.models import User
 from expensetraq.core.utils import generate_expense_report
+from zipfile import ZipFile, ZIP_DEFLATED
+from io import BytesIO
 import logging
 import maya
 logger = logging.getLogger('expensetraq')
@@ -27,11 +30,14 @@ class Command(BaseCommand):
         for user in User.objects.all():
             if user.is_manager and user.email:
                 logger.info(
-                    "Generating reports for all salesman under manager %s" % user)
-                expense_reports = []
+                    "Generating reports of team for manager %s" % user)
+                reports_zip_stream = BytesIO()
+                reports_zip = ZipFile(
+                    reports_zip_stream, mode='w', compression=ZIP_DEFLATED)
                 for salesman in user.team.all():
                     logger.info("Generating report for salesman %s" % salesman)
                     weekly_expenses = salesman.expenses.\
+                        filter(status__in=['P', 'A']).\
                         filter(transaction_date__gte=from_date.datetime().date()).\
                         filter(transaction_date__lte=to_date.datetime().date())
 
@@ -59,20 +65,41 @@ class Command(BaseCommand):
                                 expense.paid_by][e_type][trans_date] += line.amount
                             expense_list[
                                 expense.paid_by]['total'][trans_date] += line.amount
-
-                    report_pdf = generate_expense_report(
-                        salesman, date_range, expense_list, 'pdf')
-                    report_fn = 'ExpenseReport_%s_%s.xlsx' % (salesman, date_range)
-                    report_url = '{}{}?{}'.format(
-                        'http://127.0.0.1:8000' if settings.DEBUG else 'https://expenses.cevmultimedia.com',
-                        reverse_lazy('expense-list-export'),
-                        urlencode({
-                            'action': 'list',
-                            'salesman[]': salesman.id,
-                            'daterange': date_range
-                        })
+                    reports_zip.writestr(
+                        'ExpenseReport_%s_%s.pdf' % (salesman, date_range),
+                        generate_expense_report(
+                            salesman, date_range, expense_list, 'pdf')
                     )
-                    expense_reports.append(
-                        (str(salesman), report_url, report_fn))
 
-                print(expense_reports)
+                reports_zip.close()
+                report_url = '{}{}?{}'.format(
+                    'http://127.0.0.1:8000' if settings.DEBUG else 'https://expenses.cevmultimedia.com',
+                    reverse_lazy('expense-list-export'),
+                    urlencode({
+                        'action': 'list',
+                        'salesman[]': [s.id for s in user.team.all()],
+                        'status[]': ['P', 'A'],
+                        'daterange': date_range
+                    }, True)
+                )
+
+                # Send the report email to the manager
+                logger.info(
+                    "Emailing all reports of team to manager %s" % user)
+                email_body = 'Hi %s, \n\n' % user
+                email_body += 'Attached is the weekly reports of pending and ' \
+                              'approved expenses of everyone you ' \
+                              'manage for %s\n\n' % date_range
+                email_body += 'You can view the report online at %s \n\n' % report_url
+
+                report_email = EmailMessage(
+                    subject='Weekly Expenses Report',
+                    body=email_body,
+                    to=[user.email],
+                )
+                report_email.attach(
+                    'ExpenseReports_%s.zip' % date_range,
+                    reports_zip_stream.getvalue(),
+                    'application/x-zip-compressed'
+                )
+                report_email.send(fail_silently=False)

@@ -631,10 +631,12 @@ class ExpenseListExport(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ExpenseListExport, self).get_context_data(**kwargs)
-        if self.request.user.is_manager:
-            context['salesman_list'] = self.request.user.team.all()
-        elif self.request.user.is_admin:
+
+        if self.request.user.is_admin:
             context['salesman_list'] = Salesman.objects.all()
+        elif self.request.user.is_manager:
+            context['salesman_list'] = self.request.user.team.all()
+
         context['status_list'] = Expense.STATUS_CHOICES
         context['paid_by_list'] = ['Employee Paid'] + \
                                   [cc.name for cc in CompanyCard.objects.all()]
