@@ -20,7 +20,7 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         to_date = timezone.localtime(timezone.now()).date() - timedelta(days=1)
-        from_date = to_date - timedelta(days=1)
+        from_date = to_date - timedelta(days=6)
         date_range = '{} - {}'.format(
             from_date.strftime('%Y-%m-%d'),
             to_date.strftime('%Y-%m-%d'),
