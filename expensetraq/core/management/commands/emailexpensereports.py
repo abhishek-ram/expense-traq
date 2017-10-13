@@ -28,7 +28,7 @@ class Command(BaseCommand):
         # Send the report to each manager registered on the System
         logger.info('Begin weekly email job, looping through the managers')
         for user in User.objects.all():
-            if user.is_manager and user.email:
+            if user.is_manager and user.email and user.team.exists():
                 logger.info(
                     "Generating reports of team for manager %s" % user)
                 reports_zip_stream = BytesIO()
@@ -102,4 +102,4 @@ class Command(BaseCommand):
                     reports_zip_stream.getvalue(),
                     'application/x-zip-compressed'
                 )
-                report_email.send(fail_silently=False)
+                # report_email.send(fail_silently=False)
