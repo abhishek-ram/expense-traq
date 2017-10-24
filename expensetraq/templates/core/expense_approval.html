@@ -78,7 +78,7 @@
                   <tr>
                     <td>
 							        <input type="checkbox" id="id_expense_list" name="expense_list"
-                             value="{{ expense.id }}" class="flat">
+                             value="{{ expense.id }}">
 						        </td>
                     <td>{{ expense.salesman.user }}</td>
                     <td>{{ expense.expense_types }}</td>
@@ -221,14 +221,20 @@
           { "sortable": false, "targets": [0, 5, 6, 7] }
         ],
         createdRow: function( row, data, dataIndex){
-            var api = this.api();
-            var bg_color = 'rgba(243, 218, 45, 0.40)';
-            var pr_data = api.row(dataIndex-1).data();
-            if (pr_data && data[1] == pr_data[1] && data[2] == pr_data[2]
-                && data[3] == pr_data[3] && data[4] == pr_data[4]){
-              $(row).css('background-color', bg_color);
-              $(row).prev().css('background-color', bg_color);
-            }
+          var api = this.api();
+          var bg_color = 'rgba(243, 218, 45, 0.40)';
+          var pr_data = api.row(dataIndex-1).data();
+          if (pr_data && data[1] == pr_data[1] && data[2] == pr_data[2]
+              && data[3] == pr_data[3] && data[4] == pr_data[4]){
+            $(row).css('background-color', bg_color);
+            $(row).prev().css('background-color', bg_color);
+          }
+        },
+        drawCallback: function( settings ) {
+          $(':checkbox').not("input.flat").iCheck({
+              checkboxClass: 'icheckbox_flat-green',
+              radioClass: 'iradio_flat-green'
+          });
         }
       });
 
