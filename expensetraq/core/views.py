@@ -846,3 +846,72 @@ class RegionDelete(DeleteMessageMixin, DeleteView):
         else:
             return super(RegionDelete, self).delete(request, *args, **kwargs)
 
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class ExpenseMarkPaid(ListView):
+    model = Expense
+    form_class = ExpenseApprovalForm
+    template_name = 'core/expense_mark_paid.html'
+
+    def get_queryset(self):
+        # salesman = self.request.GET.get('salesman')
+        return Expense.objects.filter(status='A')
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            if form.cleaned_data['action'] == 'Paid':
+                form.cleaned_data['expense_list'].update(status='C')
+            messages.success(
+                request, 'Selected expenses have been %s' % form.cleaned_data['action'])
+
+            # Create notifications for the salesman and manager
+            for expense in form.cleaned_data['expense_list']:
+                Notification.objects.create(
+                    user=expense.salesman.user,
+                    title='Expense Updated',
+                    text='Admin has {} your expense dated {} for ${}'.format(
+                        form.cleaned_data['action'], expense.transaction_date,
+                        expense.total_amount))
+                Notification.objects.create(
+                    user=expense.salesman.manager,
+                    title='Expense Updated',
+                    text='Admin has {} {}\'s expense dated {} for ${}'.format(
+                        form.cleaned_data['action'], expense.salesman.user,
+                        expense.transaction_date, expense.total_amount))
+
+        else:
+            messages.error(
+                request, 'Unable to update expenses, please contact Admin')
+        return self.get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """
+        Insert the form into the context dict.
+        """
+        return super(ExpenseMarkPaid, self).get_context_data(**kwargs)
+
+    def get_form_kwargs(self):
+        """
+        Returns the keyword arguments for instantiating the form.
+        """
+        kwargs = {
+            # 'initial': self.get_initial(),
+            # 'prefix': self.get_prefix(),
+            # 'user': self.request.user,
+        }
+
+        if self.request.method in ('POST', 'PUT'):
+            kwargs.update({
+                'data': self.request.POST,
+                'files': self.request.FILES,
+            })
+        else:
+            kwargs.update({
+                'data': self.request.GET,
+            })
+        return kwargs
+
+    def get_form(self):
+        return self.form_class(**self.get_form_kwargs())
+

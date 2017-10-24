@@ -334,9 +334,12 @@
                         } else if (data === 'D') {
                             return '<a class="btn btn-round btn-danger btn-xs"> ' +
                                 '<i class="fa fa-times" ></i> Denied</a>'
-                        } else {
+                        } else if (data === 'P') {
                             return '<a class="btn btn-round btn-warning btn-xs"> ' +
                                 '<i class="fa fa-history" ></i> Pending</a>'
+                        } else {
+                            return '<a class="btn btn-round btn-success btn-xs"> ' +
+                                '<i class="fa fa-check-circle" ></i> Paid</a>'
                         }
                     }
                 },

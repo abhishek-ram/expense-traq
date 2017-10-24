@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 for salesman in user.team.all():
                     logger.info("Generating report for salesman %s" % salesman)
                     weekly_expenses = salesman.expenses.\
-                        filter(status__in=['P', 'A']).\
+                        filter(status__in=['A', 'C']).\
                         filter(transaction_date__gte=from_date).\
                         filter(transaction_date__lte=to_date)
 

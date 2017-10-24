@@ -1,0 +1,231 @@
+{% extends 'core/layout.html' %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block title %}Expense Tracking - Pay Expenses{% endblock %}
+
+{% block head_css %}
+  <!-- iCheck -->
+  <link href="{% static "vendors/iCheck/skins/flat/green.css" %}" rel="stylesheet">
+
+  <!-- Datatables -->
+  <link href="{% static "vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+  <link href="{% static "vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css" %}" rel="stylesheet">
+  <link href="{% static "vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css" %}" rel="stylesheet">
+  <link href="{% static "vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css" %}" rel="stylesheet">
+
+  <!-- Select2 -->
+  <link href="{% static "vendors/select2/dist/css/select2.min.css" %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block body_content %}
+
+    <!-- page content -->
+  <div class="right_col" role="main">
+    <div class="page-title">
+      <div class="title_left">
+        <h3>Expense Approvals
+          {% if salesman %}
+            for {{ salesman }}
+          {% else %}
+            <small> List the approved expenses ready for payment</small>
+          {% endif %}
+        </h3>
+      </div>
+
+{#      <div class="title_right">#}
+{#          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">#}
+{##}
+{#            <select class="form-control select2_single" id="id_salesman"#}
+{#              name="salesman" required>#}
+{#                <option value="">----------</option>#}
+{#                {% for salesman in salesman_list %}#}
+{#                  <option {% if salesman.id == request.GET.salesman|add:"0"  %} selected {% endif %}#}
+{#                    value="{{ salesman.id }}">{{ salesman.user }}</option>#}
+{#                {% endfor %}#}
+{#            </select>#}
+{#          </div>#}
+{#      </div>#}
+    </div>
+
+    <div class="clearfix"></div>
+    <!-- po table -->
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_content">
+            <form method="post" id="approval_form">
+            {% csrf_token %}
+{#            <input type="hidden" id="id_salesman" name="salesman"#}
+{#                   value="{{ request.GET.salesman }}">#}
+            <input type="hidden" id="id_action" name="action" value="">
+            <table class="table" id="datatable">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="check_all" class="flat"></th>
+                  <th>Salesman</th>
+                  <th>Expense Type</th>
+                  <th>Date of Transaction</th>
+                  <th>Amount</th>
+                  <th>Paid By</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for expense in object_list %}
+                  <tr>
+                    <td>
+							        <input type="checkbox" id="id_expense_list" name="expense_list"
+                             value="{{ expense.id }}" class="flat">
+						        </td>
+                    <td>{{ expense.salesman.user }}</td>
+                    <td>{{ expense.expense_types }}</td>
+                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                    <td>${{ expense.total_amount|intcomma }}</td>
+                    <td>{{ expense.paid_by }}</td>
+                    <td>{{ expense.notes|truncatewords:6 }}</td>
+                    <td>
+                      {% if expense.receipt %}
+                        <button class="btn btn-primary btn-xs" type="button"
+                          onclick="viewReceipt('{{ expense.receipt.url }}', '{{ expense.transaction_date|date:"Y-m-d"}}', '{{ expense.total_amount|intcomma }}')">
+                        <i class="fa fa-eye"></i> View Receipt </button>
+                      {% else %}
+                        <button class="btn btn-primary btn-xs" disabled>No Receipt Uploaded</button>
+                      {% endif %}
+
+                      <a href="{% url 'expense-update' expense.pk %}"
+                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- po table -->
+
+
+    <!-- Image modal -->
+    <div class="modal fade image-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="receipt-title">Expense Receipt</h4>
+            </div>
+            <div class="modal-body">
+                <a id="receipt-image-link" href="" target="_blank">
+                  <img id="receipt-image" class="img-responsive" src="">
+                </a>
+            </div>
+        </div>
+      </div>
+    </div>
+    <!-- delete modal -->
+  </div>
+
+<!-- /page content -->
+{% endblock %}
+
+{% block body_js %}
+  <!-- Datatables -->
+  <script src="{% static "vendors/datatables.net/js/jquery.dataTables.min.js" %}"></script>
+  <script src="{% static "vendors/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+  <script src="{% static "vendors/datatables.net-buttons/js/dataTables.buttons.min.js" %}"></script>
+  <script src="{% static "vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js" %}"></script>
+  <script src="{% static "vendors/datatables.net-buttons/js/buttons.flash.min.js" %}"></script>
+{#    <script src="{% static "vendors/datatables.net-buttons/js/buttons.html5.min.js" %}"></script>#}
+{#    <script src="{% static "vendors/datatables.net-buttons/js/buttons.print.min.js" %}"></script>#}
+  <script src="{% static "vendors/datatables.net-responsive/js/dataTables.responsive.min.js" %}"></script>
+  <script src="{% static "vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js" %}"></script>
+  <script src="{% static "vendors/datatables.net-scroller/js/dataTables.scroller.min.js" %}"></script>
+
+  <!-- iCheck -->
+  <script src="{% static "vendors/iCheck/icheck.min.js" %}"></script>
+
+  <!-- Select2 -->
+  <script src="{% static "vendors/select2/dist/js/select2.full.min.js" %}"></script>
+
+  <script>
+
+    function viewReceipt(url, date, amount) {
+      $("#receipt-image-link").attr("href", url);
+      $("#receipt-image").attr("src", url);
+      $("#receipt-title").text(
+          "Receipt of Expense on " + date + " for $" + amount);
+      $(".image-modal").modal("show");
+    }
+
+    $(document).ready(function() {
+      // Initialize Select
+      $(".select2_single").select2({
+          width: '100%',
+          placeholder: "Select a Salesman"
+      }).on('select2:select', function (evt) {
+          if ($(evt.target).val()) {
+            window.location = window.location.href.split('#')[0].split('?')[0]
+                + '?salesman=' + $(evt.target).val();
+          }
+      });
+
+
+      $('#datatable').DataTable ({
+        dom: "Bfrtip",
+        buttons: [
+          {
+            extend: "pageLength"
+          },
+          {
+            text: "Pay Selected",
+            action: function ( e, dt, node, config ) {
+              $("#id_action").val('Paid');
+              $("#approval_form").submit();
+            }
+          }
+        ],
+        responsive: true,
+        order: [[ 1, "desc" ], [ 2, "desc" ], [ 3, "desc" ]],
+        columnDefs: [
+          { "type": "date", targets: [3] },
+          {
+            targets: [2] ,
+            render: function ( data, type, full, meta ) {
+              var elem = '';
+              data.split('|').forEach(function (item, index) {
+                  elem = elem + ' <kbd>' + item + '</kbd>';
+              });
+              return elem
+            }
+          },
+          { "searchable": false, "targets": [0, 3, 4, 7] },
+          { "sortable": false, "targets": [0, 5, 6, 7] }
+        ],
+        createdRow: function( row, data, dataIndex){
+            var api = this.api();
+            var bg_color = 'rgba(243, 218, 45, 0.40)';
+            var pr_data = api.row(dataIndex-1).data();
+            if (pr_data && data[1] == pr_data[1] && data[2] == pr_data[2]
+                && data[3] == pr_data[3] && data[4] == pr_data[4]){
+              $(row).css('background-color', bg_color);
+              $(row).prev().css('background-color', bg_color);
+            }
+        }
+      });
+
+      $("#check_all").on('ifChanged', function(){
+        if (this.checked) {
+            $('input:checkbox').not(this).iCheck('check');
+        } else {
+            $('input:checkbox').not(this).iCheck('uncheck');
+        }
+      });
+    });
+
+  </script>
+{% endblock %}

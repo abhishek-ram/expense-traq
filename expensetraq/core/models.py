@@ -144,6 +144,7 @@ class Expense(TimeStampedModel, models.Model):
         ('P', 'Pending'),
         ('A', 'Approved'),
         ('D', 'Denied'),
+        ('C', 'Paid'),
     )
 
     salesman = models.ForeignKey(
