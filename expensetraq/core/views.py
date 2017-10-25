@@ -47,6 +47,9 @@ class Index(TemplateView):
                 'denied_amt': sum([
                     e.total_amount for e in Expense.objects.filter(status='D')
                 ]),
+                'paid_amt': sum([
+                    e.total_amount for e in Expense.objects.filter(status='C')
+                ]),
                 'salesman_list': salesmen,
                 'expense_list': Expense.objects.all()[:10]
             })
@@ -62,6 +65,8 @@ class Index(TemplateView):
                         e.total_amount for e in expenses.filter(status='A')]),
                     'denied_amt': sum([
                         e.total_amount for e in expenses.filter(status='D')]),
+                    'paid_amt': sum([
+                        e.total_amount for e in expenses.filter(status='C')]),
                     'expense_list': expenses[:10],
                     'daily_form': DailyExpenseForm(
                         salesman=self.request.user.salesman)
@@ -78,6 +83,8 @@ class Index(TemplateView):
                     e.total_amount for e in expenses.filter(status='A')]),
                 'denied_amt': sum([
                     e.total_amount for e in expenses.filter(status='D')]),
+                'paid_amt': sum([
+                    e.total_amount for e in expenses.filter(status='C')]),
                 'expense_list': expenses[:10]
             })
 
@@ -608,11 +615,15 @@ class ExpenseListExport(ListView):
         if salesman_list:
             qs = qs.filter(salesman_id__in=salesman_list)
         else:
-            if self.request.user.is_salesman and not self.request.user.is_admin:
+            if self.request.user.is_salesman and \
+                    (not self.request.user.is_admin and
+                     not self.request.user.is_manager):
                 qs = qs.filter(salesman_id=self.request.user.salesman)
             elif self.request.user.is_manager:
-                qs.filter(
-                    salesman_id__in=[s.id for s in self.request.user.team.all()])
+                qs = qs.filter(
+                    salesman_id__in=[self.request.user.salesman.id] +
+                                    [s.id for s in self.request.user.team.all()]
+                )
 
         status_list = self.request.GET.getlist('status[]')
         if status_list:
@@ -635,7 +646,9 @@ class ExpenseListExport(ListView):
         if self.request.user.is_admin:
             context['salesman_list'] = Salesman.objects.all()
         elif self.request.user.is_manager:
-            context['salesman_list'] = self.request.user.team.all()
+            context['salesman_list'] = list(self.request.user.team.all())
+            if self.request.user.is_salesman:
+                context['salesman_list'].append(self.request.user.salesman)
 
         context['status_list'] = Expense.STATUS_CHOICES
         context['paid_by_list'] = ['Employee Paid'] + \
