@@ -2,6 +2,7 @@ from django.utils import six
 from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+from django.contrib.auth import REDIRECT_FIELD_NAME
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
@@ -12,6 +13,21 @@ from reportlab.lib import colors, fonts
 from datetime import timedelta
 from io import BytesIO
 import maya
+
+
+def login_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME, login_url=None):
+    """
+    Decorator for views that checks that the user is logged in, redirecting
+    to the log-in page if necessary.
+    """
+    actual_decorator = user_passes_test(
+        lambda u: u.is_authenticated and u.is_active,
+        login_url=login_url,
+        redirect_field_name=redirect_field_name
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
 
 
 def user_in_groups(group, login_url=None, raise_exception=True):

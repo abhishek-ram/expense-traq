@@ -291,7 +291,7 @@
           </div>
         </div>
       </div>
-      <!-- delete modal -->
+      <!-- Submit daily rate modal -->
     {% endif %}
   {% elif user.is_manager %}
     <div class="row top_tiles">
@@ -345,7 +345,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for salesman in user.team.all %}
+                  {% for salesman in salesman_list %}
                   <tr>
                     <td>
                       <b>{{ salesman.user }}</b>

@@ -295,14 +295,14 @@
                         params[p] = val;
                     }
                 } else{
-                    if (p === 'salesman') {
-                        params[p] = [];
-                        $("#salesman").find("option").each(function () {
-                            if ($(this).val()) {
-                              params[p].push($(this).val());
-                            }
-                        });
-                    }
+{#                    if (p === 'salesman') {#}
+{#                        params[p] = [];#}
+{#                        $("#salesman").find("option").each(function () {#}
+{#                            if ($(this).val()) {#}
+{#                              params[p].push($(this).val());#}
+{#                            }#}
+{#                        });#}
+{#                    }#}
                 }
             });
             window.location = base_url + '?' + $.param(params);

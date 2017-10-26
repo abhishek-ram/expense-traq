@@ -1,5 +1,6 @@
 {% extends 'core/layout.html' %}
 {% load staticfiles %}
+{% load form_extras %}
 
 {% block title %}Expense Tracking - Manage Salesmen{% endblock %}
 
@@ -18,7 +19,11 @@
       </div>
 
       <div class="title_right">
-        <a class="btn btn-primary btn-round  pull-right" type="button"
+
+        <button class="btn btn-primary btn-round" data-toggle="modal"
+                  data-target="#activateSalesman">
+                <i class="fa fa-eye" ></i> Re-Activate Salesman</button>
+         <a class="btn btn-primary btn-round " type="button"
                  href="{% url 'salesman-add' %}">
                 <i class="fa fa-plane" ></i> On-Board Salesman</a>
       </div>
@@ -60,6 +65,8 @@
                     <td>
                       <a href="{% url 'salesman-update' salesman.pk %}"
                          class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                      <a onclick="confirmDeactivate('{% url 'salesman-deactivate' salesman.pk %}', '{{ salesman }}')"
+                         class="btn btn-danger btn-xs"><i class="fa fa-eye-slash"></i> Deactivate </a>
                       <a href="{% url 'expense-add'%}?salesman={{ salesman.pk }}"
                          class="btn btn-dark btn-xs"><i class="fa fa-plus"></i> Create Expense </a>
                     </td>
@@ -74,6 +81,57 @@
     <!-- salesman table -->
   </div>
 
+  <!-- deactivate modal -->
+    <div class="modal fade deactivate-modal" tabindex="-1" role="dialog"
+         aria-hidden="true" aria-labelledby="deleteModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form class="form-horizontal deactivate-form" method="post">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="deleteModalLabel">Deactivate Confirmation Dialog</h4>
+          </div>
+          <div class="modal-body">
+            {% csrf_token %}
+            <h5>Are you sure you want to deactivate the salesman <i><b class="salesman"></b></i>?</h5>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <input type="submit" class="btn btn-danger" value="Submit"/>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- deactivate modal -->
+
+    <!-- reactivate modal -->
+    <div class="modal fade" id="activateSalesman" tabindex="-1" role="dialog"
+         aria-hidden="true" aria-labelledby="submitDailyLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form class="form-horizontal" action="{% url 'salesman-activate'%}"
+                method="post">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="submitDailyLabel">Reactivate Salesman</h4>
+          </div>
+          <div class="modal-body">
+            {% csrf_token %}
+
+            {% render_input_select activate_form.salesman %}
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <input type="submit" class="btn btn-success" value="Submit"/>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- reactivate modal -->
 <!-- /page content -->
 {% endblock %}
 
@@ -84,6 +142,12 @@
   <script src="{% static "vendors/datatables.net/js/jquery.dataTables.min.js" %}"></script>
   <script src="{% static "vendors/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
   <script>
+    function confirmDeactivate(url, salesman) {
+      $(".deactivate-form").attr("action", url);
+      $(".deactivate-form .salesman").text(salesman);
+      $(".deactivate-modal").modal("show");
+
+    }
     $('#datatable').dataTable({
       "ordering": false,
       "responsive": true,

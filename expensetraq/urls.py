@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import login, logout
 from expensetraq.core import views
+from expensetraq.core.utils import login_required
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -51,12 +51,18 @@ urlpatterns = media_url + [
     url(r'^salesman/add/$',
         login_required(views.SalesmanCreate.as_view()),
         name='salesman-add'),
+    url(r'^salesman/activate/$',
+        login_required(views.SalesmanActivate.as_view()),
+        name='salesman-activate'),
     url(r'^salesman/(?P<pk>[0-9]+)/$',
         login_required(views.SalesmanUpdate.as_view()),
         name='salesman-update'),
     url(r'^salesman/(?P<salesman_id>[0-9]+)/expense-types/$',
         login_required(views.SalesmanExpenseTypeList.as_view()),
         name='salesman-expense-types'),
+    url(r'^salesman/(?P<salesman_id>[0-9]+)/deactivate/$',
+        login_required(views.SalesmanDeactivate.as_view()),
+        name='salesman-deactivate'),
     url(r'^expense-limits/$',
         login_required(views.ExpenseLimitList.as_view()),
         name='expense-limit-list'),

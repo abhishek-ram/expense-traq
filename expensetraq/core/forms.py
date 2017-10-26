@@ -12,7 +12,7 @@ class SalesmanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(SalesmanForm, self).__init__(*args, **kwargs)
         self.fields['user'].queryset = User.objects.filter(
-            groups__name__in=['Expense-User'])
+            groups__name__in=['Expense-User'], salesman=None)
         self.fields['manager'].queryset = User.objects.filter(
             groups__name__in=['Expense-Manager'])
 
@@ -138,3 +138,11 @@ class DailyExpenseForm(forms.Form):
         self.fields['expense_type'].queryset = SalesmanExpenseType.objects. \
             filter(salesman=salesman, expense_type__name__in=['Daily Rate'])
         self.fields['expense_type'].label_from_instance = lambda obj: obj.region.name
+
+
+class SalesmanActivateForm(forms.Form):
+    salesman = forms.ModelChoiceField(
+        queryset=Salesman.objects.filter(user__is_active=False),
+        empty_label=None,
+        required=True
+    )

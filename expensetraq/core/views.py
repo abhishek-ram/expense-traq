@@ -19,7 +19,7 @@ from expensetraq.core.models import Expense, ExpenseType, \
     Salesman, ExpenseLimit, ExpenseLine, RecurringExpense, Notification, \
     CompanyCard, User, SalesmanCompanyCard, SalesmanExpenseType, Region
 from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
-    ExpenseApprovalForm, ExpenseForm, DailyExpenseForm
+    ExpenseApprovalForm, ExpenseForm, DailyExpenseForm, SalesmanActivateForm
 from io import BytesIO
 from zipfile import ZipFile, ZIP_DEFLATED
 import json
@@ -35,23 +35,28 @@ class Index(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(Index, self).get_context_data(**kwargs)
         if self.request.user.is_admin:
-            salesmen = Salesman.objects.all()
+            salesmen = Salesman.objects.filter(user__is_active=True)
             context.update({
                 'team_count': len(salesmen),
                 'pending_amt': sum([
-                    e.total_amount for e in Expense.objects.filter(status='P')
+                    e.total_amount for e in Expense.objects.filter(
+                        salesman__user__is_active=True, status='P')
                 ]),
                 'approved_amt': sum([
-                    e.total_amount for e in Expense.objects.filter(status='A')
+                    e.total_amount for e in Expense.objects.filter(
+                        salesman__user__is_active=True, status='A')
                 ]),
                 'denied_amt': sum([
-                    e.total_amount for e in Expense.objects.filter(status='D')
+                    e.total_amount for e in Expense.objects.filter(
+                        salesman__user__is_active=True, status='D')
                 ]),
                 'paid_amt': sum([
-                    e.total_amount for e in Expense.objects.filter(status='C')
+                    e.total_amount for e in Expense.objects.filter(
+                        salesman__user__is_active=True, status='C')
                 ]),
                 'salesman_list': salesmen,
-                'expense_list': Expense.objects.all()[:10]
+                'expense_list': Expense.objects.filter(
+                    salesman__user__is_active=True)[:10]
             })
 
         elif self.request.user.is_salesman:
@@ -72,7 +77,7 @@ class Index(TemplateView):
                         salesman=self.request.user.salesman)
                 })
         elif self.request.user.is_manager:
-            team = self.request.user.team.all()
+            team = self.request.user.team.filter(user__is_active=True)
             expenses = Expense.objects.filter(
                 transaction_date__gte=LIMIT_DATE, salesman__in=team)
             context.update({
@@ -85,6 +90,7 @@ class Index(TemplateView):
                     e.total_amount for e in expenses.filter(status='D')]),
                 'paid_amt': sum([
                     e.total_amount for e in expenses.filter(status='C')]),
+                'salesman_list': team,
                 'expense_list': expenses[:10]
             })
 
@@ -371,6 +377,14 @@ class ExpenseDelete(DeleteMessageMixin, DeleteView):
 class SalesmanList(ListView):
     model = Salesman
 
+    def get_queryset(self):
+        return Salesman.objects.filter(user__is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super(SalesmanList, self).get_context_data(**kwargs)
+        context['activate_form'] = SalesmanActivateForm()
+        return context
+
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class SalesmanCreate(SuccessMessageMixin, CreateView):
@@ -609,27 +623,22 @@ class ExpenseListExport(ListView):
 
     def get_queryset(self):
         qs = Expense.objects.filter(transaction_date__gte=LIMIT_DATE)
-
+        print('here')
         # maintain a list of salesman to be used in the export
-        salesman_list = self.request.GET.getlist('salesman[]')
-        if salesman_list:
-            qs = qs.filter(salesman_id__in=salesman_list)
-        else:
+        self.salesman_list = self.request.GET.getlist('salesman[]')
+        if not self.salesman_list:
             if self.request.user.is_salesman and \
                     (not self.request.user.is_admin and
                      not self.request.user.is_manager):
-                qs = qs.filter(salesman_id=self.request.user.salesman)
+                self.salesman_list = [self.request.user.salesman.id]
             elif self.request.user.is_manager and \
                     not self.request.user.is_admin:
+                self.salesman_list = [s.id for s in self.request.user.team.all()]
                 if hasattr(self.request.user, 'salesman'):
-                    qs = qs.filter(
-                        salesman_id__in=[self.request.user.salesman.id] +
-                                        [s.id for s in self.request.user.team.all()]
-                    )
-                else:
-                    qs = qs.filter(
-                        salesman_id__in=[s.id for s in self.request.user.team.all()]
-                    )
+                    self.salesman_list += [self.request.user.salesman.id]
+            else:
+                self.salesman_list = [s.id for s in Salesman.objects.all()]
+        qs = qs.filter(salesman_id__in=self.salesman_list)
 
         status_list = self.request.GET.getlist('status[]')
         if status_list:
@@ -650,9 +659,11 @@ class ExpenseListExport(ListView):
         context = super(ExpenseListExport, self).get_context_data(**kwargs)
 
         if self.request.user.is_admin:
-            context['salesman_list'] = Salesman.objects.all()
+            context['salesman_list'] = Salesman.objects.filter(
+                user__is_active=True)
         elif self.request.user.is_manager:
-            context['salesman_list'] = list(self.request.user.team.all())
+            context['salesman_list'] = list(
+                self.request.user.team.filter(user__is_active=True))
             if self.request.user.is_salesman:
                 context['salesman_list'].append(self.request.user.salesman)
 
@@ -678,13 +689,16 @@ class ExpenseListExport(ListView):
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('action') == 'export':
             salesman_expenses = {}
+            expense_list = self.get_queryset().all()
+
             date_range = self.request.GET.get('daterange')
+
             # Initialize the array of salesman
-            for salesman in self.request.GET.getlist('salesman[]'):
+            for salesman in self.salesman_list:
                 salesman_expenses[int(salesman)] = {}
 
             # Loop through the expense types and sort it
-            for et in self.get_queryset().all():
+            for et in expense_list:
                 if not salesman_expenses[et.salesman.id].get(et.paid_by):
                     salesman_expenses[et.salesman.id][et.paid_by] = {
                         'total': {}
@@ -934,3 +948,36 @@ class ExpenseMarkPaid(ListView):
     def get_form(self):
         return self.form_class(**self.get_form_kwargs())
 
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class SalesmanDeactivate(View):
+
+    def post(self, request, salesman_id):
+        # Get the salesman and deactivate the related user
+        salesman = Salesman.objects.get(pk=salesman_id)
+        salesman.user.is_active = False
+        salesman.user.save()
+
+        messages.success(
+            self.request,
+            'Salesman %s has been deactivated successfully' % salesman
+        )
+        return HttpResponseRedirect(reverse_lazy('salesman-list'))
+
+
+@method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
+class SalesmanActivate(FormView):
+    form_class = SalesmanActivateForm
+    success_url = reverse_lazy('salesman-list')
+
+    def form_valid(self, form):
+        # Get the salesman and activate the related user
+        form.cleaned_data['salesman'].user.is_active = True
+        form.cleaned_data['salesman'].user.save()
+
+        messages.success(
+            self.request,
+            'Salesman %s has been activated successfully' % form.cleaned_data['salesman']
+        )
+
+        return super(SalesmanActivate, self).form_valid(form)
