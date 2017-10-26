@@ -10,87 +10,83 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
-    <div class="page-title">
-      <div class="title_left">
-        <h3>Manage Recurring Expenses <small>You can find all recurring expenses listed here</small></h3>
-      </div>
-
-      <div class="title_right">
-        <a class="btn btn-primary btn-round pull-right" type="button"
-                 href="{% url 'recur-expense-add' %}">
-                <i class="fa fa-plus" ></i> Add Recurring Expense</a>
-      </div>
+  <div class="page-title">
+    <div class="title_left">
+      <h3>Manage Recurring Expenses <small>You can find all recurring expenses listed here</small></h3>
     </div>
 
-    <div class="clearfix"></div>
-
-    <!-- object list -->
-    <div class="row">
-      <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-          <div class="x_content">
-            <table class="table table-striped" id="datatable">
-              <thead>
-                <tr>
-                  <th>Salesman</th>
-                  <th>Expense Type</th>
-                  <th>Amount</th>
-                  <th>Day Of Month</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for re in object_list %}
-                  <tr>
-                    <td>{{ re.salesman }}</td>
-                    <td>{{ re.expense_type }}</td>
-                    <td>${{ re.amount }}</td>
-                    <td>{{ re.day_of_month }}</td>
-                    <td>
-                      <a href="{% url 'recur-expense-update' re.pk %}"
-                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-                      <button onclick="confirmDelete('{% url 'recur-expense-delete' re.pk %}', '{{ re.salesman }}', '{{ re.expense_type }}')"
-                              class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+    <div class="title_right">
+      <a class="btn btn-primary btn-round pull-right" type="button"
+               href="{% url 'recur-expense-add' %}">
+              <i class="fa fa-plus" ></i> Add Recurring Expense</a>
     </div>
-    <!-- object list -->
-
-    <!-- delete modal -->
-    <div class="modal fade delete-modal" tabindex="-1" role="dialog"
-         aria-hidden="true" aria-labelledby="deleteModalLabel">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form class="form-horizontal delete-form" method="post">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="deleteModalLabel">Delete Confirmation Dialog</h4>
-          </div>
-          <div class="modal-body">
-            {% csrf_token %}
-            <h5>Are you sure you want to delete the recurring expense of type
-              <i><b class="expense_type"></b></i> for <i><b class="salesman"></b></i>?</h5>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <input type="submit" class="btn btn-danger" value="Delete Recurring Expense"/>
-          </div>
-          </form>
-        </div>
-      </div>
-    </div>
-    <!-- delete modal -->
   </div>
 
-<!-- /page content -->
+  <div class="clearfix"></div>
+
+  <!-- object list -->
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_content">
+          <table class="table table-striped" id="datatable">
+            <thead>
+              <tr>
+                <th>Salesman</th>
+                <th>Expense Type</th>
+                <th>Amount</th>
+                <th>Day Of Month</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for re in object_list %}
+                <tr>
+                  <td>{{ re.salesman }}</td>
+                  <td>{{ re.expense_type }}</td>
+                  <td>${{ re.amount }}</td>
+                  <td>{{ re.day_of_month }}</td>
+                  <td>
+                    <a href="{% url 'recur-expense-update' re.pk %}"
+                       class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                    <button onclick="confirmDelete('{% url 'recur-expense-delete' re.pk %}', '{{ re.salesman }}', '{{ re.expense_type }}')"
+                            class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- object list -->
+
+  <!-- delete modal -->
+  <div class="modal fade delete-modal" tabindex="-1" role="dialog"
+       aria-hidden="true" aria-labelledby="deleteModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form class="form-horizontal delete-form" method="post">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="deleteModalLabel">Delete Confirmation Dialog</h4>
+        </div>
+        <div class="modal-body">
+          {% csrf_token %}
+          <h5>Are you sure you want to delete the recurring expense of type
+            <i><b class="expense_type"></b></i> for <i><b class="salesman"></b></i>?</h5>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <input type="submit" class="btn btn-danger" value="Delete Recurring Expense"/>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- delete modal -->
+
 {% endblock %}
 
 

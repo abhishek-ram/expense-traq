@@ -11,8 +11,12 @@ class SalesmanForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(SalesmanForm, self).__init__(*args, **kwargs)
-        self.fields['user'].queryset = User.objects.filter(
-            groups__name__in=['Expense-User'], salesman=None)
+        if kwargs.get('instance'):
+            self.fields['user'].queryset = User.objects.filter(
+                groups__name__in=['Expense-User'])
+        else:
+            self.fields['user'].queryset = User.objects.filter(
+                groups__name__in=['Expense-User'], salesman=None)
         self.fields['manager'].queryset = User.objects.filter(
             groups__name__in=['Expense-Manager'])
 

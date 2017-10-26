@@ -11,75 +11,75 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
-    <div class="page-title">
-      <div class="title_left">
-        <h3>Manage Salesman <small>You can find on-boarded salesmen here</small></h3>
-      </div>
-
-      <div class="title_right">
-
-        <button class="btn btn-primary btn-round" data-toggle="modal"
-                  data-target="#activateSalesman">
-                <i class="fa fa-eye" ></i> Re-Activate Salesman</button>
-         <a class="btn btn-primary btn-round " type="button"
-                 href="{% url 'salesman-add' %}">
-                <i class="fa fa-plane" ></i> On-Board Salesman</a>
-      </div>
+  <!-- page title -->
+  <div class="page-title">
+    <div class="title_left">
+      <h3>Manage Salesman <small>You can find on-boarded salesmen here</small></h3>
     </div>
 
-    <div class="clearfix"></div>
-    <!-- salesman table -->
-    <div class="row">
-      <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-          <div class="x_content">
-            <table class="table table-striped" id="datatable">
-              <thead>
+    <div class="title_right">
+
+      <button class="btn btn-primary btn-round" data-toggle="modal"
+                data-target="#activateSalesman">
+              <i class="fa fa-eye" ></i> Re-Activate Salesman</button>
+       <a class="btn btn-primary btn-round " type="button"
+               href="{% url 'salesman-add' %}">
+              <i class="fa fa-plane" ></i> On-Board Salesman</a>
+    </div>
+  </div>
+  <!-- page title -->
+
+  <div class="clearfix"></div>
+
+  <!-- salesman table -->
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_content">
+          <table class="table table-striped" id="datatable">
+            <thead>
+              <tr>
+                <th>Salesman</th>
+                <th>Manager</th>
+                <th>Company Cards</th>
+                <th>Expense Types</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for salesman in object_list %}
                 <tr>
-                  <th>Salesman</th>
-                  <th>Manager</th>
-                  <th>Company Cards</th>
-                  <th>Expense Types</th>
-                  <th>Actions</th>
+                  <td>
+                    <b>{{ salesman.user }}</b>
+                  </td>
+                  <td>{{ salesman.manager|default:'' }}</td>
+                  <td>
+                    {% for cc in  salesman.company_cards.all %}
+                      <span class="label label-default">{{ cc.gp_vendor_code }}</span>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {% for et in  salesman.expense_types.all %}
+                      <span class="label label-default">{{ et }}</span>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    <a href="{% url 'salesman-update' salesman.pk %}"
+                       class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                    <a onclick="confirmDeactivate('{% url 'salesman-deactivate' salesman.pk %}', '{{ salesman }}')"
+                       class="btn btn-danger btn-xs"><i class="fa fa-eye-slash"></i> Deactivate </a>
+                    <a href="{% url 'expense-add'%}?salesman={{ salesman.pk }}"
+                       class="btn btn-dark btn-xs"><i class="fa fa-plus"></i> Create Expense </a>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {% for salesman in object_list %}
-                  <tr>
-                    <td>
-                      <b>{{ salesman.user }}</b>
-                    </td>
-                    <td>{{ salesman.manager|default:'' }}</td>
-                    <td>
-                      {% for cc in  salesman.company_cards.all %}
-                        <span class="label label-default">{{ cc.gp_vendor_code }}</span>
-                      {% endfor %}
-                    </td>
-                    <td>
-                      {% for et in  salesman.expense_types.all %}
-                        <span class="label label-default">{{ et }}</span>
-                      {% endfor %}
-                    </td>
-                    <td>
-                      <a href="{% url 'salesman-update' salesman.pk %}"
-                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-                      <a onclick="confirmDeactivate('{% url 'salesman-deactivate' salesman.pk %}', '{{ salesman }}')"
-                         class="btn btn-danger btn-xs"><i class="fa fa-eye-slash"></i> Deactivate </a>
-                      <a href="{% url 'expense-add'%}?salesman={{ salesman.pk }}"
-                         class="btn btn-dark btn-xs"><i class="fa fa-plus"></i> Create Expense </a>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-    <!-- salesman table -->
   </div>
+  <!-- salesman table -->
 
   <!-- deactivate modal -->
     <div class="modal fade deactivate-modal" tabindex="-1" role="dialog"

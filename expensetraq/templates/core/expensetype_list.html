@@ -10,93 +10,90 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
-    <div class="page-title">
-      <div class="title_left">
-        <h3>Manage Expense Types <small>You can find all expense types listed here</small></>
-      </div>
-
-      <div class="title_right">
-        <a class="btn btn-primary btn-round pull-right" type="button"
-                 href="{% url 'expense-type-add' %}">
-                <i class="fa fa-plus" ></i> Add Expense Type</a>
-      </div>
+  <div class="page-title">
+    <div class="title_left">
+      <h3>Manage Expense Types <small>You can find all expense types listed here</small></>
     </div>
 
-    <div class="clearfix"></div>
-
-    <!-- object list -->
-    <div class="row">
-      <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-          <div class="x_content">
-            <table class="table table-striped" id="datatable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>GL Code Prefix</th>
-                  <th>Receipt Required</th>
-                  <th>Edited On</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for et in object_list %}
-                  <tr>
-                    <td>
-                      <b>{{ et.name }}</b>
-                    </td>
-                    <td>
-                      {{ et.gl_code_prefix }}
-                    </td>
-                    <td>
-                      {% if  et.receipt_required %}
-                        <i class="fa fa-check-square fa-lg" ></i>
-                      {% else %}
-                        <i class="fa fa-square-o fa-lg" ></i>
-                      {% endif %}
-                    </td>
-                    <td>{{ et.modified }}</td>
-                    <td>
-                      <a href="{% url 'expense-type-update' et.pk %}"
-                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-                      <button onclick="confirmDelete('{% url 'expense-type-delete' et.pk %}', '{{ et.name }}')"
-                              class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+    <div class="title_right">
+      <a class="btn btn-primary btn-round pull-right" type="button"
+               href="{% url 'expense-type-add' %}">
+              <i class="fa fa-plus" ></i> Add Expense Type</a>
     </div>
-    <!-- object list -->
-    <!-- delete modal -->
-    <div class="modal fade delete-modal" tabindex="-1" role="dialog"
-         aria-hidden="true" aria-labelledby="deleteModalLabel">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form class="form-horizontal delete-form" method="post">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="deleteModalLabel">Delete Confirmation Dialog</h4>
-          </div>
-          <div class="modal-body">
-            {% csrf_token %}
-            <h5>Are you sure you want to delete the expense type <kbd></kbd> ?</h5>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <input type="submit" class="btn btn-danger" value="Delete Expense Type"/>
-          </div>
-          </form>
-        </div>
-      </div>
-    </div>
-    <!-- delete modal -->
   </div>
+
+  <div class="clearfix"></div>
+
+  <!-- object list -->
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_content">
+          <table class="table table-striped" id="datatable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>GL Code Prefix</th>
+                <th>Receipt Required</th>
+                <th>Edited On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for et in object_list %}
+                <tr>
+                  <td>
+                    <b>{{ et.name }}</b>
+                  </td>
+                  <td>
+                    {{ et.gl_code_prefix }}
+                  </td>
+                  <td>
+                    {% if  et.receipt_required %}
+                      <i class="fa fa-check-square fa-lg" ></i>
+                    {% else %}
+                      <i class="fa fa-square-o fa-lg" ></i>
+                    {% endif %}
+                  </td>
+                  <td>{{ et.modified }}</td>
+                  <td>
+                    <a href="{% url 'expense-type-update' et.pk %}"
+                       class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                    <button onclick="confirmDelete('{% url 'expense-type-delete' et.pk %}', '{{ et.name }}')"
+                            class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- object list -->
+  <!-- delete modal -->
+  <div class="modal fade delete-modal" tabindex="-1" role="dialog"
+       aria-hidden="true" aria-labelledby="deleteModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form class="form-horizontal delete-form" method="post">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="deleteModalLabel">Delete Confirmation Dialog</h4>
+        </div>
+        <div class="modal-body">
+          {% csrf_token %}
+          <h5>Are you sure you want to delete the expense type <kbd></kbd> ?</h5>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <input type="submit" class="btn btn-danger" value="Delete Expense Type"/>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- delete modal -->
 
 <!-- /page content -->
 {% endblock %}

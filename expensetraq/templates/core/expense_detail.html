@@ -5,86 +5,80 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
-    <!-- po table -->
-    <div class="row">
-      <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-          <div class="x_title">
-            <h3>Expense Record {{ object.id  }}</h3>
-            <div class="clearfix"></div>
-          </div>
-          <div class="x_content">
-            <div class="row">
-              <div class="col-md-6 col-sm-6 col-xs-12">
-                <table class="table table-striped">
-                  <tbody>
-                    <tr>
-                      <th>Transaction Date</th>
-                      <td>{{ object.transaction_date }}</td>
-                    </tr>
-                    <tr>
-                      <th>Paid by</th>
-                      <td>{{ object.paid_by }}</td>
-                    </tr>
-                    <tr>
-                      <th>Notes</th>
-                      <td>{{ object.notes|linebreaksbr }}</td>
-                    </tr>
-                    <tr>
-                      <th>Status</th>
-                      <td>{{ object.get_status_display }}</td>
-                    </tr>
-                   </tbody>
-                </table>
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_title">
+          <h3>Expense Record {{ object.id  }}</h3>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <div class="row">
+            <div class="col-md-6 col-sm-6 col-xs-12">
+              <table class="table table-striped">
+                <tbody>
+                  <tr>
+                    <th>Transaction Date</th>
+                    <td>{{ object.transaction_date }}</td>
+                  </tr>
+                  <tr>
+                    <th>Paid by</th>
+                    <td>{{ object.paid_by }}</td>
+                  </tr>
+                  <tr>
+                    <th>Notes</th>
+                    <td>{{ object.notes|linebreaksbr }}</td>
+                  </tr>
+                  <tr>
+                    <th>Status</th>
+                    <td>{{ object.get_status_display }}</td>
+                  </tr>
+                 </tbody>
+              </table>
 
-                <table class="table table-condensed">
-                  <thead>
+              <table class="table table-condensed">
+                <thead>
+                  <tr>
+                    <th>Region</th>
+                    <th>Expense Type</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for line in object.lines.all %}
                     <tr>
-                      <th>Region</th>
-                      <th>Expense Type</th>
-                      <th>Amount</th>
+                      <td>{{ line.expense_type.region }}</td>
+                      <td>{{ line.expense_type.expense_type }}</td>
+                      <td>${{ line.amount }}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {% for line in object.lines.all %}
-                      <tr>
-                        <td>{{ line.expense_type.region }}</td>
-                        <td>{{ line.expense_type.expense_type }}</td>
-                        <td>${{ line.amount }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th></th>
-                      <th>Total Amount</th>
-                      <th>${{ object.total_amount }}</th>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-              <div class="col-md-6 col-sm-6 col-xs-12">
-                {% if object.receipt %}
-                  <a href="{{ object.receipt.url }}" target="_blank">
-                    <img src="{{ object.receipt.url }}" class="img-thumbnail"
-                       style="max-height: 1024px;">
-                  </a>
-                {% else %}
-                  <img src="{% static "images/default_receipt.jpg" %}"
-                       class="img-thumbnail" style="max-height: 1024px">
-                {% endif %}
-              </div>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th></th>
+                    <th>Total Amount</th>
+                    <th>${{ object.total_amount }}</th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+              {% if object.receipt %}
+                <a href="{{ object.receipt.url }}" target="_blank">
+                  <img src="{{ object.receipt.url }}" class="img-thumbnail"
+                     style="max-height: 1024px;">
+                </a>
+              {% else %}
+                <img src="{% static "images/default_receipt.jpg" %}"
+                     class="img-thumbnail" style="max-height: 1024px">
+              {% endif %}
             </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- po table -->
   </div>
 
-<!-- /page content -->
 {% endblock %}
 
 {% block body_js %}

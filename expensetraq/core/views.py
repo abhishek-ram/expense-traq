@@ -103,26 +103,29 @@ class ExpenseTypeList(ListView):
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
-class ExpenseTypeCreate(CreateView):
+class ExpenseTypeCreate(SuccessMessageMixin, CreateView):
     model = ExpenseType
     fields = '__all__'
     success_url = reverse_lazy('expense-type-list')
-    success_message = 'Expense Type "%(name)s" has been created successfully'
+    success_message = 'Expense Type <strong>%(name)s</strong> has been ' \
+                      'created successfully'
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
-class ExpenseTypeUpdate(UpdateView):
+class ExpenseTypeUpdate(SuccessMessageMixin, UpdateView):
     model = ExpenseType
     fields = '__all__'
     success_url = reverse_lazy('expense-type-list')
-    success_message = 'Expense Type "%(name)s" has been edited successfully'
+    success_message = 'Expense Type <strong>%(name)s</strong> has been ' \
+                      'edited successfully'
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseTypeDelete(DeleteMessageMixin, DeleteView):
     model = ExpenseType
     success_url = reverse_lazy('expense-type-list')
-    success_message = 'Expense Type "%(name)s" has been deleted successfully'
+    success_message = 'Expense Type <strong>%(name)s</strong> has been' \
+                      ' deleted successfully'
 
 
 @method_decorator(user_in_groups(['Expense-User',
@@ -130,8 +133,8 @@ class ExpenseTypeDelete(DeleteMessageMixin, DeleteView):
 class ExpenseCreate(CreateView):
     model = Expense
     form_class = ExpenseForm
-    success_message = 'Expense with total ${0.total_amount} has ' \
-                      'been recorded successfully'
+    success_message = 'Expense with total <strong>${0.total_amount}</strong> ' \
+                      'has been recorded successfully'
     ExpenseFormSet = inlineformset_factory(
         Expense, ExpenseLine, extra=4, min_num=1, can_delete=False,
         validate_min=True, form=ExpenseLineForm)
@@ -212,7 +215,7 @@ class ExpenseCreate(CreateView):
 class ExpenseUpdate(UpdateView):
     model = Expense
     fields = ['status', 'transaction_date', 'paid_by', 'notes']
-    success_message = 'Expense "{0.pk}" has been edited successfully'
+    success_message = 'Expense <strong>{0.pk}</strong> has been edited successfully'
 
     ExpenseFormSet = inlineformset_factory(
         Expense, ExpenseLine, max_num=5, can_delete=False, form=ExpenseLineForm)
@@ -316,6 +319,7 @@ class ExpenseApproval(ListView):
                     text='Admin has {} your expense dated {} for ${}'.format(
                         form.cleaned_data['action'], expense.transaction_date,
                         expense.total_amount))
+            if expense.salesman.manager:
                 Notification.objects.create(
                     user=expense.salesman.manager,
                     title='Expense Updated',
@@ -366,7 +370,7 @@ class ExpenseDetail(DetailView):
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class ExpenseDelete(DeleteMessageMixin, DeleteView):
     model = Expense
-    success_message = 'Expense <var>%(id)s</var> has been deleted ' \
+    success_message = 'Expense <strong>%(id)s</strong> has been deleted ' \
                       'successfully'
 
     def get_success_url(self):
@@ -391,7 +395,8 @@ class SalesmanCreate(SuccessMessageMixin, CreateView):
     model = Salesman
     form_class = SalesmanForm
     success_url = reverse_lazy('salesman-list')
-    success_message = 'Salesman "%(user)s" has been added successfully'
+    success_message = 'Salesman <strong>%(user)s</strong> has been ' \
+                      'added successfully'
     CCFormSet = inlineformset_factory(
         Salesman, SalesmanCompanyCard, extra=2, can_delete=False,
         fields=['company_card', 'gp_vendor_code'])
@@ -453,7 +458,8 @@ class SalesmanUpdate(SuccessMessageMixin, UpdateView):
     model = Salesman
     form_class = SalesmanForm
     success_url = reverse_lazy('salesman-list')
-    success_message = 'Salesman "%(user)s" has been edited successfully'
+    success_message = 'Salesman <strong>%(user)s</strong> has been ' \
+                      'edited successfully'
 
     CCFormSet = inlineformset_factory(
         Salesman, SalesmanCompanyCard, extra=1,
@@ -512,7 +518,7 @@ class ExpenseLimitCreate(SuccessMessageMixin, CreateView):
     model = ExpenseLimit
     fields = '__all__'
     success_url = reverse_lazy('expense-limit-list')
-    success_message = 'Expense limit for <var>%(salesman)s</var> has been ' \
+    success_message = 'Expense limit for <strong>%(salesman)s</strong> has been ' \
                       'added successfully'
 
 
@@ -521,7 +527,7 @@ class ExpenseLimitUpdate(SuccessMessageMixin, UpdateView):
     model = ExpenseLimit
     fields = '__all__'
     success_url = reverse_lazy('expense-limit-list')
-    success_message = 'Expense limit for <var>%(salesman)s</var> has been ' \
+    success_message = 'Expense limit for <strong>%(salesman)s</strong> has been ' \
                       'edited successfully'
 
 
@@ -529,7 +535,7 @@ class ExpenseLimitUpdate(SuccessMessageMixin, UpdateView):
 class ExpenseLimitDelete(DeleteMessageMixin, DeleteView):
     model = ExpenseLimit
     success_url = reverse_lazy('expense-limit-list')
-    success_message = 'Expense Type <var>%(id)s</var> has been deleted ' \
+    success_message = 'Expense Type <strong>%(id)s</strong> has been deleted ' \
                       'successfully'
 
 
@@ -543,7 +549,7 @@ class RecurringExpenseCreate(SuccessMessageMixin, CreateView):
     model = RecurringExpense
     fields = '__all__'
     success_url = reverse_lazy('recur-expense-list')
-    success_message = 'Recurring Expense for <var>%(salesman)s</var> has ' \
+    success_message = 'Recurring Expense for <strong>%(salesman)s</strong> has ' \
                       'been added successfully'
 
 
@@ -552,7 +558,7 @@ class RecurringExpenseUpdate(SuccessMessageMixin, UpdateView):
     model = RecurringExpense
     fields = '__all__'
     success_url = reverse_lazy('recur-expense-list')
-    success_message = 'Recurring Expense for <var>%(salesman)s</var> has ' \
+    success_message = 'Recurring Expense for <strong>%(salesman)s</strong> has ' \
                       'been edited successfully'
 
 
@@ -560,7 +566,7 @@ class RecurringExpenseUpdate(SuccessMessageMixin, UpdateView):
 class RecurringExpenseDelete(DeleteMessageMixin, DeleteView):
     model = RecurringExpense
     success_url = reverse_lazy('recur-expense-list')
-    success_message = 'Recurring Expense <var>%(id)s</var> has been deleted ' \
+    success_message = 'Recurring Expense <strong>%(id)s</strong> has been deleted ' \
                       'successfully'
 
 
@@ -597,7 +603,7 @@ class CompanyCardCreate(SuccessMessageMixin, CreateView):
     model = CompanyCard
     fields = '__all__'
     success_url = reverse_lazy('company-card-list')
-    success_message = 'Company Card <var>%(name)s</var> has ' \
+    success_message = 'Company Card <strong>%(name)s</strong> has ' \
                       'been added successfully'
 
 
@@ -606,7 +612,7 @@ class CompanyCardUpdate(SuccessMessageMixin, UpdateView):
     model = CompanyCard
     fields = '__all__'
     success_url = reverse_lazy('company-card-list')
-    success_message = 'Company Card <var>%(name)s</var> has ' \
+    success_message = 'Company Card <strong>%(name)s</strong> has ' \
                       'been edited successfully'
 
 
@@ -614,7 +620,7 @@ class CompanyCardUpdate(SuccessMessageMixin, UpdateView):
 class CompanyCardDelete(DeleteMessageMixin, DeleteView):
     model = CompanyCard
     success_url = reverse_lazy('company-card-list')
-    success_message = 'Company Card <var>%(name)s</var> has been deleted ' \
+    success_message = 'Company Card <strong>%(name)s</strong> has been deleted ' \
                       'successfully'
 
 
@@ -623,7 +629,7 @@ class ExpenseListExport(ListView):
 
     def get_queryset(self):
         qs = Expense.objects.filter(transaction_date__gte=LIMIT_DATE)
-        print('here')
+
         # maintain a list of salesman to be used in the export
         self.salesman_list = self.request.GET.getlist('salesman[]')
         if not self.salesman_list:
@@ -845,26 +851,29 @@ class RegionList(ListView):
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
-class RegionCreate(CreateView):
+class RegionCreate(SuccessMessageMixin, CreateView):
     model = Region
     fields = '__all__'
     success_url = reverse_lazy('region-list')
-    success_message = 'Region "%(name)s" has been created successfully'
+    success_message = 'Region <strong>%(name)s</string> has been created ' \
+                      'successfully'
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
-class RegionUpdate(UpdateView):
+class RegionUpdate(SuccessMessageMixin, UpdateView):
     model = Region
     fields = '__all__'
     success_url = reverse_lazy('region-list')
-    success_message = 'Region "%(name)s" has been edited successfully'
+    success_message = 'Region <strong>%(name)s</string> has been ' \
+                      'edited successfully'
 
 
 @method_decorator(user_in_groups(['Expense-Admin']), name='dispatch')
 class RegionDelete(DeleteMessageMixin, DeleteView):
     model = Region
     success_url = reverse_lazy('region-list')
-    success_message = 'Region "%(name)s" has been deleted successfully'
+    success_message = 'Region <strong>%(name)s</string> has been ' \
+                      'deleted successfully'
 
     def delete(self, request, *args, **kwargs):
         region = self.get_object()
@@ -960,7 +969,8 @@ class SalesmanDeactivate(View):
 
         messages.success(
             self.request,
-            'Salesman %s has been deactivated successfully' % salesman
+            'Salesman <strong>%s</strong> has been deactivated '
+            'successfully' % salesman
         )
         return HttpResponseRedirect(reverse_lazy('salesman-list'))
 
@@ -977,7 +987,8 @@ class SalesmanActivate(FormView):
 
         messages.success(
             self.request,
-            'Salesman %s has been activated successfully' % form.cleaned_data['salesman']
+            'Salesman <strong>%s</strong> has been activated '
+            'successfully' % form.cleaned_data['salesman']
         )
 
         return super(SalesmanActivate, self).form_valid(form)

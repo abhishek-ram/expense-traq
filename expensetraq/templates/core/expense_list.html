@@ -21,228 +21,223 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
-    <div class="page-title">
-      <div class="title_left">
-        <h3>Expense Report <small>You can filter to list or export expenses here</small>
+  <div class="page-title">
+    <div class="title_left">
+      <h3>Expense Report <small>You can filter to list or export expenses here</small>
 
-
-        </h3>
-      </div>
-
-
-      <div class="title_right">
-        {% if request.GET.action == 'list' %}
-            {% if request.user.is_salesman and not request.user.is_admin %}
-              <a class="btn btn-primary btn-round" type="button"
-                         href="{% url 'expense-add' %}">
-                        <i class="fa fa-plus" ></i> Add Expense</a>
-            {% endif %}
-            <a class="btn btn-primary btn-round" type="button"
-                         href="{% url 'expense-list-export' %}">
-                        <i class="fa fa-sliders" ></i> Filter Expenses</a>
-            <a class="btn btn-success btn-round" type="button"
-                         href="{{ current_path|replace:"/action=list/action=export" }}">
-                        <i class="fa fa-external-link" ></i> Export Expenses</a>
-          {% endif %}
-      </div>
-
+      </h3>
     </div>
 
-    <div class="clearfix"></div>
 
-    <!-- po table -->
-    <div class="row">
-      {% if request.GET.action == 'list' %}
-        <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-          <div class="x_content">
-            <table class="table" id="datatable">
-              <thead>
-                <tr>
-                  <th>Salesman</th>
-                  <th>Expense Type</th>
-                  <th>Date of Transaction</th>
-                  <th>Amount</th>
-                  <th>Paid By</th>
-                  <th>Status</th>
-                  <th>Notes</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for expense in object_list %}
-                  <tr>
-                    <td>{{ expense.salesman.user }}</td>
-                    <td>{{ expense.expense_types }}</td>
-                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
-                    <td>${{ expense.total_amount|intcomma }}</td>
-                    <td>{{ expense.paid_by }}</td>
-                    <td> {{ expense.status }}
-
-                    </td>
-                    <td>{{ expense.notes|truncatewords:6 }}</td>
-                    <td>
-                      <a href="{% url 'expense-detail' expense.pk %}"
-                         class="btn btn-primary btn-xs">
-                        <i class="fa fa-folder"></i> View </a>
-                        {% if expense.status == 'P' or user.is_admin %}
-                          <a href="{% url 'expense-update' expense.pk %}"
-                             class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-                        {% endif %}
-                        {% if user.is_admin %}
-                          <button type="button" class="btn btn-danger btn-xs"
-                                onclick="confirmDelete('{% url 'expense-delete' expense.pk %}','{{ expense.salesman }}','{{ expense.transaction_date }}','{{ expense.total_amount }}')">
-                          <i class="fa fa-trash-o"></i> Delete </button>
-                        {% endif %}
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th>
-                    {% for salesman in  all_salesman %}
-                        <span class="label label-default">{{ salesman }}</span>
-                    {% endfor %}
-                  </th>
-                  <th>{{ all_expense_type|length }}</th>
-                  <th>{{ request.GET.daterange }}</th>
-                  <th>${{ total_amount }}</th>
-                  <th>
-                    {% for paid_by in  all_paid_by %}
-                        <span class="label label-default">{{ paid_by }}</span>
-                    {% endfor %}
-                  </th>
-                  <th>
-                    {% for status in  all_status %}
-                        <span class="label label-default">{{ status }}</span>
-                    {% endfor %}
-                  </th>
-                  <th></th>
-                  <th></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-      </div>
-      <!-- delete modal -->
-      <div class="modal fade delete-modal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <form class="form-horizontal delete-form" method="post">
-            <div class="modal-header">
-              <button type="button" class="close"
-                      data-dismiss="modal"><span aria-hidden="true">×</span></button>
-              <h4 class="modal-title" id="myModalLabel">Delete Confirmation Dialog</h4>
-            </div>
-            <div class="modal-body">
-                {% csrf_token %}
-                <input type="hidden" name="success_url" value="{{ request.path }}">
-                <h5> Are you sure you want to delete the expense record  of amount <strong class="amount"></strong>
-                  for salesman <strong class="salesan"></strong> dated <strong class="date"></strong>?
-                </h5>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              <input type="submit" class="btn btn-danger" value="Delete Expense"/>
-            </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      <!-- delete modal -->
-      {% else %}
-        <div class="col-md-8 col-sm-8 col-xs-12 col-md-offset-2 col-sm-offset-2">
-        <div class="x_panel">
-          <div class="x_title">
-            <h3>Filter Expenses</h3>
-            <div class="clearfix"></div>
-          </div>
-          <div class="x_content">
-            <form class="form-horizontal form-label-left">
-
-              {% if user.is_admin or user.is_manager %}
-                <div class="item form-group ">
-                  <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                    for="salesman">Salesman
-                  </label>
-                  <div class="col-md-6 col-sm-6 col-xs-12">
-                    <select class="form-control select2_single" id="salesman" multiple>
-                    <option value="">----------</option>
-                    {% for salesman in salesman_list %}
-                      <option value="{{ salesman.id }}">{{ salesman.user }}</option>
-                    {% endfor %}
-                    </select>
-                  </div>
-                </div>
-              {% else %}
-                <input type="hidden" id="salesman" value="{{  user.salesman.id }}">
-              {% endif %}
-
-              <div class="item form-group ">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                  for="status">Status
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select class="form-control select2_single" id="status" multiple>
-                  <option value="">----------</option>
-                  {% for status in status_list %}
-                    <option value="{{ status.0 }}">{{ status.1 }}</option>
-                  {% endfor %}
-                  </select>
-                </div>
-              </div>
-
-              <div class="item form-group ">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                  for="status">Paid By
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select class="form-control select2_single" id="paid_by" multiple>
-                  <option value="">----------</option>
-                  {% for paid_by in paid_by_list %}
-                    <option value="{{ paid_by }}">{{ paid_by }}</option>
-                  {% endfor %}
-                  </select>
-                </div>
-              </div>
-
-              <div class="item form-group ">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12"
-                  for="status">Date Range
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <div class="input-prepend input-group">
-                    <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
-                    <input type="text" id="daterange" class="form-control" value="" />
-                  </div>
-                </div>
-              </div>
-
-              <div class="ln_solid"></div>
-              <div class="form-group">
-                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                  <button type="button" class="btn btn-primary action" id="list" >
-                    <i class="fa fa-list"></i> List Expenses</button>
-                  <button type="button" class="btn btn-success action" id="export">
-                    <i class="fa fa-external-link" ></i> Export Expenses</button>
-                </div>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      </div>
-        <div class="col-md-2 col-sm-2"></div>
+    <div class="title_right">
+      {% if request.user.is_salesman and not request.user.is_admin %}
+        <a class="btn btn-primary btn-round" type="button"
+                   href="{% url 'expense-add' %}">
+                  <i class="fa fa-plus" ></i> Add Expense</a>
       {% endif %}
+      {% if request.GET.action == 'list' %}
+          <a class="btn btn-primary btn-round" type="button"
+                       href="{% url 'expense-list-export' %}">
+                      <i class="fa fa-sliders" ></i> Filter Expenses</a>
+          <a class="btn btn-success btn-round" type="button"
+                       href="{{ current_path|replace:"/action=list/action=export" }}">
+                      <i class="fa fa-external-link" ></i> Export Expenses</a>
+        {% endif %}
     </div>
-    <!-- po table -->
+
   </div>
 
-<!-- /page content -->
+  <div class="clearfix"></div>
+
+  <div class="row">
+    {% if request.GET.action == 'list' %}
+      <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_content">
+          <table class="table" id="datatable">
+            <thead>
+              <tr>
+                <th>Salesman</th>
+                <th>Expense Type</th>
+                <th>Date of Transaction</th>
+                <th>Amount</th>
+                <th>Paid By</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for expense in object_list %}
+                <tr>
+                  <td>{{ expense.salesman.user }}</td>
+                  <td>{{ expense.expense_types }}</td>
+                  <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                  <td>${{ expense.total_amount|intcomma }}</td>
+                  <td>{{ expense.paid_by }}</td>
+                  <td> {{ expense.status }}
+
+                  </td>
+                  <td>{{ expense.notes|truncatewords:6 }}</td>
+                  <td>
+                    <a href="{% url 'expense-detail' expense.pk %}"
+                       class="btn btn-primary btn-xs">
+                      <i class="fa fa-folder"></i> View </a>
+                      {% if expense.status == 'P' or user.is_admin %}
+                        <a href="{% url 'expense-update' expense.pk %}"
+                           class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+                      {% endif %}
+                      {% if user.is_admin %}
+                        <button type="button" class="btn btn-danger btn-xs"
+                              onclick="confirmDelete('{% url 'expense-delete' expense.pk %}','{{ expense.salesman }}','{{ expense.transaction_date }}','{{ expense.total_amount }}')">
+                        <i class="fa fa-trash-o"></i> Delete </button>
+                      {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>
+                  {% for salesman in  all_salesman %}
+                      <span class="label label-default">{{ salesman }}</span>
+                  {% endfor %}
+                </th>
+                <th>{{ all_expense_type|length }}</th>
+                <th>{{ request.GET.daterange }}</th>
+                <th>${{ total_amount }}</th>
+                <th>
+                  {% for paid_by in  all_paid_by %}
+                      <span class="label label-default">{{ paid_by }}</span>
+                  {% endfor %}
+                </th>
+                <th>
+                  {% for status in  all_status %}
+                      <span class="label label-default">{{ status }}</span>
+                  {% endfor %}
+                </th>
+                <th></th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- delete modal -->
+    <div class="modal fade delete-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form class="form-horizontal delete-form" method="post">
+          <div class="modal-header">
+            <button type="button" class="close"
+                    data-dismiss="modal"><span aria-hidden="true">×</span></button>
+            <h4 class="modal-title" id="myModalLabel">Delete Confirmation Dialog</h4>
+          </div>
+          <div class="modal-body">
+              {% csrf_token %}
+              <input type="hidden" name="success_url" value="{{ request.path }}">
+              <h5> Are you sure you want to delete the expense record  of amount <strong class="amount"></strong>
+                for salesman <strong class="salesan"></strong> dated <strong class="date"></strong>?
+              </h5>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <input type="submit" class="btn btn-danger" value="Delete Expense"/>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- delete modal -->
+
+    {% else %}
+      <div class="col-md-8 col-sm-8 col-xs-12 col-md-offset-2 col-sm-offset-2">
+      <div class="x_panel">
+        <div class="x_title">
+          <h3>Filter Expenses</h3>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <form class="form-horizontal form-label-left">
+
+            {% if user.is_admin or user.is_manager %}
+              <div class="item form-group ">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                  for="salesman">Salesman
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select class="form-control select2_single" id="salesman" multiple>
+                  <option value="">----------</option>
+                  {% for salesman in salesman_list %}
+                    <option value="{{ salesman.id }}">{{ salesman.user }}</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>
+            {% else %}
+              <input type="hidden" id="salesman" value="{{  user.salesman.id }}">
+            {% endif %}
+
+            <div class="item form-group ">
+              <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                for="status">Status
+              </label>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                <select class="form-control select2_single" id="status" multiple>
+                <option value="">----------</option>
+                {% for status in status_list %}
+                  <option value="{{ status.0 }}">{{ status.1 }}</option>
+                {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="item form-group ">
+              <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                for="status">Paid By
+              </label>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                <select class="form-control select2_single" id="paid_by" multiple>
+                <option value="">----------</option>
+                {% for paid_by in paid_by_list %}
+                  <option value="{{ paid_by }}">{{ paid_by }}</option>
+                {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="item form-group ">
+              <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                for="status">Date Range
+              </label>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                <div class="input-prepend input-group">
+                  <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                  <input type="text" id="daterange" class="form-control" value="" />
+                </div>
+              </div>
+            </div>
+
+            <div class="ln_solid"></div>
+            <div class="form-group">
+              <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                <button type="button" class="btn btn-primary action" id="list" >
+                  <i class="fa fa-list"></i> List Expenses</button>
+                <button type="button" class="btn btn-success action" id="export">
+                  <i class="fa fa-external-link" ></i> Export Expenses</button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+      <div class="col-md-2 col-sm-2"></div>
+    {% endif %}
+  </div>
+
+
 {% endblock %}
 
 {% block body_js %}

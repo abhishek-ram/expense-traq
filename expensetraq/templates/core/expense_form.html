@@ -18,143 +18,136 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
-    <!-- po table -->
-    <div class="row">
-      <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-          <div class="x_title">
-            {% if form.instance.id %}
-            <h3>Edit Expense {{ form.instance.id  }}</h3>
-            {% else %}
-            <h3>Record an Expense</h3>
-            {% endif %}
-            <div class="clearfix"></div>
-          </div>
-          <div class="x_content">
-            <form class="form-horizontal form-label-left" method="post" enctype="multipart/form-data">
-              {% csrf_token %}
-              <input type="hidden" value="{{ salesman.id }}" name="salesman" id="id_salesman">
-              <div class="row">
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <table class="table table-striped">
-                    <tbody>
-                      <tr>
-                        <th>Date of Transaction</th>
-                        <td>
-                          <input type="text" class="form-control" id="id_transaction_date"
-                                 name="transaction_date"
-                                 value="{{ form.instance.transaction_date|date:"m/d/Y" }}">
-                        </td>
-                      </tr>
-                      <tr>
-                        <th>Paid by</th>
-                        <td>
-                          <select id="id_paid_by" name="paid_by" required="required"
-                              class="form-control col-md-7 col-xs-12 ">
-                              {% for cc in salesman.company_cards.all %}
-                                <option {% if cc.company_card.name == form.instance.paid_by %} selected {% endif %}
-                                    value="{{ cc.company_card }}">{{ cc.company_card }}</option>
-                              {% endfor %}
-                                <option {% if 'Employee Paid' == form.instance.paid_by %} selected {% endif %}
-                                    value="Employee Paid">Employee Paid</option>
-                          </select>
-                        </td>
-                      </tr>
-                      {% if form.instance.id %}
-                        {% if user.is_admin %}
-                          <tr>
-                            <th>Status</th>
-                            <td>
-                              <select id="id_status" name="status" required="required"
-                                  class="form-control col-md-7 col-xs-12 ">
-                                  {% for k, v in form.fields.status.choices %}
-                                    <option {% if k == form.instance.status %} selected {% endif %}
-                                        value="{{ k }}">{{ v }}</option>
-                                  {% endfor %}
-                              </select>
-                            </td>
-                          </tr>
-                        {% else %}
-                          <input type="hidden" id="id_status" name="status" value="{{ form.instance.status }}">
-                        {% endif %}
-                      {% endif %}
-                      <tr>
-                        <th>Notes</th>
-                        <td>
-                          <textarea class="resizable_textarea form-control col-md-7 col-xs-12"
-                                id="id_notes" name="notes">{{ form.instance.notes|default:""}}</textarea>
-                        </td>
-                      </tr>
-                     </tbody>
-                  </table>
-                  {{ inline_formset.management_form }}
-                  <table class="table table-condensed" id="formset">
-                    <thead>
-                      <tr>
-                        <th>Region</th>
-                        <th>Expense Type</th>
-                        <th>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for i_form in inline_formset %}
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_title">
+          {% if form.instance.id %}
+          <h3>Edit Expense {{ form.instance.id  }}</h3>
+          {% else %}
+          <h3>Record an Expense</h3>
+          {% endif %}
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <form class="form-horizontal form-label-left" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" value="{{ salesman.id }}" name="salesman" id="id_salesman">
+            <div class="row">
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                <table class="table table-striped">
+                  <tbody>
+                    <tr>
+                      <th>Date of Transaction</th>
+                      <td>
+                        <input type="text" class="form-control" id="id_transaction_date"
+                               name="transaction_date"
+                               value="{{ form.instance.transaction_date|date:"m/d/Y" }}">
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Paid by</th>
+                      <td>
+                        <select id="id_paid_by" name="paid_by" required="required"
+                            class="form-control col-md-7 col-xs-12 ">
+                            {% for cc in salesman.company_cards.all %}
+                              <option {% if cc.company_card.name == form.instance.paid_by %} selected {% endif %}
+                                  value="{{ cc.company_card }}">{{ cc.company_card }}</option>
+                            {% endfor %}
+                              <option {% if 'Employee Paid' == form.instance.paid_by %} selected {% endif %}
+                                  value="Employee Paid">Employee Paid</option>
+                        </select>
+                      </td>
+                    </tr>
+                    {% if form.instance.id %}
+                      {% if user.is_admin %}
                         <tr>
-                          {% for hidden in i_form.hidden_fields %}
-                            {{ hidden }}
-                          {% endfor %}
-                          {% render_inline_form_tb i_form %}
+                          <th>Status</th>
+                          <td>
+                            <select id="id_status" name="status" required="required"
+                                class="form-control col-md-7 col-xs-12 ">
+                                {% for k, v in form.fields.status.choices %}
+                                  <option {% if k == form.instance.status %} selected {% endif %}
+                                      value="{{ k }}">{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                          </td>
                         </tr>
-                      {% endfor %}
-
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <th></th>
-                        <th class="pull-right">Total Sum</th>
-                        <th id="total-sum"></th>
-                      </tr>
-                    </tfoot>
-                  </table>
-                  <div class="ln_solid"></div>
-                  <div class="form-group">
-                    <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-6">
-                      <button class="btn btn-success pull-right"><i class="fa fa-credit-card"></i> Submit Expense</button>
-                    </div>
-                  </div>
-
-                </div>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  {% if form.instance.id %}
-                    {% if form.instance.receipt %}
-                      <a href="{{ object.receipt.url }}" target="_blank">
-                        <img src="{{ form.instance.receipt.url }}" class="img-thumbnail"
-                             style="max-height: 1024px;">
-                      </a>
-                    {% else %}
-                      <img src="{% static "images/default_receipt.jpg" %}"
-                           class="img-thumbnail" style="max-height: 1024px;">
+                      {% else %}
+                        <input type="hidden" id="id_status" name="status" value="{{ form.instance.status }}">
+                      {% endif %}
                     {% endif %}
-                  {% else %}
-                    <input type="file" accept="image/*" capture="camera"
-                           class="form-control" id="id_receipt"
-                           name="receipt"/>
-                  {% endif %}
+                    <tr>
+                      <th>Notes</th>
+                      <td>
+                        <textarea class="resizable_textarea form-control col-md-7 col-xs-12"
+                              id="id_notes" name="notes">{{ form.instance.notes|default:""}}</textarea>
+                      </td>
+                    </tr>
+                   </tbody>
+                </table>
+                {{ inline_formset.management_form }}
+                <table class="table table-condensed" id="formset">
+                  <thead>
+                    <tr>
+                      <th>Region</th>
+                      <th>Expense Type</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for i_form in inline_formset %}
+                      <tr>
+                        {% for hidden in i_form.hidden_fields %}
+                          {{ hidden }}
+                        {% endfor %}
+                        {% render_inline_form_tb i_form %}
+                      </tr>
+                    {% endfor %}
+
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th></th>
+                      <th class="pull-right">Total Sum</th>
+                      <th id="total-sum"></th>
+                    </tr>
+                  </tfoot>
+                </table>
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-6">
+                    <button class="btn btn-success pull-right"><i class="fa fa-credit-card"></i> Submit Expense</button>
+                  </div>
                 </div>
+
               </div>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                {% if form.instance.id %}
+                  {% if form.instance.receipt %}
+                    <a href="{{ object.receipt.url }}" target="_blank">
+                      <img src="{{ form.instance.receipt.url }}" class="img-thumbnail"
+                           style="max-height: 1024px;">
+                    </a>
+                  {% else %}
+                    <img src="{% static "images/default_receipt.jpg" %}"
+                         class="img-thumbnail" style="max-height: 1024px;">
+                  {% endif %}
+                {% else %}
+                  <input type="file" accept="image/*" capture="camera"
+                         class="form-control" id="id_receipt"
+                         name="receipt"/>
+                {% endif %}
+              </div>
+            </div>
 
 
 
-            </form>
-          </div>
+          </form>
         </div>
       </div>
     </div>
-    <!-- po table -->
   </div>
-
-<!-- /page content -->
 {% endblock %}
 
 {% block body_js %}

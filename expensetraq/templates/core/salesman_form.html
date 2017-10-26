@@ -10,120 +10,116 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
+  <!-- page content -->
 
-    <!-- po table -->
-    <div class="row">
-      <div class="col-md-8 col-sm-8 col-xs-12 col-md-offset-2 col-sm-offset-2">
-        <div class="x_panel">
-          <div class="x_title">
-            {% if form.instance.id %}
-              <h3>Edit Salesman - {{ form.instance.user  }}</h3>
-            {% else %}
-              <h3>On-board a Salesman</h3>
-            {% endif %}
-            <div class="clearfix"></div>
-          </div>
-          <div class="x_content">
-            <form class="form-horizontal form-label-left" method="post">
-              {% csrf_token %}
-              {% render_input_select form.user "Salesman" %}
+  <div class="row">
+    <div class="col-md-8 col-sm-8 col-xs-12 col-md-offset-2 col-sm-offset-2">
+      <div class="x_panel">
+        <div class="x_title">
+          {% if form.instance.id %}
+            <h3>Edit Salesman - {{ form.instance.user  }}</h3>
+          {% else %}
+            <h3>On-board a Salesman</h3>
+          {% endif %}
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <form class="form-horizontal form-label-left" method="post">
+            {% csrf_token %}
+            {% render_input_select form.user "Salesman" %}
 
-              {% render_input_select form.manager %}
-              {% render_input_text form.daily_expense %}
-              {% render_input_text form.gp_cash_vendor_code %}
+            {% render_input_select form.manager %}
+            {% render_input_text form.daily_expense %}
+            {% render_input_text form.gp_cash_vendor_code %}
 
-              <br/>
+            <br/>
 
 
-              <div class="accordion col-md-offset-3 col-sm-offset-3"
-                   id="accordion" role="tablist" aria-multiselectable="true">
-                <div class="panel">
-                  <a class="panel-heading" role="tab" id="headingOne"
-                     data-toggle="collapse" data-parent="#accordion"
-                     href="#companyCards" aria-expanded="true"
-                     aria-controls="companyCards">
-                    <h4 class="panel-title">Company Cards</h4>
-                  </a>
-                  <div id="companyCards" class="panel-collapse collapse in"
-                       role="tabpanel" aria-labelledby="headingOne">
-                    <div class="panel-body">
-                      {{ cc_formset.management_form }}
-                      <table class="table" id="cc_formset">
-                        <thead>
+            <div class="accordion col-md-offset-3 col-sm-offset-3"
+                 id="accordion" role="tablist" aria-multiselectable="true">
+              <div class="panel">
+                <a class="panel-heading" role="tab" id="headingOne"
+                   data-toggle="collapse" data-parent="#accordion"
+                   href="#companyCards" aria-expanded="true"
+                   aria-controls="companyCards">
+                  <h4 class="panel-title">Company Cards</h4>
+                </a>
+                <div id="companyCards" class="panel-collapse collapse in"
+                     role="tabpanel" aria-labelledby="headingOne">
+                  <div class="panel-body">
+                    {{ cc_formset.management_form }}
+                    <table class="table" id="cc_formset">
+                      <thead>
+                        <tr>
+                          <th>Company Card</th>
+                          <th>GP Vendor Code</th>
+                          {% if form.instance.id %}<th>Delete</th>{% endif %}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for i_form in cc_formset %}
                           <tr>
-                            <th>Company Card</th>
-                            <th>GP Vendor Code</th>
-                            {% if form.instance.id %}<th>Delete</th>{% endif %}
+                            {% for hidden in i_form.hidden_fields %}
+                              {{ hidden }}
+                            {% endfor %}
+                            {% render_inline_form_tb i_form %}
                           </tr>
-                        </thead>
-                        <tbody>
-                          {% for i_form in cc_formset %}
-                            <tr>
-                              {% for hidden in i_form.hidden_fields %}
-                                {{ hidden }}
-                              {% endfor %}
-                              {% render_inline_form_tb i_form %}
-                            </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div class="panel">
-                  <a class="panel-heading collapsed" role="tab" id="headingTwo"
-                     data-toggle="collapse" data-parent="#accordion"
-                     href="#etCodes" aria-expanded="false" aria-controls="etCodes">
-                    <h4 class="panel-title">Expense Type Code</h4>
-                  </a>
-                  <div id="etCodes" class="panel-collapse collapse"
-                       role="tabpanel" aria-labelledby="headingTwo">
-                    <div class="panel-body">
-                      {{ et_formset.management_form }}
-                      <table class="table" id="et_formset">
-                        <thead>
-                          <tr>
-                            <th>Expense Type</th>
-                            <th>Region</th>
-                            <th>GL Code Suffix</th>
-                            {% if form.instance.id %}<th>Delete</th>{% endif %}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for i_form in et_formset %}
-                            <tr>
-                              {% for hidden in i_form.hidden_fields %}
-                                {{ hidden }}
-                              {% endfor %}
-                              {% render_inline_form_tb i_form %}
-                            </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
-
-              <div class="ln_solid"></div>
-              <div class="form-group">
-                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                  <button type="submit" class="btn btn-success">Submit</button>
+              <div class="panel">
+                <a class="panel-heading collapsed" role="tab" id="headingTwo"
+                   data-toggle="collapse" data-parent="#accordion"
+                   href="#etCodes" aria-expanded="false" aria-controls="etCodes">
+                  <h4 class="panel-title">Expense Type Code</h4>
+                </a>
+                <div id="etCodes" class="panel-collapse collapse"
+                     role="tabpanel" aria-labelledby="headingTwo">
+                  <div class="panel-body">
+                    {{ et_formset.management_form }}
+                    <table class="table" id="et_formset">
+                      <thead>
+                        <tr>
+                          <th>Expense Type</th>
+                          <th>Region</th>
+                          <th>GL Code Suffix</th>
+                          {% if form.instance.id %}<th>Delete</th>{% endif %}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for i_form in et_formset %}
+                          <tr>
+                            {% for hidden in i_form.hidden_fields %}
+                              {{ hidden }}
+                            {% endfor %}
+                            {% render_inline_form_tb i_form %}
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
+            </div>
 
-            </form>
-          </div>
+            <div class="ln_solid"></div>
+            <div class="form-group">
+              <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                <button type="submit" class="btn btn-success">Submit</button>
+              </div>
+            </div>
+
+          </form>
         </div>
       </div>
-      <div class="col-md-2 col-sm-2"></div>
     </div>
-    <!-- po table -->
+    <div class="col-md-2 col-sm-2"></div>
   </div>
 
-<!-- /page content -->
+  <!-- /page content -->
 {% endblock %}
 
 {% block body_js %}

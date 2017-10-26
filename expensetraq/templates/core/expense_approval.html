@@ -21,18 +21,16 @@
 
 {% block body_content %}
 
-    <!-- page content -->
-  <div class="right_col" role="main">
-    <div class="page-title">
-      <div class="title_left">
-        <h3>Expense Approvals
-          {% if salesman %}
-            for {{ salesman }}
-          {% else %}
-            <small> List the pending expenses for Review</small>
-          {% endif %}
-        </h3>
-      </div>
+  <div class="page-title">
+    <div class="title_left">
+      <h3>Expense Approvals
+        {% if salesman %}
+          for {{ salesman }}
+        {% else %}
+          <small> List the pending expenses for Review</small>
+        {% endif %}
+      </h3>
+    </div>
 
 {#      <div class="title_right">#}
 {#          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">#}
@@ -47,90 +45,86 @@
 {#            </select>#}
 {#          </div>#}
 {#      </div>#}
-    </div>
-
-    <div class="clearfix"></div>
-    <!-- po table -->
-    <div class="row">
-      <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-          <div class="x_content">
-            <form method="post" id="approval_form">
-            {% csrf_token %}
-{#            <input type="hidden" id="id_salesman" name="salesman"#}
-{#                   value="{{ request.GET.salesman }}">#}
-            <input type="hidden" id="id_action" name="action" value="">
-            <table class="table" id="datatable">
-              <thead>
-                <tr>
-                  <th><input type="checkbox" id="check_all" class="flat"></th>
-                  <th>Salesman</th>
-                  <th>Expense Type</th>
-                  <th>Date of Transaction</th>
-                  <th>Amount</th>
-                  <th>Paid By</th>
-                  <th>Notes</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for expense in object_list %}
-                  <tr>
-                    <td>
-							        <input type="checkbox" id="id_expense_list" name="expense_list"
-                             value="{{ expense.id }}">
-						        </td>
-                    <td>{{ expense.salesman.user }}</td>
-                    <td>{{ expense.expense_types }}</td>
-                    <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
-                    <td>${{ expense.total_amount|intcomma }}</td>
-                    <td>{{ expense.paid_by }}</td>
-                    <td>{{ expense.notes|truncatewords:6 }}</td>
-                    <td>
-                      {% if expense.receipt %}
-                        <button class="btn btn-primary btn-xs" type="button"
-                          onclick="viewReceipt('{{ expense.receipt.url }}', '{{ expense.transaction_date|date:"Y-m-d"}}', '{{ expense.total_amount|intcomma }}')">
-                        <i class="fa fa-eye"></i> View Receipt </button>
-                      {% else %}
-                        <button class="btn btn-primary btn-xs" disabled>No Receipt Uploaded</button>
-                      {% endif %}
-
-                      <a href="{% url 'expense-update' expense.pk %}"
-                         class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
-
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- po table -->
-
-
-    <!-- Image modal -->
-    <div class="modal fade image-modal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="receipt-title">Expense Receipt</h4>
-            </div>
-            <div class="modal-body">
-                <a id="receipt-image-link" href="" target="_blank">
-                  <img id="receipt-image" class="img-responsive" src="">
-                </a>
-            </div>
-        </div>
-      </div>
-    </div>
-    <!-- delete modal -->
   </div>
 
-<!-- /page content -->
+  <div class="clearfix"></div>
+
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_content">
+          <form method="post" id="approval_form">
+          {% csrf_token %}
+{#            <input type="hidden" id="id_salesman" name="salesman"#}
+{#                   value="{{ request.GET.salesman }}">#}
+          <input type="hidden" id="id_action" name="action" value="">
+          <table class="table" id="datatable">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="check_all" class="flat"></th>
+                <th>Salesman</th>
+                <th>Expense Type</th>
+                <th>Date of Transaction</th>
+                <th>Amount</th>
+                <th>Paid By</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for expense in object_list %}
+                <tr>
+                  <td>
+                    <input type="checkbox" id="id_expense_list" name="expense_list"
+                           value="{{ expense.id }}">
+                  </td>
+                  <td>{{ expense.salesman.user }}</td>
+                  <td>{{ expense.expense_types }}</td>
+                  <td>{{ expense.transaction_date|date:"Y-m-d"}}</td>
+                  <td>${{ expense.total_amount|intcomma }}</td>
+                  <td>{{ expense.paid_by }}</td>
+                  <td>{{ expense.notes|truncatewords:6 }}</td>
+                  <td>
+                    {% if expense.receipt %}
+                      <button class="btn btn-primary btn-xs" type="button"
+                        onclick="viewReceipt('{{ expense.receipt.url }}', '{{ expense.transaction_date|date:"Y-m-d"}}', '{{ expense.total_amount|intcomma }}')">
+                      <i class="fa fa-eye"></i> View Receipt </button>
+                    {% else %}
+                      <button class="btn btn-primary btn-xs" disabled>No Receipt Uploaded</button>
+                    {% endif %}
+
+                    <a href="{% url 'expense-update' expense.pk %}"
+                       class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image modal -->
+  <div class="modal fade image-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="receipt-title">Expense Receipt</h4>
+          </div>
+          <div class="modal-body">
+              <a id="receipt-image-link" href="" target="_blank">
+                <img id="receipt-image" class="img-responsive" src="">
+              </a>
+          </div>
+      </div>
+    </div>
+  </div>
+  <!-- Image modal -->
+
 {% endblock %}
 
 {% block body_js %}
@@ -222,7 +216,8 @@
         ],
         createdRow: function( row, data, dataIndex){
           var api = this.api();
-          var bg_color = 'rgba(243, 218, 45, 0.40)';
+          // var bg_color = 'rgba(243, 218, 45, 0.40)';
+          var bg_color = '#ffffcc';
           var pr_data = api.row(dataIndex-1).data();
           if (pr_data && data[1] == pr_data[1] && data[2] == pr_data[2]
               && data[3] == pr_data[3] && data[4] == pr_data[4]){
