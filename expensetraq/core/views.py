@@ -619,11 +619,17 @@ class ExpenseListExport(ListView):
                     (not self.request.user.is_admin and
                      not self.request.user.is_manager):
                 qs = qs.filter(salesman_id=self.request.user.salesman)
-            elif self.request.user.is_manager:
-                qs = qs.filter(
-                    salesman_id__in=[self.request.user.salesman.id] +
-                                    [s.id for s in self.request.user.team.all()]
-                )
+            elif self.request.user.is_manager and \
+                    not self.request.user.is_admin:
+                if hasattr(self.request.user, 'salesman'):
+                    qs = qs.filter(
+                        salesman_id__in=[self.request.user.salesman.id] +
+                                        [s.id for s in self.request.user.team.all()]
+                    )
+                else:
+                    qs = qs.filter(
+                        salesman_id__in=[s.id for s in self.request.user.team.all()]
+                    )
 
         status_list = self.request.GET.getlist('status[]')
         if status_list:
