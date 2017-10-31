@@ -319,13 +319,13 @@ class ExpenseApproval(ListView):
                     text='Admin has {} your expense dated {} for ${}'.format(
                         form.cleaned_data['action'], expense.transaction_date,
                         expense.total_amount))
-            if expense.salesman.manager:
-                Notification.objects.create(
-                    user=expense.salesman.manager,
-                    title='Expense Updated',
-                    text='Admin has {} {}\'s expense dated {} for ${}'.format(
-                        form.cleaned_data['action'], expense.salesman.user,
-                        expense.transaction_date, expense.total_amount))
+                if expense.salesman.manager:
+                    Notification.objects.create(
+                        user=expense.salesman.manager,
+                        title='Expense Updated',
+                        text='Admin has {} {}\'s expense dated {} for ${}'.format(
+                            form.cleaned_data['action'], expense.salesman.user,
+                            expense.transaction_date, expense.total_amount))
 
         else:
             messages.error(
