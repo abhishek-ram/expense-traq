@@ -253,7 +253,8 @@ class ExpenseUpdate(UpdateView):
             formset.save()
 
             # Create notifications for the salesman and manager
-            if self.request.user.salesman != self.object.salesman:
+            if hasattr(self.request.user, 'salesman') and \
+                    self.request.user.salesman != self.object.salesman:
                 Notification.objects.create(
                     user=self.object.salesman.user,
                     title='Expense Updated',
