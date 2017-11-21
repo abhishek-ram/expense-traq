@@ -786,7 +786,7 @@ class DailyExpenseSubmit(FormView):
         # Get the list of daily rates logged by the user
         exist_expense = form.salesman.expenses.filter(
             transaction_date=form.cleaned_data['transaction_date'],
-            lines__expense_type=form.cleaned_data['expense_type']
+            lines__expense_type__expense_type__name__in=['Daily Rate']
         ).first()
 
         # Calculate expense amount based on the worked hours
@@ -818,12 +818,14 @@ class DailyExpenseSubmit(FormView):
                                      form.cleaned_data['transaction_date']))
         elif (exist_expense.total_amount + expense_amount) \
                 <= form.salesman.daily_expense:
-            line = exist_expense.lines.all().first()
-            line.amount = exist_expense.total_amount + expense_amount
-            line.save()
+            ExpenseLine.objects.create(
+                expense=exist_expense,
+                expense_type=form.cleaned_data['expense_type'],
+                amount=expense_amount
+            )
             messages.success(
                 self.request,
-                'Full Daily Rate has been successfully logged '
+                'Additional Daily Rate has been successfully logged '
                 'for date {}'.format(form.cleaned_data['transaction_date']))
         else:
             messages.error(
