@@ -22,6 +22,7 @@ from expensetraq.core.forms import SalesmanForm, ExpenseLineForm, \
     ExpenseApprovalForm, ExpenseForm, DailyExpenseForm, SalesmanActivateForm
 from io import BytesIO
 from zipfile import ZipFile, ZIP_DEFLATED
+from collections import defaultdict
 import json
 import maya
 
@@ -695,14 +696,9 @@ class ExpenseListExport(ListView):
 
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('action') == 'export':
-            salesman_expenses = {}
+            salesman_expenses = defaultdict(dict)
             expense_list = self.get_queryset().all()
-
             date_range = self.request.GET.get('daterange')
-
-            # Initialize the array of salesman
-            for salesman in self.salesman_list:
-                salesman_expenses[int(salesman)] = {}
 
             # Loop through the expense types and sort it
             for et in expense_list:
@@ -740,7 +736,13 @@ class ExpenseListExport(ListView):
                     salesman, date_range, expense_list)
 
             file_names = list(expense_report_files.keys())
-            if len(file_names) == 1:
+            if len(file_names) == 0:
+                messages.error(
+                    self.request,
+                    'No expenses logged by selected salesmen in this date range')
+                response = super(
+                    ExpenseListExport, self).get(request, *args, **kwargs)
+            elif len(file_names) == 1:
                 filename = file_names[0]
                 response = HttpResponse(
                     expense_report_files[filename],
