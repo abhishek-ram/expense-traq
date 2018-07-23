@@ -27,7 +27,7 @@ import json
 import maya
 
 LIMIT_DATE = maya.when(timezone.now().isoformat()).subtract(
-    months=3).datetime()
+    months=360).datetime()
 
 
 class Index(TemplateView):
